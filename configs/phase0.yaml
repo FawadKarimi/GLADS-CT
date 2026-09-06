@@ -1,0 +1,53 @@
+extends: base.yaml
+
+source_lock_file: locks/baseline_sources.yaml
+
+dataset_inventory:
+  expected_collection: LIDC-IDRI
+  expected_modality: CT
+
+  # TCIA collection statistics. These are validation targets, not values used
+  # to manufacture or truncate a manifest.
+  tcia_reference:
+    unique_patients: 1010
+    unique_ct_series: 1018
+
+  # Final Phase 0 run should be strict. Use --allow-incomplete-inventory only
+  # for local debugging; such a manifest is not acceptable for final experiments.
+  enforce_full_inventory: true
+
+  column_candidates:
+    patient_id:
+      - patient_id
+      - PatientID
+      - Subject ID
+      - SubjectID
+      - Subject_ID
+    series_uid:
+      - series_instance_uid
+      - SeriesInstanceUID
+      - Series UID
+      - Series ID
+      - SeriesUID
+      - Series_Instance_UID
+    study_uid:
+      - study_instance_uid
+      - StudyInstanceUID
+      - Study UID
+      - StudyUID
+    modality:
+      - modality
+      - Modality
+
+split:
+  ratios:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+
+  # Counts are allocated with the largest-remainder method. If fractional
+  # remainders tie, this order resolves the tie deterministically.
+  tie_priority:
+    - train
+    - val
+    - test

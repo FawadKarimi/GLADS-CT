@@ -1,0 +1,16 @@
+project:
+  name: consendxformer
+  display_name: ConsenDxFormer
+  title: "ConsenDxFormer: A Disagreement-Aware CNN–Transformer Model with Explainable Attention for Pulmonary Nodule Malignancy Stratification"
+  phase: 0
+
+reproducibility:
+  seed: 2026
+  deterministic_algorithms: true
+  cudnn_benchmark: false
+  split_algorithm: sha256_rank_v1
+
+paths:
+  phase0_dir: artifacts/phase0
+  manifest_dir: artifacts/phase0/manifests
+  baseline_repo_dir: external/LungDxFormer

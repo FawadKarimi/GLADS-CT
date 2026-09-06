@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+artifacts/phase0/environment_lock.json
+artifacts/phase0/source_lock_report.json
+external/LungDxFormer/
+data/
+*.dcm
