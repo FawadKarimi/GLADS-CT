@@ -1,0 +1,4 @@
+patient_id,image_path,label
+LIDC-IDRI-0002,images/train_example.npy,benign
+LIDC-IDRI-0009,images/val_example.npy,indeterminate
+LIDC-IDRI-0001,images/test_example.npy,malignant

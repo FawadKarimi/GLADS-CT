@@ -5,13 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "consendxformer"
 version = "0.0.1"
-description = "Phase 0 reproducibility scaffold for ConsenDxFormer"
+description = "Reproducible baseline infrastructure for ConsenDxFormer"
 requires-python = ">=3.9"
 dependencies = [
   "PyYAML>=6.0,<7",
   "pandas>=2.0,<3",
   "numpy>=1.24,<3",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

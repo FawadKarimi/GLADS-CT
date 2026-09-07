@@ -6,6 +6,7 @@ venv/
 .env
 artifacts/phase0/environment_lock.json
 artifacts/phase0/source_lock_report.json
+artifacts/phase1/
 external/LungDxFormer/
 data/
 *.dcm

@@ -1,0 +1,6 @@
+extends: baseline_common.yaml
+
+experiment:
+  name: lungdxformer_b0_released
+  baseline_mode: B0
+  protocol: released-code
