@@ -1,0 +1,56 @@
+extends: base.yaml
+
+project:
+  phase: 2
+
+source:
+  provider: pylidc
+  raw_root: null
+  mode: partial_development
+  expected_unique_patients: 1010
+  expected_unique_ct_series: 1018
+
+frozen_manifest:
+  directory: artifacts/phase0/manifests
+  bundle_sha256: 0c983f0ebbc6dd70623b570c8a657aa14ccc550ac590b577648b3163bc8a01e3
+
+clustering:
+  implementation: pylidc.Scan.cluster_annotations
+  metric: min
+  tol: null
+  factor: 0.9
+  min_tol: 0.1
+
+consensus:
+  implementation: pylidc.utils.consensus
+  clevel: 0.5
+  pad: null
+  ret_masks: true
+
+representative_slice:
+  rule: maximum_soft_consensus_area_lowest_index_v1
+
+crop:
+  rule: square_union_bbox_context_v1
+  context_fraction: 0.25
+  min_side_pixels: 16
+  pad_mode: constant
+  pad_hu: -1000.0
+
+hu:
+  provenance: explicit_required
+  window_min: null
+  window_max: null
+
+rendering:
+  supported_resolutions: [64, 96]
+  image_dtype: float32
+  individual_mask_dtype: uint8
+  soft_mask_dtype: float32
+  image_interpolation: bilinear
+  mask_interpolation: nearest
+
+output:
+  root: data/processed/consendxformer_phase2
+  canonical_ledger: canonical_nodule_ledger.csv
+  mask_directory: masks
