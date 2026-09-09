@@ -25,6 +25,14 @@ min_tol: 0.1
 
 The provider also records and enforces `pylidc==0.2.3`; it does not substitute `pylidc-updated` or another fork.
 
+### Official pylidc compatibility on modern NumPy
+
+Official pylidc 0.2.3 uses the removed `np.int` and `np.bool` aliases inside the clustering/consensus call graph. Phase 2 does not edit or vendor pylidc and does not mutate the process-wide NumPy module. Immediately before a real official clustering or consensus call, the provider acquires a process-wide reentrant lock and temporarily replaces only the `np` bindings inside the official `pylidc.Contour` and `pylidc.Annotation` modules with a delegating proxy. The proxy supplies `int → Python int` and `bool → Python bool` only when each name is absent from the installed NumPy namespace. All other attributes delegate to the original NumPy module, and the exact original module bindings are restored in `finally`.
+
+`np.float` is intentionally not supplied: it occurs in unrelated pylidc visualization code, not in the Phase 2 clustering or consensus paths. Compatibility setup is verified transactionally during provider initialization. Setup or restoration failure raises `ProviderCompatibilityError`; it cannot be downgraded to a malformed annotation or missing mask. Provenance records whether the adapter was required, the exact aliases supplied, and confirms that neither algorithms, NumPy, nor pylidc source files were modified.
+
+Official pylidc also imports the legacy `pkg_resources` API without declaring its provider as a runtime dependency. The LIDC extra and `requirements-phase2-pylidc.txt` therefore pin `setuptools>=68,<81`; setuptools 81 and later no longer provide that API. This is an environment dependency only and does not modify pylidc source or behavior.
+
 Each annotation signature hashes the patient, study and series identifiers; slice index, SOP UID and z position; inclusion flag; canonicalized contour points; and malignancy rating. Polygon start position and direction are canonicalized. A physical nodule SHA-256 then hashes the sorted annotation hashes, making identity independent of provider iteration and annotation order. The human identifier is `<patient_id>__nodule-<first-16-hash-chars>`. Malformed annotations receive deterministic diagnostic signatures and remain represented with exclusion reasons.
 
 Annotation order within one nodule is the lexicographic order of those annotation hashes. IDs such as `local-01-...` describe only this local deterministic order. They are not global radiologist identities.
@@ -118,6 +126,14 @@ python scripts/24_export_baseline_metadata.py --rendered-ledger data/processed/c
 ```
 
 The exporter also provides a distinct `paper_aligned_strict_four_reader` candidate view; it is never silently substituted for the available-reader view.
+
+After installing the exact official runtime, its bundled annotation database can exercise the real clustering and consensus algorithms without accessing DICOM pixels:
+
+```text
+python scripts/25_smoke_pylidc_runtime.py
+```
+
+This command uses `PylidcProvider(raw_root=None)`, reports NumPy/pylidc and compatibility metadata, and prints `PYLIDC_RUNTIME_SMOKE=PASS` only after validating real clustered annotations and aligned non-empty individual/soft masks. It explicitly reports that DICOM/source readiness was not tested. A missing official dependency produces `NOT_RUN`; an installed but failing runtime produces `FAIL` with the exact exception.
 
 ## Verification
 

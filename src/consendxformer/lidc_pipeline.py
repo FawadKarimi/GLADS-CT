@@ -35,6 +35,7 @@ from .phase2_io import (
     write_provenance_or_verify,
 )
 from .phase2_provenance import build_phase2_provenance
+from .pylidc_provider import ProviderCompatibilityError
 
 
 def run_inventory(
@@ -162,6 +163,10 @@ def run_extraction(
                         analysis.identity.annotation_sha256s,
                     )
                     _written, mask_sha = write_mask_artifact(mask_path, representative)
+            except ProviderCompatibilityError:
+                # A broken official runtime/compatibility layer is systemic,
+                # never a per-annotation malformed-data exclusion.
+                raise
             except Exception as exc:
                 mask_error = str(exc)
                 representative = None

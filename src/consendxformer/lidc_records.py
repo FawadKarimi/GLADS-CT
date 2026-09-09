@@ -79,7 +79,7 @@ class LIDCProvider(Protocol):
 
     name: str
 
-    def versions(self) -> Mapping[str, str | None]: ...
+    def versions(self) -> Mapping[str, Any]: ...
 
     def iter_scans(self) -> Iterable[ScanRecord]: ...
 
@@ -115,8 +115,21 @@ class InMemoryLIDCProvider:
         self._consensus_factory = consensus_factory
         self._dicom_slices = dict(dicom_slices or {})
 
-    def versions(self) -> Mapping[str, str | None]:
-        return {"provider": "in_memory_test_provider", "pylidc": None, "pydicom": None}
+    def versions(self) -> Mapping[str, Any]:
+        return {
+            "provider": "in_memory_test_provider",
+            "pylidc": None,
+            "pydicom": None,
+            "numpy": np.__version__,
+            "pylidc_numpy_compatibility": {
+                "required": False,
+                "aliases": [],
+                "algorithm_modified": False,
+                "numpy_module_modified": False,
+                "pylidc_source_modified": False,
+                "strategy": "not_applicable_in_memory_provider",
+            },
+        }
 
     def iter_scans(self) -> Iterable[ScanRecord]:
         return iter(self._scans)

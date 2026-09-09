@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 phase2 = ["pydicom>=2.4,<4"]
-lidc = ["pydicom>=2.4,<4", "pylidc==0.2.3"]
+lidc = ["pydicom>=2.4,<4", "pylidc==0.2.3", "setuptools>=68,<81"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

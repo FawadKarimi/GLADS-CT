@@ -20,6 +20,11 @@ from .lidc_records import (
     ScanRecord,
 )
 from .phase2_config import ClusteringConfig, ConsensusConfig, PYLIDC_VERSION
+from .pylidc_numpy_compat import (
+    NumpyCompatibilityError,
+    PylidcNumpyCompatibility,
+    pylidc_numpy_compatibility_report,
+)
 
 
 class ProviderDependencyError(RuntimeError):
@@ -43,12 +48,15 @@ class PylidcProvider:
 
     name = "official_pylidc"
 
-    def __init__(self, raw_root: str | Path) -> None:
-        self.raw_root = Path(raw_root).resolve()
+    def __init__(self, raw_root: str | Path | None) -> None:
+        self.raw_root = None if raw_root is None else Path(raw_root).resolve()
         self._pylidc: Any = None
         self._consensus: Any = None
         self._pydicom: Any = None
+        self._numpy_compatibility: PylidcNumpyCompatibility | None = None
+        self._raw_scan_cache: tuple[Any, ...] | None = None
         self._scan_cache: tuple[ScanRecord, ...] | None = None
+        self._annotation_scan_cache: tuple[ScanRecord, ...] | None = None
         # Keep at most one decoded series resident.  A cache containing all 1018
         # scans can approach the size of the source collection.
         self._dicom_cache_series: str | None = None
@@ -56,6 +64,10 @@ class PylidcProvider:
 
     def _load(self) -> None:
         if self._pylidc is not None:
+            if self._numpy_compatibility is None:
+                raise ProviderCompatibilityError(
+                    "Official pylidc runtime is only partially initialized"
+                )
             return
         try:
             installed = importlib.metadata.version("pylidc")
@@ -69,15 +81,19 @@ class PylidcProvider:
                 f"Unsupported pylidc version {installed!r}; exactly {PYLIDC_VERSION} is required"
             )
         try:
-            self._pylidc = importlib.import_module("pylidc")
+            pylidc_module = importlib.import_module("pylidc")
             utils = importlib.import_module("pylidc.utils")
-            self._consensus = utils.consensus
-            self._pydicom = importlib.import_module("pydicom")
+            consensus = utils.consensus
+            pydicom_module = importlib.import_module("pydicom")
+            compatibility_modules = (
+                importlib.import_module("pylidc.Annotation"),
+                importlib.import_module("pylidc.Contour"),
+            )
         except Exception as exc:
             raise ProviderCompatibilityError(
                 f"Official pylidc=={PYLIDC_VERSION} could not be imported in this runtime: {exc!r}"
             ) from exc
-        defaults = inspect.signature(self._pylidc.Scan.cluster_annotations).parameters
+        defaults = inspect.signature(pylidc_module.Scan.cluster_annotations).parameters
         expected = {"metric": "min", "tol": None, "factor": 0.9, "min_tol": 0.1}
         conflicts: dict[str, dict[str, Any]] = {}
         for name, value in expected.items():
@@ -89,7 +105,7 @@ class PylidcProvider:
                 "Installed official pylidc clustering defaults conflict with the documented "
                 f"0.2.3 API: {conflicts!r}"
             )
-        consensus_parameters = inspect.signature(self._consensus).parameters
+        consensus_parameters = inspect.signature(consensus).parameters
         required_consensus_parameters = {"anns", "clevel", "pad", "ret_masks"}
         if not required_consensus_parameters.issubset(consensus_parameters):
             raise ProviderCompatibilityError(
@@ -97,11 +113,34 @@ class PylidcProvider:
                 f"{sorted(required_consensus_parameters - set(consensus_parameters))}"
             )
 
-    def versions(self) -> Mapping[str, str | None]:
-        values: dict[str, str | None] = {
+        try:
+            compatibility = PylidcNumpyCompatibility(np, compatibility_modules)
+            compatibility.verify()
+        except NumpyCompatibilityError as exc:
+            raise ProviderCompatibilityError(
+                "Could not establish scoped NumPy compatibility for official "
+                f"pylidc=={PYLIDC_VERSION}: {exc}"
+            ) from exc
+
+        # Assign only after all imports, API checks, and compatibility checks
+        # succeed, so a failed setup cannot be bypassed on a later call.
+        self._pylidc = pylidc_module
+        self._consensus = consensus
+        self._pydicom = pydicom_module
+        self._numpy_compatibility = compatibility
+
+    def versions(self) -> Mapping[str, Any]:
+        compatibility = (
+            self._numpy_compatibility.report
+            if self._numpy_compatibility is not None
+            else pylidc_numpy_compatibility_report(np)
+        )
+        values: dict[str, Any] = {
             "provider": self.name,
+            "numpy": np.__version__,
             "pylidc": None,
             "pydicom": None,
+            "pylidc_numpy_compatibility": compatibility.to_dict(),
         }
         for package in ("pylidc", "pydicom"):
             try:
@@ -111,6 +150,10 @@ class PylidcProvider:
         return values
 
     def _dicom_directory(self, raw_scan: Any) -> tuple[str | None, bool]:
+        if self.raw_root is None:
+            raise ProviderCompatibilityError(
+                "Annotation-database-only provider mode cannot inspect DICOM directories"
+            )
         try:
             directory = Path(raw_scan.get_path_to_dicom_files()).resolve()
         except Exception:
@@ -147,6 +190,10 @@ class PylidcProvider:
 
     def _load_dicoms(self, scan: ScanRecord) -> list[Any]:
         self._load()
+        if self.raw_root is None:
+            raise ProviderCompatibilityError(
+                "Annotation-database-only provider mode cannot load DICOM pixels"
+            )
         if (
             self._dicom_cache_series == scan.series_instance_uid
             and self._dicom_cache_images is not None
@@ -171,18 +218,36 @@ class PylidcProvider:
         self._dicom_cache_images = images
         return images
 
-    def iter_scans(self) -> Iterable[ScanRecord]:
+    def _query_raw_scans(self) -> tuple[Any, ...]:
         self._load()
-        if self._scan_cache is not None:
-            return iter(self._scan_cache)
+        if self._raw_scan_cache is not None:
+            return self._raw_scan_cache
         try:
             raw_scans = list(self._pylidc.query(self._pylidc.Scan).all())
         except Exception as exc:
             raise ProviderCompatibilityError(
                 f"Could not query the pylidc annotation database: {exc}"
             ) from exc
+        raw_scans.sort(
+            key=lambda scan: (
+                str(getattr(scan, "patient_id", "")),
+                str(getattr(scan, "study_instance_uid", "")),
+                str(getattr(scan, "series_instance_uid", "")),
+            )
+        )
+        self._raw_scan_cache = tuple(raw_scans)
+        return self._raw_scan_cache
+
+    def iter_scans(self) -> Iterable[ScanRecord]:
+        self._load()
+        if self.raw_root is None:
+            raise ProviderCompatibilityError(
+                "Use iter_annotation_scans() for a no-DICOM runtime smoke test"
+            )
+        if self._scan_cache is not None:
+            return iter(self._scan_cache)
         records: list[ScanRecord] = []
-        for raw in raw_scans:
+        for raw in self._query_raw_scans():
             directory, readable = self._dicom_directory(raw)
             records.append(
                 ScanRecord(
@@ -206,8 +271,46 @@ class PylidcProvider:
         self._scan_cache = tuple(records)
         return iter(self._scan_cache)
 
+    def iter_annotation_scans(self) -> Iterable[ScanRecord]:
+        """Yield bundled-database records without claiming or touching DICOM readiness."""
+        self._load()
+        if self.raw_root is not None:
+            raise ProviderCompatibilityError(
+                "Annotation-only scan iteration requires PylidcProvider(raw_root=None)"
+            )
+        if self._annotation_scan_cache is not None:
+            return iter(self._annotation_scan_cache)
+        records: list[ScanRecord] = []
+        for raw in self._query_raw_scans():
+            try:
+                z_positions = tuple(float(value) for value in raw.slice_zvals)
+            except Exception as exc:
+                raise ProviderCompatibilityError(
+                    "Could not read slice z positions from the bundled pylidc database for "
+                    f"{getattr(raw, 'series_instance_uid', '')}: {exc}"
+                ) from exc
+            records.append(
+                ScanRecord(
+                    patient_id=str(getattr(raw, "patient_id", "")),
+                    study_instance_uid=str(getattr(raw, "study_instance_uid", "")),
+                    series_instance_uid=str(getattr(raw, "series_instance_uid", "")),
+                    annotation_count=len(getattr(raw, "annotations", ()) or ()),
+                    dicom_readable=False,
+                    annotation_source_available=True,
+                    dicom_directory=None,
+                    sop_instance_uids=(None,) * len(z_positions),
+                    z_positions=z_positions,
+                    provider_payload=raw,
+                )
+            )
+        self._annotation_scan_cache = tuple(records)
+        return iter(self._annotation_scan_cache)
+
     def _with_slice_inventory(self, scan: ScanRecord) -> ScanRecord:
-        if scan.sop_instance_uids and scan.z_positions:
+        if (
+            scan.z_positions
+            and len(scan.sop_instance_uids) == len(scan.z_positions)
+        ):
             return scan
         images = self._load_dicoms(scan)
         return ScanRecord(
@@ -233,15 +336,10 @@ class PylidcProvider:
         source_errors: list[str] = []
         for contour_index, contour in enumerate(getattr(raw, "contours", ()) or ()):
             try:
-                try:
-                    matrix = np.asarray(contour.to_matrix(include_k=True))
-                except TypeError:
-                    matrix = np.asarray(contour.to_matrix())
-                if matrix.ndim != 2 or matrix.shape[1] < 2:
+                matrix = np.asarray(contour.to_matrix(include_k=False))
+                if matrix.ndim != 2 or matrix.shape[1] != 2:
                     raise ValueError("pylidc contour matrix is malformed")
                 raw_index = getattr(contour, "image_k_position", None)
-                if raw_index is None and matrix.shape[1] >= 3:
-                    raw_index = int(round(float(matrix[0, 2])))
                 slice_index = int(raw_index) if raw_index is not None else None
                 if slice_index is not None and not 0 <= slice_index < len(scan.sop_instance_uids):
                     raise ValueError(f"slice index {slice_index} is outside the DICOM inventory")
@@ -276,15 +374,22 @@ class PylidcProvider:
     ) -> Sequence[NoduleClusterRecord]:
         self._load()
         scan_with_slices = self._with_slice_inventory(scan)
+        if self._numpy_compatibility is None:
+            raise ProviderCompatibilityError("pylidc NumPy compatibility is not initialized")
         try:
-            raw_clusters = scan.provider_payload.cluster_annotations(
-                metric=config.metric,
-                tol=config.tol,
-                factor=config.factor,
-                min_tol=config.min_tol,
-                return_distance_matrix=False,
-                verbose=False,
-            )
+            with self._numpy_compatibility.activated():
+                raw_clusters = scan.provider_payload.cluster_annotations(
+                    metric=config.metric,
+                    tol=config.tol,
+                    factor=config.factor,
+                    min_tol=config.min_tol,
+                    return_distance_matrix=False,
+                    verbose=False,
+                )
+        except NumpyCompatibilityError as exc:
+            raise ProviderCompatibilityError(
+                f"pylidc NumPy compatibility failed during clustering: {exc}"
+            ) from exc
         except Exception as exc:
             raise ProviderCompatibilityError(
                 f"pylidc clustering failed for {scan.series_instance_uid}: {exc}"
@@ -304,13 +409,20 @@ class PylidcProvider:
         raw_annotations = [annotation.provider_payload for annotation in cluster.annotations]
         if any(annotation is None for annotation in raw_annotations):
             raise ProviderCompatibilityError("pylidc annotation payload is unavailable")
+        if self._numpy_compatibility is None:
+            raise ProviderCompatibilityError("pylidc NumPy compatibility is not initialized")
         try:
-            _binary, bbox, masks = self._consensus(
-                raw_annotations,
-                clevel=config.clevel,
-                pad=config.pad,
-                ret_masks=True,
-            )
+            with self._numpy_compatibility.activated():
+                _binary, bbox, masks = self._consensus(
+                    raw_annotations,
+                    clevel=config.clevel,
+                    pad=config.pad,
+                    ret_masks=True,
+                )
+        except NumpyCompatibilityError as exc:
+            raise ProviderCompatibilityError(
+                f"pylidc NumPy compatibility failed during consensus: {exc}"
+            ) from exc
         except Exception as exc:
             raise ProviderCompatibilityError(
                 f"pylidc consensus failed for {cluster.scan.series_instance_uid}: {exc}"

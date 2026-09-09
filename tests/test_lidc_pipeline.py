@@ -20,6 +20,7 @@ from consendxformer.lidc_reconciliation import assess_source_readiness
 from consendxformer.lidc_render_pipeline import run_rendering
 from consendxformer.manifest_guard import validate_frozen_manifest_bundle
 from consendxformer.phase2_config import HUWindow, clustering_config, load_phase2_config
+from consendxformer.pylidc_provider import ProviderCompatibilityError
 from phase2_fakes import (
     cluster_with_ratings,
     consensus_for_cluster,
@@ -152,6 +153,27 @@ def test_incomplete_extraction_resumes_with_identical_provenance(tmp_path, manif
     assert original.equals(resumed)
     assert (output / "provenance.json").read_bytes() == provenance_before
     assert (output / "COMPLETED.json").is_file()
+
+
+def test_systemic_provider_compatibility_failure_is_never_downgraded_to_bad_mask(
+    tmp_path, manifest, monkeypatch
+):
+    config, provider, scans, source_report = _runtime(tmp_path, manifest, [[1, 3, 5]])
+
+    def compatibility_failure(*_args, **_kwargs):
+        raise ProviderCompatibilityError("compatibility setup failed")
+
+    monkeypatch.setattr(provider, "consensus_masks", compatibility_failure)
+    with pytest.raises(ProviderCompatibilityError, match="compatibility setup failed"):
+        run_extraction(
+            provider=provider,
+            scans=scans,
+            manifest=manifest,
+            source_report=source_report,
+            config=config,
+            output_dir=tmp_path / "must-fail-loudly",
+            project_root=ROOT,
+        )
 
 
 def test_one_canonical_ledger_feeds_both_64_and_96_renderings(tmp_path, manifest):

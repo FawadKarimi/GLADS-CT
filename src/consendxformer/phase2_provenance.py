@@ -20,7 +20,7 @@ def _version(package: str) -> str | None:
         return None
 
 
-def phase2_versions(provider_versions: Mapping[str, str | None] | None = None) -> dict[str, Any]:
+def phase2_versions(provider_versions: Mapping[str, Any] | None = None) -> dict[str, Any]:
     values: dict[str, Any] = {
         "python": platform.python_version(),
         "numpy": np.__version__,
@@ -28,7 +28,11 @@ def phase2_versions(provider_versions: Mapping[str, str | None] | None = None) -
         "pylidc": _version("pylidc"),
     }
     if provider_versions:
-        values["provider"] = dict(provider_versions)
+        provider = dict(provider_versions)
+        values["provider"] = provider
+        compatibility = provider.get("pylidc_numpy_compatibility")
+        if compatibility is not None:
+            values["pylidc_numpy_compatibility"] = dict(compatibility)
     return values
 
 
@@ -41,7 +45,7 @@ def build_phase2_provenance(
     manifest: ManifestGuardReport,
     source_root: str | Path,
     source_report: Mapping[str, Any],
-    provider_versions: Mapping[str, str | None],
+    provider_versions: Mapping[str, Any],
     output_path: str | Path,
     output_resolution: int | None = None,
     hu_configuration: Mapping[str, Any] | None = None,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+from types import ModuleType
 
 import numpy as np
 
@@ -11,6 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from consendxformer.lidc_records import AnnotationRecord, NoduleClusterRecord, ScanRecord
 from consendxformer.phase2_config import ClusteringConfig, ConsensusConfig
 from consendxformer.pylidc_provider import PylidcProvider
+from consendxformer.pylidc_numpy_compat import PylidcNumpyCompatibility
 
 
 class _Contour:
@@ -18,9 +20,13 @@ class _Contour:
     image_z_position = 1.0
     inclusion = True
 
+    def __init__(self):
+        self.include_k_calls = []
+
     def to_matrix(self, include_k=True):
-        assert include_k is True
-        return np.array([[1, 1, 1], [1, 3, 1], [3, 3, 1], [3, 1, 1]])
+        self.include_k_calls.append(include_k)
+        assert include_k is False
+        return np.array([[1, 1], [1, 3], [3, 3], [3, 1]])
 
 
 class _Annotation:
@@ -50,6 +56,13 @@ class _RawScan:
 def _provider_and_scan():
     provider = PylidcProvider(ROOT)
     provider._pylidc = object()
+    annotation_module = ModuleType("pylidc.Annotation")
+    contour_module = ModuleType("pylidc.Contour")
+    annotation_module.np = np
+    contour_module.np = np
+    provider._numpy_compatibility = PylidcNumpyCompatibility(
+        np, (annotation_module, contour_module)
+    )
     raw = _RawScan()
     scan = ScanRecord(
         patient_id="LIDC-IDRI-0001",
@@ -79,6 +92,7 @@ def test_clustering_calls_official_api_with_every_parameter_explicit():
     assert len(clusters) == 1
     assert clusters[0].annotations[0].malignancy == 3
     assert clusters[0].annotations[0].contours[0].sop_instance_uid == "sop-1"
+    assert clusters[0].annotations[0].provider_payload.contours[0].include_k_calls == [False]
     assert not hasattr(clusters[0].annotations[0], "database_id")
 
 
