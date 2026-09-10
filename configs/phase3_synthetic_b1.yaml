@@ -1,0 +1,10 @@
+extends: phase3_b1.yaml
+
+data:
+  mode: synthetic
+  metadata_path: tests/fixtures/phase3_synthetic_64_metadata.csv
+  source_readiness_report: null
+  canonical_dir: null
+  rendered_dir: null
+  cohort_view: synthetic_tiny_fixture
+  synthetic_marker: SYNTHETIC_NON_RESEARCH_ONLY

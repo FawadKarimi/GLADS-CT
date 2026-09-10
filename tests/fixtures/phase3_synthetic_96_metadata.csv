@@ -1,0 +1,7 @@
+patient_id,image_path,label,nodule_id,series_instance_uid,split,resolution,n_valid_malignancy_ratings,cohort_view,data_origin
+SYNTHETIC-0001,synthetic/images/96/train-benign.npy,benign,synthetic-nodule-0001,synthetic-series-0001,train,96,3,synthetic_tiny_fixture,synthetic_non_research
+SYNTHETIC-0002,synthetic/images/96/train-indeterminate.npy,indeterminate,synthetic-nodule-0002,synthetic-series-0002,train,96,4,synthetic_tiny_fixture,synthetic_non_research
+SYNTHETIC-0003,synthetic/images/96/train-malignant.npy,malignant,synthetic-nodule-0003,synthetic-series-0003,train,96,2,synthetic_tiny_fixture,synthetic_non_research
+SYNTHETIC-0004,synthetic/images/96/val-benign.npy,benign,synthetic-nodule-0004,synthetic-series-0004,val,96,3,synthetic_tiny_fixture,synthetic_non_research
+SYNTHETIC-0005,synthetic/images/96/val-malignant.npy,malignant,synthetic-nodule-0005,synthetic-series-0005,val,96,4,synthetic_tiny_fixture,synthetic_non_research
+SYNTHETIC-0006,synthetic/images/96/test-indeterminate.npy,indeterminate,synthetic-nodule-0006,synthetic-series-0006,test,96,2,synthetic_tiny_fixture,synthetic_non_research

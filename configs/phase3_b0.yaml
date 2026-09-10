@@ -1,0 +1,11 @@
+extends: phase3_common.yaml
+
+experiment:
+  baseline_variant: B0
+
+baseline:
+  phase1_config: configs/b0.yaml
+
+data:
+  metadata_path: data/processed/consendxformer_phase2_render96/baseline_metadata.csv
+  rendered_dir: data/processed/consendxformer_phase2_render96
