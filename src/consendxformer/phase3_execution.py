@@ -61,6 +61,35 @@ class Phase3ExecutionError(RuntimeError):
     """Raised when the locked real baseline cannot execute safely."""
 
 
+class IdentityPreservingDataset:
+    """Attach stable Phase 3 identities to a released baseline dataset.
+
+    Composition keeps this adapter importable and pickleable for DataLoader
+    workers that use the ``spawn`` start method, including Windows workers.
+    """
+
+    def __init__(self, dataset: Any, metadata: pd.DataFrame) -> None:
+        if len(dataset) != len(metadata):
+            raise Phase3ExecutionError(
+                "Baseline dataset and identity metadata have different lengths"
+            )
+        self.dataset = dataset
+        self.identities = metadata.loc[
+            :, ["series_instance_uid", "nodule_id", "label"]
+        ].reset_index(drop=True)
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, index: int) -> dict[str, Any]:
+        sample = dict(self.dataset[index])
+        row = self.identities.iloc[index]
+        sample["series_instance_uid"] = str(row["series_instance_uid"])
+        sample["nodule_id"] = str(row["nodule_id"])
+        sample["true_class"] = str(row["label"])
+        return sample
+
+
 def _module_is_within_source(module: Any, source_path: Path) -> bool:
     location = getattr(module, "__file__", None)
     if not isinstance(location, str):
@@ -180,14 +209,22 @@ def execute_locked_lungdxformer(
 
     previous_bytecode = sys.dont_write_bytecode
     previous_pycache_prefix = sys.pycache_prefix
+    previous_env_bytecode = os.environ.get("PYTHONDONTWRITEBYTECODE")
+    previous_env_pycache = os.environ.get("PYTHONPYCACHEPREFIX")
+    redirected_pycache = str(
+        (context.layout.provenance_dir / ".disabled_pycache").resolve()
+    )
     inserted = False
     if str(source_path) not in sys.path:
         sys.path.insert(0, str(source_path))
         inserted = True
     sys.dont_write_bytecode = True
     # Redirect cache lookup as well as cache writes, so ignored bytecode in the
-    # locked checkout can never supersede the verified source files.
-    sys.pycache_prefix = str(context.layout.provenance_dir / ".disabled_pycache")
+    # locked checkout can never supersede the verified source files. Export the
+    # same controls for spawned DataLoader workers.
+    sys.pycache_prefix = redirected_pycache
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+    os.environ["PYTHONPYCACHEPREFIX"] = redirected_pycache
     try:
         from lungdxformer.data.augmentation import BasicAugmenter
         from lungdxformer.data.dataset import LungNoduleDataset
@@ -216,32 +253,26 @@ def execute_locked_lungdxformer(
 
         frame = _require_real_metadata(context.metadata)
 
-        class IdentityDataset(LungNoduleDataset):
-            def __getitem__(self, index: int) -> dict[str, Any]:
-                sample = super().__getitem__(index)
-                row = self.df.iloc[index]
-                sample["series_instance_uid"] = str(row["series_instance_uid"])
-                sample["nodule_id"] = str(row["nodule_id"])
-                sample["true_class"] = str(row["label"])
-                return sample
-
         train_frame = frame.loc[frame["split"] == "train"].reset_index(drop=True)
         val_frame = frame.loc[frame["split"] == "val"].sort_values(
             "nodule_id", kind="stable"
         ).reset_index(drop=True)
 
         train_aug = BasicAugmenter(**config["augmentation"]["train"], enabled=True)
-        train_dataset = IdentityDataset(
+        train_dataset = LungNoduleDataset(
             train_frame,
             config["dataset"]["image_size"],
             config["dataset"]["in_channels"],
             augmenter=train_aug,
         )
-        val_dataset = IdentityDataset(
+        val_dataset = IdentityPreservingDataset(
+            LungNoduleDataset(
+                val_frame,
+                config["dataset"]["image_size"],
+                config["dataset"]["in_channels"],
+                augmenter=None,
+            ),
             val_frame,
-            config["dataset"]["image_size"],
-            config["dataset"]["in_channels"],
-            augmenter=None,
         )
         loader_kwargs = {
             "batch_size": config["dataset"]["batch_size"],
@@ -439,11 +470,14 @@ def execute_locked_lungdxformer(
         test_frame = frame.loc[frame["split"] == "test"].sort_values(
             "nodule_id", kind="stable"
         ).reset_index(drop=True)
-        test_dataset = IdentityDataset(
+        test_dataset = IdentityPreservingDataset(
+            LungNoduleDataset(
+                test_frame,
+                config["dataset"]["image_size"],
+                config["dataset"]["in_channels"],
+                augmenter=None,
+            ),
             test_frame,
-            config["dataset"]["image_size"],
-            config["dataset"]["in_channels"],
-            augmenter=None,
         )
         test_loader = DataLoader(
             test_dataset,
@@ -477,6 +511,14 @@ def execute_locked_lungdxformer(
     finally:
         sys.dont_write_bytecode = previous_bytecode
         sys.pycache_prefix = previous_pycache_prefix
+        if previous_env_bytecode is None:
+            os.environ.pop("PYTHONDONTWRITEBYTECODE", None)
+        else:
+            os.environ["PYTHONDONTWRITEBYTECODE"] = previous_env_bytecode
+        if previous_env_pycache is None:
+            os.environ.pop("PYTHONPYCACHEPREFIX", None)
+        else:
+            os.environ["PYTHONPYCACHEPREFIX"] = previous_env_pycache
         for name in tuple(sys.modules):
             if name == "lungdxformer" or name.startswith("lungdxformer."):
                 sys.modules.pop(name, None)
@@ -485,3 +527,12 @@ def execute_locked_lungdxformer(
                 sys.path.remove(str(source_path))
             except ValueError:
                 pass
+
+
+__all__ = [
+    "IdentityPreservingDataset",
+    "Phase3ExecutionContext",
+    "Phase3ExecutionError",
+    "Phase3ExecutionResult",
+    "execute_locked_lungdxformer",
+]

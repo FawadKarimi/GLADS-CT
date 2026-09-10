@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import pickle
 import sys
 
 import pandas as pd
@@ -23,7 +24,10 @@ from consendxformer.phase3_checkpoints import (
     build_history_record,
     build_last_checkpoint,
 )
-from consendxformer.phase3_execution import Phase3ExecutionResult
+from consendxformer.phase3_execution import (
+    IdentityPreservingDataset,
+    Phase3ExecutionResult,
+)
 from consendxformer.phase3_orchestrator import (
     Phase3OrchestrationError,
     run_phase3_matrix,
@@ -204,6 +208,29 @@ def _successful_fake_executor(context):
             "test_evaluation_started_after_checkpoint_selection",
         ),
     )
+
+
+def test_identity_dataset_adapter_is_spawn_pickleable():
+    metadata = pd.DataFrame(
+        {
+            "series_instance_uid": ["series-1"],
+            "nodule_id": ["nodule-1"],
+            "label": ["benign"],
+        }
+    )
+    wrapped = IdentityPreservingDataset(
+        [{"image": "placeholder", "label": 0}], metadata
+    )
+
+    restored = pickle.loads(pickle.dumps(wrapped))
+
+    assert restored[0] == {
+        "image": "placeholder",
+        "label": 0,
+        "series_instance_uid": "series-1",
+        "nodule_id": "nodule-1",
+        "true_class": "benign",
+    }
 
 
 def test_real_runner_fails_before_output_while_source_gate_is_incomplete():
