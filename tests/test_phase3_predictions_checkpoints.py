@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+import pickle
 import sys
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -21,6 +23,12 @@ from consendxformer.phase3_checkpoints import (
     validate_checkpoint_pair,
     validate_checkpoint_record,
     validate_epoch_history,
+)
+from consendxformer.phase3_execution import (
+    Phase3ExecutionError,
+    _atomic_torch_save,
+    _checkpoint_provenance,
+    _load_and_validate_persisted_checkpoints,
 )
 from consendxformer.phase3_predictions import (
     CLASS_ORDER,
@@ -69,6 +77,85 @@ def _prediction_table(
         baseline_variant="B0",
         experiment_id="phase3-b0-seed17",
     )
+
+
+class _PickleTorch:
+    """Minimal CPU-only stand-in for torch checkpoint serialization."""
+
+    @staticmethod
+    def save(value, stream) -> None:
+        pickle.dump(value, stream, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(path, *, map_location, weights_only):
+        assert map_location == "cpu"
+        assert weights_only is False
+        with Path(path).open("rb") as stream:
+            return pickle.load(stream)
+
+
+def _write_persisted_checkpoint_pair(tmp_path):
+    context = SimpleNamespace(
+        experiment_id="phase3-b0-s17-snapshot",
+        baseline_variant="B0",
+        seed=17,
+        configuration_sha256="a" * 64,
+        baseline_source_commit="b" * 40,
+        project_commit="c" * 40,
+        metadata_sha256="d" * 64,
+        cohort_sha256="e" * 64,
+        ordered_sample_sha256="f" * 64,
+        frozen_split_sha256="1" * 64,
+        effective_baseline_config={"protocol": "locked-test-fixture"},
+    )
+    best_model_state = {"weight": [1.0]}
+    best_optimizer_state = {"state": {"momentum": [10.0]}}
+    best_scheduler_state = {"last_epoch": [1]}
+    best = build_best_checkpoint(
+        model_state=best_model_state,
+        optimizer_state=best_optimizer_state,
+        scheduler_state=best_scheduler_state,
+        epoch=1,
+        best_validation_loss=0.2,
+        seed=context.seed,
+        baseline_variant=context.baseline_variant,
+        config_sha256=context.configuration_sha256,
+        experiment_id=context.experiment_id,
+    )
+    best.update(_checkpoint_provenance(context))
+    best["effective_baseline_config"] = dict(context.effective_baseline_config)
+    best["validation_metrics"] = {"loss": 0.2}
+    best_path = _atomic_torch_save(_PickleTorch, best, tmp_path / "best.pt")
+
+    # These in-place changes reproduce the aliasing risk after serialization.
+    best_model_state["weight"][0] = 101.0
+    best_optimizer_state["state"]["momentum"][0] = 110.0
+    best_scheduler_state["last_epoch"][0] = 101
+
+    last_model_state = {"weight": [2.0]}
+    last_optimizer_state = {"state": {"momentum": [20.0]}}
+    last_scheduler_state = {"last_epoch": [2]}
+    last = build_last_checkpoint(
+        model_state=last_model_state,
+        optimizer_state=last_optimizer_state,
+        scheduler_state=last_scheduler_state,
+        epoch=2,
+        best_epoch=1,
+        best_validation_loss=0.2,
+        seed=context.seed,
+        baseline_variant=context.baseline_variant,
+        config_sha256=context.configuration_sha256,
+        experiment_id=context.experiment_id,
+    )
+    last.update(_checkpoint_provenance(context))
+    last["effective_baseline_config"] = dict(context.effective_baseline_config)
+    last["validation_metrics"] = {"loss": 0.3}
+    last_path = _atomic_torch_save(_PickleTorch, last, tmp_path / "last.pt")
+
+    last_model_state["weight"][0] = 202.0
+    last_optimizer_state["state"]["momentum"][0] = 220.0
+    last_scheduler_state["last_epoch"][0] = 202
+    return context, best_path, last_path, best, last, last_model_state
 
 
 def test_prediction_table_has_fixed_schema_and_preserves_all_identities(
@@ -292,3 +379,66 @@ def test_checkpoint_validator_rejects_false_presence_and_test_selection() -> Non
     test_selected = dict(checkpoint, selection_split="test")
     with pytest.raises(CheckpointContractError, match="selection_split"):
         validate_checkpoint_record(test_selected)
+
+
+def test_execution_returns_authoritative_persisted_checkpoint_snapshots(
+    tmp_path,
+) -> None:
+    context, best_path, last_path, live_best, live_last, live_model_state = (
+        _write_persisted_checkpoint_pair(tmp_path)
+    )
+
+    persisted_best, persisted_last = _load_and_validate_persisted_checkpoints(
+        _PickleTorch,
+        context,
+        best_path=best_path,
+        last_path=last_path,
+        device="cpu",
+        history=(
+            build_history_record(epoch=1, train_loss=0.4, validation_loss=0.2),
+            build_history_record(epoch=2, train_loss=0.3, validation_loss=0.3),
+        ),
+    )
+
+    assert persisted_best is not live_best
+    assert persisted_last is not live_last
+    assert live_best["model_state"]["weight"] == [101.0]
+    assert live_last["model_state"]["weight"] == [202.0]
+    assert persisted_best["model_state"]["weight"] == [1.0]
+    assert persisted_best["optimizer_state"]["state"]["momentum"] == [10.0]
+    assert persisted_best["scheduler_state"]["last_epoch"] == [1]
+    assert persisted_last["model_state"]["weight"] == [2.0]
+    assert persisted_last["optimizer_state"]["state"]["momentum"] == [20.0]
+    assert persisted_last["scheduler_state"]["last_epoch"] == [2]
+
+    # Emulate loading persisted best weights into the live model after epoch 2.
+    live_model_state["weight"][:] = persisted_best["model_state"]["weight"]
+    assert live_model_state["weight"] == [1.0]
+    assert live_last["model_state"]["weight"] == [1.0]
+    assert persisted_last["model_state"]["weight"] == [2.0]
+
+
+def test_persisted_checkpoint_context_mismatch_fails_closed(tmp_path) -> None:
+    context, best_path, last_path, *_ = _write_persisted_checkpoint_pair(tmp_path)
+    last = _PickleTorch.load(
+        last_path, map_location="cpu", weights_only=False
+    )
+    last["project_commit"] = "0" * 40
+    _atomic_torch_save(_PickleTorch, last, last_path)
+
+    with pytest.raises(Phase3ExecutionError, match="project_commit"):
+        _load_and_validate_persisted_checkpoints(
+            _PickleTorch,
+            context,
+            best_path=best_path,
+            last_path=last_path,
+            device="cpu",
+            history=(
+                build_history_record(
+                    epoch=1, train_loss=0.4, validation_loss=0.2
+                ),
+                build_history_record(
+                    epoch=2, train_loss=0.3, validation_loss=0.3
+                ),
+            ),
+        )

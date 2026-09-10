@@ -14,14 +14,20 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
 
 from .baseline_evaluation import CLASS_ORDER
 from .phase3_artifacts import ExperimentLayout
-from .phase3_checkpoints import build_best_checkpoint, build_last_checkpoint
+from .phase3_checkpoints import (
+    build_best_checkpoint,
+    build_last_checkpoint,
+    select_best_validation_epoch,
+    validate_checkpoint_pair,
+    validate_epoch_history,
+)
 from .phase3_predictions import build_prediction_table
 from .reproducibility import make_dataloader_generator, seed_dataloader_worker, set_global_seed
 
@@ -147,6 +153,102 @@ def _checkpoint_provenance(
         "frozen_split_sha256": context.frozen_split_sha256,
         "class_order": list(CLASS_ORDER),
     }
+
+
+def _load_persisted_checkpoint(
+    torch: Any,
+    path: Path,
+    *,
+    device: str,
+) -> Mapping[str, Any]:
+    """Load one authoritative checkpoint snapshot from its persisted file."""
+
+    try:
+        checkpoint = torch.load(path, map_location=device, weights_only=False)
+    except Exception as exc:
+        raise Phase3ExecutionError(
+            f"Could not load persisted Phase 3 checkpoint: {path}"
+        ) from exc
+    if not isinstance(checkpoint, Mapping):
+        raise Phase3ExecutionError(
+            f"Persisted Phase 3 checkpoint is not a mapping: {path}"
+        )
+    return checkpoint
+
+
+def _load_and_validate_persisted_checkpoints(
+    torch: Any,
+    context: Phase3ExecutionContext,
+    *,
+    best_path: Path,
+    last_path: Path,
+    device: str,
+    history: Sequence[Mapping[str, Any]],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Reload and validate the authoritative best/last checkpoint snapshots."""
+
+    loaded_best = _load_persisted_checkpoint(torch, best_path, device=device)
+    loaded_last = _load_persisted_checkpoint(torch, last_path, device=device)
+    try:
+        validated_history = validate_epoch_history(history)
+        selection = select_best_validation_epoch(validated_history)
+        best, last = validate_checkpoint_pair(loaded_best, loaded_last)
+    except (TypeError, ValueError) as exc:
+        raise Phase3ExecutionError(
+            "Persisted Phase 3 best/last checkpoint contract validation failed"
+        ) from exc
+
+    expected_context = {
+        "experiment_id": context.experiment_id,
+        "baseline_variant": context.baseline_variant,
+        "seed": context.seed,
+        "config_sha256": context.configuration_sha256,
+        **_checkpoint_provenance(context),
+        "effective_baseline_config": dict(context.effective_baseline_config),
+    }
+    for kind, checkpoint in (("best", best), ("last", last)):
+        for field, expected in expected_context.items():
+            if checkpoint.get(field) != expected:
+                raise Phase3ExecutionError(
+                    f"Persisted {kind} checkpoint field {field!r} disagrees "
+                    "with its execution context"
+                )
+
+    selected_epoch = int(selection["epoch"])
+    selected_loss = float(selection["value"])
+    final_epoch = int(validated_history[-1]["epoch"])
+    if best["epoch"] != selected_epoch or best["best_epoch"] != selected_epoch:
+        raise Phase3ExecutionError(
+            "Persisted best checkpoint epoch disagrees with validation selection"
+        )
+    if last["epoch"] != final_epoch or last["best_epoch"] != selected_epoch:
+        raise Phase3ExecutionError(
+            "Persisted last checkpoint epoch metadata disagrees with training history"
+        )
+    if (
+        best["best_validation_loss"] != selected_loss
+        or last["best_validation_loss"] != selected_loss
+    ):
+        raise Phase3ExecutionError(
+            "Persisted checkpoint validation loss disagrees with validation selection"
+        )
+    history_by_epoch = {
+        int(record["epoch"]): record for record in validated_history
+    }
+    for kind, checkpoint in (("best", best), ("last", last)):
+        validation_metrics = checkpoint.get("validation_metrics")
+        expected_loss = history_by_epoch[int(checkpoint["epoch"])]["validation"][
+            "loss"
+        ]
+        if (
+            not isinstance(validation_metrics, Mapping)
+            or validation_metrics.get("loss") != expected_loss
+        ):
+            raise Phase3ExecutionError(
+                f"Persisted {kind} checkpoint validation metrics disagree "
+                "with training history"
+            )
+    return best, last
 
 
 def _require_real_metadata(metadata: pd.DataFrame) -> pd.DataFrame:
@@ -388,8 +490,8 @@ def execute_locked_lungdxformer(
         best_epoch = 0
         best_path = context.layout.checkpoints_dir / "best.pt"
         last_path = context.layout.checkpoints_dir / "last.pt"
-        best_record: dict[str, Any] | None = None
-        last_record: dict[str, Any] | None = None
+        best_checkpoint_written = False
+        last_checkpoint_written = False
         for epoch in range(1, training_config["epochs"] + 1):
             train_metrics, _ = run_epoch(train_loader, training=True)
             validation_metrics, _ = run_epoch(val_loader, training=False)
@@ -405,7 +507,7 @@ def execute_locked_lungdxformer(
             if improved:
                 best_loss = validation_loss
                 best_epoch = epoch
-                best_record = build_best_checkpoint(
+                checkpoint_to_persist = build_best_checkpoint(
                     model_state=model.state_dict(),
                     optimizer_state=optimizer.state_dict(),
                     scheduler_state=(
@@ -418,15 +520,16 @@ def execute_locked_lungdxformer(
                     config_sha256=context.configuration_sha256,
                     experiment_id=context.experiment_id,
                 )
-                best_record.update(_checkpoint_provenance(context))
-                best_record["effective_baseline_config"] = config
-                best_record["validation_metrics"] = validation_metrics
+                checkpoint_to_persist.update(_checkpoint_provenance(context))
+                checkpoint_to_persist["effective_baseline_config"] = config
+                checkpoint_to_persist["validation_metrics"] = validation_metrics
                 _atomic_torch_save(
                     torch,
-                    best_record,
+                    checkpoint_to_persist,
                     best_path,
                 )
-            last_record = build_last_checkpoint(
+                best_checkpoint_written = True
+            checkpoint_to_persist = build_last_checkpoint(
                 model_state=model.state_dict(),
                 optimizer_state=optimizer.state_dict(),
                 scheduler_state=(scheduler.state_dict() if scheduler is not None else None),
@@ -438,23 +541,34 @@ def execute_locked_lungdxformer(
                 config_sha256=context.configuration_sha256,
                 experiment_id=context.experiment_id,
             )
-            last_record.update(_checkpoint_provenance(context))
-            last_record["effective_baseline_config"] = config
-            last_record["validation_metrics"] = validation_metrics
+            checkpoint_to_persist.update(_checkpoint_provenance(context))
+            checkpoint_to_persist["effective_baseline_config"] = config
+            checkpoint_to_persist["validation_metrics"] = validation_metrics
             _atomic_torch_save(
                 torch,
-                last_record,
+                checkpoint_to_persist,
                 last_path,
             )
+            last_checkpoint_written = True
             if early_stopping.should_stop:
                 break
 
-        if best_record is None or last_record is None or best_epoch <= 0:
+        if (
+            not best_checkpoint_written
+            or not last_checkpoint_written
+            or best_epoch <= 0
+            or not history
+        ):
             raise Phase3ExecutionError("Training produced no validation-selected checkpoint")
-        selected = torch.load(best_path, map_location=device, weights_only=False)
-        if selected.get("experiment_id") != context.experiment_id:
-            raise Phase3ExecutionError("Best checkpoint identity changed before evaluation")
-        model.load_state_dict(selected["model_state"])
+        persisted_best, persisted_last = _load_and_validate_persisted_checkpoints(
+            torch,
+            context,
+            best_path=best_path,
+            last_path=last_path,
+            device=device,
+            history=history,
+        )
+        model.load_state_dict(persisted_best["model_state"])
 
         _, val_logits = run_epoch(val_loader, training=False)
         val_predictions = build_prediction_table(
@@ -497,13 +611,14 @@ def execute_locked_lungdxformer(
             history=tuple(history),
             best_checkpoint_path=best_path,
             last_checkpoint_path=last_path,
-            best_checkpoint_record=best_record,
-            last_checkpoint_record=last_record,
+            best_checkpoint_record=persisted_best,
+            last_checkpoint_record=persisted_last,
             predictions={"val": val_predictions, "test": test_predictions},
             best_epoch=best_epoch,
-            last_epoch=int(last_record["epoch"]),
+            last_epoch=int(persisted_last["epoch"]),
             events=(
                 "best_checkpoint_selected_from_validation_loss",
+                "persisted_checkpoints_reloaded_and_validated",
                 "best_checkpoint_reloaded",
                 "test_evaluation_started_after_checkpoint_selection",
             ),
