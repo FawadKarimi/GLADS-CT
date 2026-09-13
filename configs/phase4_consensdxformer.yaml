@@ -1,0 +1,100 @@
+project:
+  phase: 4
+  name: ConsenDxFormer
+
+experiment:
+  model_name: ConsenDxFormer
+  seed: 42
+  output_root: artifacts/phase4/experiments
+
+device: auto
+
+fairness_anchor:
+  baseline_variant: B1
+  config: configs/b1.yaml
+
+data:
+  metadata_path: data/processed/consendxformer_phase2/rendered_64/baseline_metadata_2_to_4.csv
+  rendered_dir: data/processed/consendxformer_phase2/rendered_64
+  canonical_dir: data/processed/consendxformer_phase2
+  frozen_split_dir: artifacts/phase0/manifests
+  cohort_view: paper_aligned_multi_reader_2_to_4
+
+dataset:
+  image_size: 64
+  in_channels: 1
+  num_classes: 3
+  batch_size: 32
+  num_workers: 0
+  class_names:
+    - benign
+    - indeterminate
+    - malignant
+
+augmentation:
+  train:
+    hflip: true
+    vflip: true
+    rotation_deg: 10
+    translation_frac: 0.08
+    intensity_jitter: 0.08
+    gaussian_noise_std: 0.01
+  eval:
+    enabled: false
+
+model:
+  cnn_channels: [32, 64, 128]
+  embed_dim: 128
+  transformer_heads: 4
+  transformer_layers: 2
+  transformer_mlp_ratio: 4.0
+  dropout: 0.5
+  attention_dropout: 0.1
+  classifier_hidden_dim: 128
+  use_transformer: true
+  use_positional_encoding: true
+  use_spatial_attention: true
+  fusion_type: concat
+  use_raw_transformer_in_fusion: false
+
+  # ConsenDxFormer-specific architecture control.
+  use_hierarchical_fusion: true
+
+training:
+  epochs: 100
+  lr: 0.0001
+  weight_decay: 0.00001
+  label_smoothing: 0.0
+  class_weights: auto
+  early_stopping_patience: 10
+  scheduler: reduce_on_plateau
+  scheduler_patience: 3
+  scheduler_factor: 0.5
+  amp: false
+  grad_clip_norm: 1.0
+
+losses:
+  selection_split: val
+  test_tuning_forbidden: true
+
+  # Candidate values only. Final values must be chosen from validation evidence.
+  lambda_ordinal_candidates:
+    - 0.0
+    - 0.1
+    - 0.25
+    - 0.5
+
+  lambda_attention_candidates:
+    - 0.0
+    - 0.05
+    - 0.1
+    - 0.25
+
+  selected_lambda_ordinal: null
+  selected_lambda_attention: null
+
+ablation:
+  use_disagreement_weighting: true
+  use_ordinal_head: true
+  use_attention_alignment: true
+  use_hierarchical_fusion: true
