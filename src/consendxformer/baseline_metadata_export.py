@@ -13,6 +13,7 @@ from .phase2_io import write_csv_new
 
 COHORT_VIEWS = (
     "paper_aligned_available_reader_mean",
+    "paper_aligned_multi_reader_2_to_4",
     "paper_aligned_strict_four_reader",
 )
 
@@ -66,6 +67,11 @@ def export_baseline_metadata(
             raise ValueError(f"Frozen identity mismatch in primary export: {row.nodule_id}")
     eligible = _as_bool(frame["paper_primary_eligible"], "paper_primary_eligible")
     selected = frame.loc[eligible].copy()
+    if cohort_view == "paper_aligned_multi_reader_2_to_4":
+        reader_counts = pd.to_numeric(
+            selected["n_valid_malignancy_ratings"], errors="raise"
+        )
+        selected = selected.loc[reader_counts.between(2, 4)].copy()
     if cohort_view == "paper_aligned_strict_four_reader":
         selected = selected.loc[
             _as_bool(selected["has_four_valid_readers"], "has_four_valid_readers")

@@ -233,9 +233,23 @@ def test_identity_dataset_adapter_is_spawn_pickleable():
     }
 
 
-def test_real_runner_fails_before_output_while_source_gate_is_incomplete():
+def test_real_runner_fails_before_output_while_source_gate_is_incomplete(tmp_path):
+    config_path = _write_config(
+        "phase3_b0.yaml",
+        tmp_path / "missing-source-b0.yaml",
+        tmp_path / "out",
+    )
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    config["data"]["source_readiness_report"] = str(
+        (tmp_path / "missing-source-readiness.json").resolve()
+    )
+    config_path.write_text(
+        yaml.safe_dump(config, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
     with pytest.raises(RuntimeError, match="source readiness report does not exist"):
-        run_phase3_experiment(config_path=ROOT / "configs" / "phase3_b0.yaml")
+        run_phase3_experiment(config_path=config_path)
 
 
 def test_synthetic_dry_run_is_explicit_and_emits_no_result_artifacts(

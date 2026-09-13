@@ -78,6 +78,38 @@ def test_available_reader_and_strict_four_reader_views_remain_separate(tmp_path,
     assert "boundary_zone" not in available["label"].tolist()
 
 
+def test_multi_reader_two_to_four_view_excludes_single_and_gt_four(tmp_path, manifest):
+    rendered = _rendered(manifest)
+
+    one_reader = rendered.iloc[[0]].copy()
+    one_reader["nodule_id"] = "eligible-one-reader"
+    one_reader["n_valid_malignancy_ratings"] = 1
+
+    five_reader = rendered.iloc[[1]].copy()
+    five_reader["nodule_id"] = "eligible-five-reader"
+    five_reader["n_valid_malignancy_ratings"] = 5
+    five_reader["has_four_valid_readers"] = False
+
+    rendered = pd.concat([rendered, one_reader, five_reader], ignore_index=True)
+
+    multi_reader = export_baseline_metadata(
+        rendered,
+        manifest,
+        cohort_view="paper_aligned_multi_reader_2_to_4",
+        rendered_root=tmp_path,
+    )
+
+    assert set(multi_reader["nodule_id"]) == {
+        "eligible-two-reader",
+        "eligible-four-reader",
+    }
+    assert multi_reader["cohort_view"].nunique() == 1
+    assert (
+        multi_reader["cohort_view"].iloc[0]
+        == "paper_aligned_multi_reader_2_to_4"
+    )
+
+
 def test_unknown_patient_or_series_fails_primary_export(tmp_path, manifest):
     rendered = _rendered(manifest).iloc[[0]].copy()
     rendered.loc[rendered.index[0], "series_instance_uid"] = "unknown-series"
