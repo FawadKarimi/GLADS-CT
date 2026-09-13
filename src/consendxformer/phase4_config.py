@@ -223,11 +223,31 @@ def validate_phase4_config(
 
     data = _mapping(config, "data")
 
+    if data.get("mode") != "real":
+        raise ValueError(
+            "Phase 4 real-data contract requires data.mode='real'"
+        )
+
+    if (
+        data.get("source_readiness_report")
+        != "artifacts/phase2/runtime/source_readiness.json"
+    ):
+        raise ValueError(
+            "Phase 4 real-data lineage requires the locked Phase 2 "
+            "source-readiness report"
+        )
+
+    if data.get("synthetic_marker") is not None:
+        raise ValueError(
+            "Phase 4 real-data contract forbids a synthetic marker"
+        )
+
     for key in (
         "metadata_path",
         "rendered_dir",
         "canonical_dir",
         "frozen_split_dir",
+        "source_readiness_report",
         "cohort_view",
     ):
         _nonempty_text(
@@ -259,6 +279,52 @@ def validate_phase4_config(
     if "rendered_64" not in str(data["rendered_dir"]):
         raise ValueError(
             "Phase 4 primary rendered_dir must reference the 64x64 artifacts"
+        )
+
+    expected_determinism = {
+        "deterministic_algorithms": True,
+        "warn_only": True,
+        "cudnn_benchmark": False,
+        "dataloader_worker_seeding": True,
+        "seeded_dataloader_generator": True,
+    }
+    if dict(_mapping(config, "determinism")) != expected_determinism:
+        raise ValueError(
+            "Phase 4 determinism policy must match the validated Phase 3 contract"
+        )
+
+    expected_checkpoint = {
+        "selection_criterion": "validation_loss",
+        "selection_mode": "min",
+        "save_best": True,
+        "save_last": True,
+    }
+    if dict(_mapping(config, "checkpoint")) != expected_checkpoint:
+        raise ValueError(
+            "Phase 4 checkpoint policy must match the validated Phase 3 contract"
+        )
+
+    expected_predictions = {
+        "format": "csv",
+        "splits": ["val", "test"],
+        "class_order": ["benign", "indeterminate", "malignant"],
+        "export_logits": True,
+        "export_probabilities": True,
+    }
+    if dict(_mapping(config, "predictions")) != expected_predictions:
+        raise ValueError(
+            "Phase 4 prediction-export policy must match the validated Phase 3 contract"
+        )
+
+    expected_inference = {
+        "tta": False,
+        "ema": False,
+        "pretrained_weights": False,
+    }
+    if dict(_mapping(config, "inference")) != expected_inference:
+        raise ValueError(
+            "Phase 4 inference policy must preserve the validated no-TTA, "
+            "no-EMA, no-pretraining contract"
         )
 
     losses = _mapping(config, "losses")

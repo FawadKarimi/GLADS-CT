@@ -14,11 +14,14 @@ fairness_anchor:
   config: configs/b1.yaml
 
 data:
+  mode: real
   metadata_path: data/processed/consendxformer_phase2/rendered_64/baseline_metadata_2_to_4.csv
-  rendered_dir: data/processed/consendxformer_phase2/rendered_64
-  canonical_dir: data/processed/consendxformer_phase2
   frozen_split_dir: artifacts/phase0/manifests
+  source_readiness_report: artifacts/phase2/runtime/source_readiness.json
+  canonical_dir: data/processed/consendxformer_phase2
+  rendered_dir: data/processed/consendxformer_phase2/rendered_64
   cohort_view: paper_aligned_multi_reader_2_to_4
+  synthetic_marker: null
 
 dataset:
   image_size: 64
@@ -98,3 +101,28 @@ ablation:
   use_ordinal_head: true
   use_attention_alignment: true
   use_hierarchical_fusion: true
+
+determinism:
+  deterministic_algorithms: true
+  warn_only: true
+  cudnn_benchmark: false
+  dataloader_worker_seeding: true
+  seeded_dataloader_generator: true
+
+checkpoint:
+  selection_criterion: validation_loss
+  selection_mode: min
+  save_best: true
+  save_last: true
+
+predictions:
+  format: csv
+  splits: [val, test]
+  class_order: [benign, indeterminate, malignant]
+  export_logits: true
+  export_probabilities: true
+
+inference:
+  tta: false
+  ema: false
+  pretrained_weights: false

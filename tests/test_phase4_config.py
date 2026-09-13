@@ -128,3 +128,123 @@ def test_validator_rejects_test_based_loss_selection():
             bad,
             b1_anchor_config=bundle.b1_anchor_config,
         )
+
+
+def test_phase4_config_locks_real_data_lineage_contract():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+    data = bundle.phase4_config["data"]
+
+    assert data["mode"] == "real"
+    assert (
+        data["source_readiness_report"]
+        == "artifacts/phase2/runtime/source_readiness.json"
+    )
+    assert data["canonical_dir"] == "data/processed/consendxformer_phase2"
+    assert (
+        data["rendered_dir"]
+        == "data/processed/consendxformer_phase2/rendered_64"
+    )
+    assert data["frozen_split_dir"] == "artifacts/phase0/manifests"
+    assert data["synthetic_marker"] is None
+
+
+def test_phase4_config_preserves_phase3_determinism_and_inference_guards():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+    cfg = bundle.phase4_config
+
+    assert cfg["determinism"] == {
+        "deterministic_algorithms": True,
+        "warn_only": True,
+        "cudnn_benchmark": False,
+        "dataloader_worker_seeding": True,
+        "seeded_dataloader_generator": True,
+    }
+
+    assert cfg["checkpoint"] == {
+        "selection_criterion": "validation_loss",
+        "selection_mode": "min",
+        "save_best": True,
+        "save_last": True,
+    }
+
+    assert cfg["predictions"] == {
+        "format": "csv",
+        "splits": ["val", "test"],
+        "class_order": ["benign", "indeterminate", "malignant"],
+        "export_logits": True,
+        "export_probabilities": True,
+    }
+
+    assert cfg["inference"] == {
+        "tta": False,
+        "ema": False,
+        "pretrained_weights": False,
+    }
+
+
+def test_validator_rejects_weakened_real_data_lineage():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+
+    bad = dict(bundle.phase4_config)
+    bad["data"] = dict(bad["data"])
+    bad["data"]["mode"] = "synthetic"
+
+    with pytest.raises(ValueError, match="real-data"):
+        validate_phase4_config(
+            bad,
+            b1_anchor_config=bundle.b1_anchor_config,
+        )
+
+
+def test_validator_rejects_weakened_determinism_policy():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+
+    bad = dict(bundle.phase4_config)
+    bad["determinism"] = dict(bad["determinism"])
+    bad["determinism"]["cudnn_benchmark"] = True
+
+    with pytest.raises(ValueError, match="determinism"):
+        validate_phase4_config(
+            bad,
+            b1_anchor_config=bundle.b1_anchor_config,
+        )
+
+
+def test_validator_rejects_changed_checkpoint_selection():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+
+    bad = dict(bundle.phase4_config)
+    bad["checkpoint"] = dict(bad["checkpoint"])
+    bad["checkpoint"]["selection_criterion"] = "validation_macro_f1"
+
+    with pytest.raises(ValueError, match="checkpoint"):
+        validate_phase4_config(
+            bad,
+            b1_anchor_config=bundle.b1_anchor_config,
+        )
+
+
+def test_validator_rejects_test_time_augmentation():
+    bundle = load_phase4_config(
+        ROOT / "configs" / "phase4_consensdxformer.yaml"
+    )
+
+    bad = dict(bundle.phase4_config)
+    bad["inference"] = dict(bad["inference"])
+    bad["inference"]["tta"] = True
+
+    with pytest.raises(ValueError, match="inference"):
+        validate_phase4_config(
+            bad,
+            b1_anchor_config=bundle.b1_anchor_config,
+        )
