@@ -185,3 +185,65 @@ def test_total_loss_auxiliary_terms_are_independently_toggleable():
         "ordinal",
         "attention",
     }
+
+
+def test_diagnostic_loss_matches_b1_weighted_ce_when_disagreement_is_zero():
+    """At u=0, Phase 4 must reproduce B1's weighted CE reduction exactly."""
+    logits = torch.tensor(
+        [
+            [2.0, 0.5, -1.0],
+            [0.2, 1.5, -0.3],
+            [-0.4, 0.1, 1.8],
+        ],
+        dtype=torch.float32,
+    )
+    hard_target = torch.tensor([0, 1, 2], dtype=torch.long)
+    soft_target = F.one_hot(
+        hard_target,
+        num_classes=3,
+    ).to(dtype=torch.float32)
+    disagreement = torch.zeros(3, dtype=torch.float32)
+    class_weights = torch.tensor(
+        [1.0, 3.0, 2.0],
+        dtype=torch.float32,
+    )
+
+    observed = diagnostic_disagreement_loss(
+        logits,
+        hard_target,
+        soft_target,
+        disagreement,
+        class_weights=class_weights,
+    )
+
+    expected = F.cross_entropy(
+        logits,
+        hard_target,
+        weight=class_weights,
+    )
+
+    assert observed == pytest.approx(
+        float(expected),
+        rel=1e-6,
+        abs=1e-7,
+    )
+
+
+def test_attention_alignment_is_zero_for_exact_distribution_match():
+    """Exact consensus-attention agreement should have zero KL alignment loss."""
+    soft_mask = torch.tensor(
+        [[[[1.0, 2.0], [3.0, 4.0]]]],
+        dtype=torch.float32,
+    )
+
+    attention = soft_mask / soft_mask.sum(dim=(2, 3), keepdim=True)
+
+    observed = attention_alignment_loss(
+        attention,
+        soft_mask,
+    )
+
+    assert observed == pytest.approx(
+        0.0,
+        abs=1e-6,
+    )

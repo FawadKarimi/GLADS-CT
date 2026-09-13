@@ -147,3 +147,55 @@ def test_paired_augmenter_applies_identical_horizontal_flip(monkeypatch):
     assert np.array_equal(augmented_mask, np.fliplr(mask))
     assert augmented_image.dtype == np.float32
     assert augmented_mask.dtype == np.float32
+
+
+def test_paired_augmenter_image_matches_released_b1_under_identical_rng():
+    """Mask supervision must not alter the B1 image-augmentation stream."""
+    baseline_src = (
+        ROOT
+        / "external"
+        / "LungDxFormer"
+        / "LungDxFormer"
+        / "src"
+    )
+    sys.path.insert(0, str(baseline_src))
+
+    from lungdxformer.data.augmentation import BasicAugmenter
+
+    image = np.linspace(
+        0.0,
+        1.0,
+        num=64 * 64,
+        dtype=np.float32,
+    ).reshape(64, 64)
+
+    mask = np.zeros((64, 64), dtype=np.float32)
+    mask[18:46, 20:44] = 1.0
+
+    kwargs = {
+        "hflip": True,
+        "vflip": True,
+        "rotation_deg": 10,
+        "translation_frac": 0.08,
+        "intensity_jitter": 0.08,
+        "gaussian_noise_std": 0.01,
+        "enabled": True,
+    }
+
+    baseline = BasicAugmenter(**kwargs)
+    paired = PairedAugmenter(**kwargs)
+
+    import random
+
+    random.seed(20260913)
+    np.random.seed(20260913)
+    expected_image = baseline(image)
+
+    random.seed(20260913)
+    np.random.seed(20260913)
+    observed_image, observed_mask = paired(image, mask)
+
+    assert np.array_equal(observed_image, expected_image)
+    assert observed_image.dtype == np.float32
+    assert observed_mask.dtype == np.float32
+    assert observed_mask.shape == mask.shape

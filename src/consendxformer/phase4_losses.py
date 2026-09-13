@@ -83,32 +83,52 @@ def diagnostic_disagreement_loss(
             dtype=logits.dtype,
         )
 
-    hard_loss = F.cross_entropy(
-        logits,
-        hard_target,
-        weight=weights,
-        reduction="none",
-    )
-
     log_probs = F.log_softmax(logits, dim=1)
-    if weights is None:
-        soft_loss = -(soft_target * log_probs).sum(dim=1)
-    else:
-        weighted_target = soft_target * weights.unsqueeze(0)
-        normalizer = weighted_target.sum(dim=1).clamp_min(_EPS)
-        soft_loss = -(weighted_target * log_probs).sum(dim=1) / normalizer
 
     disagreement = disagreement.to(
         device=logits.device,
         dtype=logits.dtype,
     )
-
-    blended = (
-        (1.0 - disagreement) * hard_loss
-        + disagreement * soft_loss
+    soft_target = soft_target.to(
+        device=logits.device,
+        dtype=logits.dtype,
     )
 
-    return blended.mean()
+    if weights is None:
+        hard_numerator = F.cross_entropy(
+            logits,
+            hard_target,
+            reduction="none",
+        )
+        hard_mass = torch.ones_like(hard_numerator)
+
+        soft_numerator = -(soft_target * log_probs).sum(dim=1)
+        soft_mass = torch.ones_like(soft_numerator)
+    else:
+        hard_mass = weights[hard_target]
+        hard_numerator = (
+            F.cross_entropy(
+                logits,
+                hard_target,
+                reduction="none",
+            )
+            * hard_mass
+        )
+
+        weighted_target = soft_target * weights.unsqueeze(0)
+        soft_mass = weighted_target.sum(dim=1)
+        soft_numerator = -(weighted_target * log_probs).sum(dim=1)
+
+    blended_numerator = (
+        (1.0 - disagreement) * hard_numerator
+        + disagreement * soft_numerator
+    )
+    blended_mass = (
+        (1.0 - disagreement) * hard_mass
+        + disagreement * soft_mass
+    )
+
+    return blended_numerator.sum() / blended_mass.sum().clamp_min(_EPS)
 
 
 def ordinal_distribution_loss(
@@ -182,7 +202,7 @@ def attention_alignment_loss(
     attention_map: torch.Tensor,
     soft_consensus_mask: torch.Tensor,
 ) -> torch.Tensor:
-    """Cross-entropy from consensus spatial distribution to native DSA attention.
+    """KL divergence from consensus spatial distribution to native DSA attention.
 
     LungDxFormer's DSA is a spatial softmax distribution, not a sigmoid mask.
     The rendered soft consensus mask is therefore resized to the DSA grid and
@@ -223,9 +243,15 @@ def attention_alignment_loss(
         ),
     )
 
-    return -(
+    target_safe = target.clamp_min(_EPS)
+    attention_safe = attention.clamp_min(_EPS)
+
+    return (
         target
-        * torch.log(attention.clamp_min(_EPS))
+        * (
+            torch.log(target_safe)
+            - torch.log(attention_safe)
+        )
     ).sum(dim=1).mean()
 
 
