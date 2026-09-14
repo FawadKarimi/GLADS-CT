@@ -9,6 +9,7 @@ artifacts/phase0/source_lock_report.json
 artifacts/phase1/
 artifacts/phase2/runtime/
 artifacts/phase3/
+artifacts/phase4/
 external/LungDxFormer/
 data/
 *.dcm

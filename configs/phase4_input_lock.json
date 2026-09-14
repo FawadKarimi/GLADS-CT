@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "cohort_view": "paper_aligned_multi_reader_2_to_4",
+  "expected_resolution": 64,
+  "sample_count": 1133,
+  "split_counts": {
+    "train": 807,
+    "val": 143,
+    "test": 183
+  },
+  "reader_count_counts": {
+    "2": 307,
+    "3": 305,
+    "4": 521
+  },
+  "manifest_bundle_sha256": "0c983f0ebbc6dd70623b570c8a657aa14ccc550ac590b577648b3163bc8a01e3",
+  "supervision_sha256": "cbe4e402825665428ee890887963437d2bc480f8616bd7ec7999c667759ccc25",
+  "ordered_supervision_sha256": "2bae364b180f75cf2332714cc486a517540fcff3b9e94c48d83f59d0d9d6789a"
+}

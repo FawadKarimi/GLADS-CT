@@ -401,6 +401,16 @@ def validate_phase4_config(
             "Phase 4 ablation defaults must explicitly enable all proposed components"
         )
 
+    model = _mapping(config, "model")
+    if model.get("use_hierarchical_fusion") is not True:
+        raise ValueError(
+            "model.use_hierarchical_fusion must explicitly enable the locked Phase 4 design"
+        )
+    if model["use_hierarchical_fusion"] != ablation["use_hierarchical_fusion"]:
+        raise ValueError(
+            "model and ablation hierarchical-fusion controls must agree"
+        )
+
 
 def _resolve_anchor_path(
     config_path: Path,
