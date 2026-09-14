@@ -93,8 +93,8 @@ losses:
     - 0.1
     - 0.25
 
-  selected_lambda_ordinal: null
-  selected_lambda_attention: null
+  selected_lambda_ordinal: 0.5
+  selected_lambda_attention: 0.05
 
 ablation:
   use_disagreement_weighting: true

@@ -80,8 +80,10 @@ def test_phase4_loss_weights_are_validation_candidates_not_test_tuned():
     assert all(value >= 0.0 for value in ordinal)
     assert all(value >= 0.0 for value in attention)
 
-    assert losses["selected_lambda_ordinal"] is None
-    assert losses["selected_lambda_attention"] is None
+    assert losses["selected_lambda_ordinal"] == 0.5
+    assert losses["selected_lambda_attention"] == 0.05
+    assert losses["selected_lambda_ordinal"] in ordinal
+    assert losses["selected_lambda_attention"] in attention
 
 
 def test_phase4_ablation_toggles_are_explicit():

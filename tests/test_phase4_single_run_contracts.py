@@ -124,20 +124,22 @@ def test_hierarchical_fusion_config_cannot_disagree_with_executed_ablation():
 
 def test_final_mode_requires_frozen_selected_lambdas_and_forbids_overrides():
     config = _phase4_config()
-    with pytest.raises(Phase4ProtocolError, match="selected.*null"):
-        resolve_phase4_run_spec(config, mode="final")
 
-    config["losses"]["selected_lambda_ordinal"] = 0.25
-    config["losses"]["selected_lambda_attention"] = 0.1
+    unfrozen = deepcopy(config)
+    unfrozen["losses"]["selected_lambda_ordinal"] = None
+    unfrozen["losses"]["selected_lambda_attention"] = None
+    with pytest.raises(Phase4ProtocolError, match="selected.*null"):
+        resolve_phase4_run_spec(unfrozen, mode="final")
+
     final = resolve_phase4_run_spec(config, mode="final")
     assert final.evaluate_test is True
-    assert (final.lambda_ordinal, final.lambda_attention) == (0.25, 0.1)
+    assert (final.lambda_ordinal, final.lambda_attention) == (0.5, 0.05)
 
     with pytest.raises(Phase4ProtocolError, match="override"):
         resolve_phase4_run_spec(
             config,
             mode="final",
-            lambda_ordinal=0.25,
+            lambda_ordinal=0.5,
             lambda_attention=None,
         )
 
