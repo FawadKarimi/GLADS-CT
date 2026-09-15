@@ -361,20 +361,35 @@ def validate_final_source_descriptors(
 def _canonical_match_rows(frame: pd.DataFrame, *, seed: int, role: str) -> pd.DataFrame:
     if not isinstance(frame, pd.DataFrame) or frame.empty:
         raise Phase4EvaluationError(f"{role} seed {seed} predictions are empty")
+    if not frame.columns.is_unique:
+        raise Phase4EvaluationError(f"{role} seed {seed} has duplicate matching columns")
     missing = sorted(set(_MATCH_COLUMNS) - set(frame.columns))
     if missing:
         raise Phase4EvaluationError(
             f"{role} seed {seed} predictions lack matching fields: {missing}"
         )
-    if not bool((frame["split"] == "test").all()):
+    rows = frame.loc[:, list(_MATCH_COLUMNS)].copy()
+    for column in _MATCH_COLUMNS:
+        valid = rows[column].map(
+            lambda value: isinstance(value, str) and bool(value) and not value.isspace()
+        )
+        if not valid.all():
+            raise Phase4EvaluationError(
+                f"{role} seed {seed} matching field {column} must contain nonblank text"
+            )
+    if not rows["true_class"].isin(CLASS_ORDER).all():
+        raise Phase4EvaluationError(f"{role} seed {seed} has noncanonical true_class")
+    if not bool((rows["split"] == "test").all()):
         raise Phase4EvaluationError(f"{role} seed {seed} predictions must be test-only")
     if "seed" in frame:
         numeric_seed = pd.to_numeric(frame["seed"], errors="coerce")
-        if numeric_seed.isna().any() or set(numeric_seed.astype(int)) != {seed}:
+        if numeric_seed.isna().any() or not numeric_seed.eq(seed).all():
             raise Phase4EvaluationError(f"{role} prediction seed provenance is invalid")
-    rows = frame.loc[:, list(_MATCH_COLUMNS)].copy()
     if rows.duplicated(subset=["patient_id", "nodule_id", "series_instance_uid"]).any():
         raise Phase4EvaluationError(f"{role} seed {seed} contains duplicate samples")
+    # Normalize storage only, after validation: no null/non-text coercion,
+    # trimming or relabeling. Caller-owned frames retain their original dtypes.
+    rows = rows.astype(pd.StringDtype(storage="python"))
     return rows.sort_values(list(_MATCH_COLUMNS), kind="mergesort").reset_index(drop=True)
 
 
