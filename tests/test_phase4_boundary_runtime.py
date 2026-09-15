@@ -136,7 +136,8 @@ def _complete_artifact(
     return ledger["bundle_sha256"], ledger_sha
 
 
-def _fixture_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def _fixture_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *,
+                    extra_canonical_rows=(), canonical_edit=None, rendered_edit=None):
     canonical_dir = tmp_path / "canonical"
     rendered_dir = tmp_path / "rendered"
     manifest_dir = tmp_path / "manifest"
@@ -168,11 +169,15 @@ def _fixture_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         eligible="False",
         boundary="True",
     )
-    canonical = pd.DataFrame([primary_row, boundary_row], columns=LEDGER_COLUMNS)
+    canonical = pd.DataFrame([primary_row, boundary_row, *extra_canonical_rows], columns=LEDGER_COLUMNS)
     rendered = pd.DataFrame(
         [_rendered_row(primary_row), _rendered_row(boundary_row)],
         columns=RENDERED_COLUMNS,
     )
+    if canonical_edit is not None:
+        canonical = canonical_edit(canonical)
+    if rendered_edit is not None:
+        rendered = rendered_edit(rendered)
     canonical.to_csv(canonical_dir / "canonical_nodule_ledger.csv", index=False)
     rendered.to_csv(rendered_dir / "rendered_rois.csv", index=False)
     _write_json(canonical_dir / "run_configuration.json", {"fixture": True})
@@ -324,7 +329,7 @@ def test_runtime_loader_binds_completed_phase2_chain_and_primary_cohort(
         f"resolution_64/{'b' * 64}.npy"
     ]
     record = source.provenance
-    assert record["schema_version"] == 2
+    assert record["schema_version"] == 3
     assert record["sample_count"] == 1
     assert record["primary_cohort_binding"]["sample_count"] == 1
     assert record["primary_cohort_binding"]["split_counts"] == {

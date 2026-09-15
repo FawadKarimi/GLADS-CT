@@ -242,7 +242,14 @@ def test_changed_source_during_export_does_not_complete(tmp_path, monkeypatch):
 
 def test_boundary_export_uses_only_frozen_cpu_best_loader(tmp_path, monkeypatch):
     full, _ = install_sources(tmp_path, monkeypatch)
-    boundary = SimpleNamespace(source_snapshot={}, provenance={"synthetic": True})
+    accounting = {"eligible_subset_count": 3, "full_boundary_membership_count": 4,
+                  "source_invalid_exclusion_count": 1, "exclusion_records": [{
+                      "patient_id": "excluded", "nodule_id": "excluded", "split": "train",
+                      "mean_malignancy": "2.6666666666666665",
+                      "source_validity_status": "excluded_malformed_geometry",
+                      "exclusion_reason": "pre_existing_phase2_malformed_geometry"}]}
+    boundary = SimpleNamespace(source_snapshot={}, provenance={"synthetic": True,
+                              "source_validity_accounting": accounting})
     monkeypatch.setattr(gaps, "load_repository_phase4_boundary_source", lambda **kw: boundary)
     monkeypatch.setattr(gaps, "assert_boundary_source_snapshot_unchanged", lambda snapshot: None)
     called = []
@@ -258,4 +265,9 @@ def test_boundary_export_uses_only_frozen_cpu_best_loader(tmp_path, monkeypatch)
     assert called == [42, 43, 44]
     result = json.loads((output / "evaluation.json").read_text())
     assert result["summary"]["n_nodules"] == 3
+    assert result["summary"]["source_validity_accounting"] == accounting
+    assert result["summary"]["evaluated_population"] == "source_valid_boundary_subset"
+    assert "source-valid boundary subset" in (output / "README.md").read_text()
+    exclusions = pd.read_csv(output / "tables/boundary_source_invalid_exclusions.csv", dtype=str)
+    assert exclusions.mean_malignancy.tolist() == ["2.6666666666666665"]
     assert (output / "COMPLETED.json").exists()

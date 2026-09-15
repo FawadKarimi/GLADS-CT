@@ -118,3 +118,42 @@ calibration-to-hard-label score or primary headline metric is computed. The
 results must not drive model selection, filtering or tuning. Actual boundary
 counts and patient overlaps are unknown until the reviewed future execution;
 this implementation makes no claims about them.
+
+### Source-validity accounting correction (inference remains paused)
+
+Boundary membership is determined by the same Phase 2 rule before source
+validity is considered. Identity, rating/marker, split and primary-nodule
+overlap checks still cover the entire boundary membership. Only afterward are
+`excluded_malformed_geometry` rows recorded as pre-existing source-invalid
+exclusions. The renderable allowlist remains exactly `valid` and
+`valid_with_missing_ratings`; other or missing boundary statuses fail closed.
+Exclusions never depend on missing rendered rows or files. Every eligible row
+must still pass the existing rendering and evaluation checks. An empty eligible
+subset fails before inference.
+
+New runtime boundary provenance is schema 3. Existing `sample_count`,
+`split_counts`, ordered inference identities and cohort hashes describe the
+source-valid subset. The added `source_validity_accounting` object records the
+full boundary membership and split counts, source-invalid counts by reason and
+split, eligible counts by split, and exclusion records. Exclusion records retain
+the canonical mean-malignancy value without rounding, alongside patient/nodule
+IDs, split, original source-validity status and explicit reason. Full-membership
+and exclusion hashes supplement the existing frozen source snapshots.
+
+The provenance validator reconstructs the partition from the canonical ledger
+bound to the frozen checksum fingerprint, checks all accounting values/hashes,
+and reconciles the evaluated identities to the eligible subset. Schema 2
+records are not silently upgraded. Existing result bundles are left untouched;
+any future authorized run must construct new schema 3 provenance.
+
+Both boundary reporting entrypoints describe the evaluated population as the
+**source-valid boundary subset**, preserve full accounting in JSON, and export
+`boundary_source_invalid_exclusions.csv` separately from prediction tables.
+This does not turn boundary stress testing into primary held-out performance.
+
+The supplied server diagnostic reports 729 boundary members: 726 with `valid`
+status and three pre-existing malformed-geometry exclusions. These are supplied
+evidence, not locally verified data or production selection constants. Rendering
+integrity and evaluation eligibility of the 726 cases have not been established
+by that diagnostic or by this patch. Boundary inference remains paused pending
+patch review.

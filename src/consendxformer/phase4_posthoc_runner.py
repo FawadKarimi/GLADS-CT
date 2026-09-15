@@ -17,6 +17,8 @@ from .hashing import sha256_file, sha256_json
 from .phase3_artifacts import atomic_write_csv, atomic_write_json, atomic_write_text
 from .phase4_boundary import (
     BOUNDARY_LIMITATIONS,
+    BOUNDARY_EXCLUSION_FIELDS,
+    BOUNDARY_SOURCE_VALIDITY_NOTE,
     assert_boundary_source_snapshot_unchanged,
     load_repository_phase4_boundary_source,
 )
@@ -80,6 +82,7 @@ def run_phase4_posthoc_evaluation(
         "source_snapshots": [record["source_snapshot"] for record in records],
         "source_descriptors": descriptors,
         "boundary_cohort_sha256": None if boundary is None else boundary.provenance["boundary_cohort_sha256"],
+        "boundary_provenance_sha256": None if boundary is None else sha256_json(dict(boundary.provenance)),
         "device": device,
     }
     evaluation_id = f"phase4-evaluation-{sha256_json(identity)[:16]}"
@@ -131,6 +134,9 @@ def run_phase4_posthoc_evaluation(
             "per_seed": boundary_results, "descriptive_probability_summary": boundary_summary,
             "primary_metrics_computed": False,
             "limitations": list(BOUNDARY_LIMITATIONS),
+            "evaluated_population": None if boundary is None else boundary.provenance["evaluated_population"],
+            "source_validity_accounting": None if boundary is None else boundary.provenance["source_validity_accounting"],
+            "source_validity_note": BOUNDARY_SOURCE_VALIDITY_NOTE,
         },
         "training_performed": False, "test_driven_tuning": False,
         "causal_explanation_claimed": False,
@@ -160,6 +166,12 @@ def run_phase4_posthoc_evaluation(
         tables["boundary_descriptive_per_seed.csv"] = boundary_summary
     for name, rows in tables.items():
         artifacts.append(atomic_write_csv(layout.tables_dir / name, pd.DataFrame(rows)))
+    if boundary is not None:
+        artifacts.append(atomic_write_csv(
+            layout.tables_dir / "boundary_source_invalid_exclusions.csv",
+            pd.DataFrame(boundary.provenance["source_validity_accounting"]["exclusion_records"],
+                         columns=BOUNDARY_EXCLUSION_FIELDS),
+        ))
     provenance = atomic_write_json(layout.provenance_dir / "provenance.json", {
         "schema_version": 1, "evaluation_id": evaluation_id,
         "identity": identity, "evaluator_git": git_before,
@@ -183,6 +195,12 @@ def run_phase4_posthoc_evaluation(
     lines.extend(["", f"Boundary analysis: {analysis['boundary_stress']['status']}.",
                   "Boundary rows retain their original split and reader targets; no primary class is invented.",
                   "Boundary results are descriptive and excluded from the primary test headline.", ""])
+    if boundary is not None:
+        accounting = boundary.provenance["source_validity_accounting"]
+        lines.extend([BOUNDARY_SOURCE_VALIDITY_NOTE,
+            f"Full membership: {accounting['full_boundary_membership_count']}; "
+            f"source-invalid exclusions: {accounting['source_invalid_exclusion_count']}; "
+            f"evaluated source-valid subset: {accounting['eligible_subset_count']}.", ""])
     for row in boundary_summary:
         lines.append(f"Seed {row['seed']}, {row['boundary_stratum']}: {row['sample_count']} nodules / {row['patient_count']} patients.")
     summary = atomic_write_text(layout.output_dir / "summary.md", "\n".join(lines) + "\n")

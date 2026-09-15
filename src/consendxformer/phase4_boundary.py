@@ -107,6 +107,23 @@ _FULL_BOUNDARY_IDENTITY_FIELDS = (
 BOUNDARY_SOURCE_VALIDITY_STATUSES = frozenset(
     {"valid", "valid_with_missing_ratings"}
 )
+_SOURCE_INVALID_STATUS = "excluded_malformed_geometry"
+_SOURCE_INVALID_REASON = "pre_existing_phase2_malformed_geometry"
+BOUNDARY_EVALUATED_POPULATION = "source_valid_boundary_subset"
+BOUNDARY_SOURCE_VALIDITY_NOTE = (
+    "Only the source-valid boundary subset is evaluated, after all existing "
+    "rendering and evaluation checks. Pre-existing Phase 2 malformed-geometry "
+    "exclusions remain in full boundary accounting; missing renders never "
+    "determine exclusions. Results remain descriptive stress testing only."
+)
+_MEMBERSHIP_ACCOUNTING_FIELDS = (
+    *_IDENTITY_FIELDS, *_EXACT_RULE_FIELDS, "paper_label",
+    "paper_primary_eligible", "boundary_zone", "source_validity_status",
+)
+BOUNDARY_EXCLUSION_FIELDS = (
+    "patient_id", "nodule_id", "split", "mean_malignancy",
+    "source_validity_status", "exclusion_reason",
+)
 FROZEN_BOUNDARY_RESOLUTION = 64
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PHASE4_CONFIG = PROJECT_ROOT / "configs" / "phase4_consensdxformer.yaml"
@@ -344,10 +361,11 @@ def isolate_phase2_boundary_cohort(
     source_provenance: Mapping[str, Any],
     boundary_ranges: Sequence[Sequence[float]] = BOUNDARY_RANGES,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Isolate authoritative boundary rows and return their audit record.
+    """Account for all boundary members, then return the source-valid subset.
 
     The input is never mutated. The returned frame preserves source order and
-    every source column, adding only ``boundary_stratum``. No model inference,
+    every source column of eligible rows, adding only ``boundary_stratum``.
+    Source-invalid members remain in the audit record. No model inference,
     target assignment, threshold selection, or artifact write occurs here.
     """
 
@@ -390,11 +408,11 @@ def isolate_phase2_boundary_cohort(
     statuses = boundary["source_validity_status"].map(
         lambda value: _canonical_text(value, "source_validity_status")
     )
-    if not statuses.isin(BOUNDARY_SOURCE_VALIDITY_STATUSES).all():
-        unknown = sorted(set(statuses) - BOUNDARY_SOURCE_VALIDITY_STATUSES)
+    if not statuses.isin(BOUNDARY_SOURCE_VALIDITY_STATUSES | {_SOURCE_INVALID_STATUS}).all():
+        unknown = sorted(set(statuses) - BOUNDARY_SOURCE_VALIDITY_STATUSES - {_SOURCE_INVALID_STATUS})
         raise Phase4BoundaryError(
             "Boundary cohort source validity is outside the exact renderable "
-            f"allowlist: {unknown}"
+            f"allowlist and known Phase 2 source-invalid exclusion: {unknown}"
         )
 
     primary = _primary_ids(primary_nodule_ids)
@@ -403,6 +421,14 @@ def isolate_phase2_boundary_cohort(
         raise Phase4BoundaryError(
             f"Boundary cohort overlaps the primary cohort: {overlap}"
         )
+
+    # Partition only AFTER full-membership identity, rule, split and primary
+    # overlap checks. Preserve raw canonical values (not rounded float means)
+    # in the accounting/exclusion ledger, including all source-invalid rows.
+    accounting = _source_validity_accounting(boundary)
+    boundary = boundary.loc[statuses.isin(BOUNDARY_SOURCE_VALIDITY_STATUSES)].copy()
+    if boundary.empty:
+        raise Phase4BoundaryError("No source-valid boundary rows remain for evaluation")
 
     ordered_identities: list[dict[str, Any]] = []
     for _, row in boundary.iterrows():
@@ -469,11 +495,42 @@ def isolate_phase2_boundary_cohort(
         "target_interpretation": BOUNDARY_TARGET_INTERPRETATION,
         "limitations": list(BOUNDARY_LIMITATIONS),
         "source_provenance": provenance,
+        "evaluated_population": BOUNDARY_EVALUATED_POPULATION,
+        "source_validity_note": BOUNDARY_SOURCE_VALIDITY_NOTE,
+        "source_validity_accounting": accounting,
     }
     # Keep the public frame source-faithful apart from its declared stratum.
     boundary.drop(columns=["_validated_mean"], inplace=True)
     boundary.reset_index(drop=True, inplace=True)
     return boundary, record
+
+
+def _source_validity_accounting(boundary: pd.DataFrame) -> dict[str, Any]:
+    """Exact canonical values and reproducible counts; no file-based selection."""
+    members = boundary.loc[:, list(_MEMBERSHIP_ACCOUNTING_FIELDS)].to_dict("records")
+    exclusions = [
+        {**{field: row[field] for field in BOUNDARY_EXCLUSION_FIELDS if field != "exclusion_reason"},
+         "exclusion_reason": _SOURCE_INVALID_REASON}
+        for row in members if row["source_validity_status"] == _SOURCE_INVALID_STATUS
+    ]
+    eligible = [row for row in members if row["source_validity_status"] in BOUNDARY_SOURCE_VALIDITY_STATUSES]
+    def split_counts(rows):
+        return {split: sum(row["split"] == split for row in rows) for split in _SPLITS}
+    return {
+        "full_boundary_membership_count": len(members),
+        "full_boundary_split_counts": split_counts(members),
+        "source_invalid_exclusion_count": len(exclusions),
+        "source_invalid_exclusion_counts_by_reason": {_SOURCE_INVALID_REASON: len(exclusions)},
+        "source_invalid_exclusion_split_counts": split_counts(exclusions),
+        "source_invalid_exclusion_counts_by_reason_and_split": {_SOURCE_INVALID_REASON: split_counts(exclusions)},
+        "eligible_subset_count": len(eligible),
+        "eligible_subset_split_counts": split_counts(eligible),
+        "exclusion_records": exclusions,
+        "full_boundary_membership": members,
+        "ordered_full_boundary_membership_sha256": sha256_json(members),
+        "full_boundary_membership_sha256": sha256_json(sorted(members, key=lambda row: row["nodule_id"])),
+        "exclusion_records_sha256": sha256_json(exclusions),
+    }
 
 
 @dataclass(frozen=True)
@@ -963,7 +1020,7 @@ def validate_boundary_provenance_record(
 
     payload = _json_provenance(record)
     required_values = {
-        "schema_version": 2,
+        "schema_version": 3,
         "analysis": "phase4_boundary_stress",
         "source_definition": "authoritative_phase2_paper_mean_label",
         "ranges_redefined": False,
@@ -973,6 +1030,8 @@ def validate_boundary_provenance_record(
         "frozen_final_model_required": True,
         "boundary_driven_tuning_forbidden": True,
         "threshold_or_architecture_selection_permitted": False,
+        "evaluated_population": BOUNDARY_EVALUATED_POPULATION,
+        "source_validity_note": BOUNDARY_SOURCE_VALIDITY_NOTE,
     }
     for field, expected in required_values.items():
         if type(payload.get(field)) is not type(expected) or payload.get(field) != expected:
@@ -1024,9 +1083,43 @@ def validate_boundary_provenance_record(
     if payload.get("ordered_boundary_cohort_sha256") != sha256_json(identities):
         raise Phase4BoundaryError("Boundary ordered cohort hash is inconsistent")
 
+    # Reconcile the NEW population ledger to the same frozen, checksummed
+    # canonical bytes. Self-consistent counts/hashes alone cannot authorize a
+    # fabricated exclusion or hide a full-membership contract violation.
+    source = payload["source_provenance"].get("canonical_artifact")
+    if not isinstance(source, dict) or source.get("primary_ledger_member") != "canonical_nodule_ledger.csv":
+        raise Phase4BoundaryError("Boundary accounting lacks the canonical ledger binding")
+    canonical_path = Path(_canonical_text(source.get("directory"), "canonical directory")) / "canonical_nodule_ledger.csv"
+    digest = _sha256_text(source.get("primary_ledger_sha256"), "canonical ledger digest")
+    if not canonical_path.is_absolute() or not canonical_path.is_file() or sha256_file(canonical_path) != digest:
+        raise Phase4BoundaryError("Boundary accounting canonical ledger changed or is missing")
     binding = payload.get("primary_cohort_binding")
-    if not isinstance(binding, dict):
-        raise Phase4BoundaryError("Boundary provenance lacks primary cohort binding")
+    if not isinstance(binding, dict) or not isinstance(binding.get("phase3_input_fingerprint"), dict):
+        raise Phase4BoundaryError("Boundary accounting lacks the frozen primary fingerprint")
+    checksum_path = canonical_path.parent / "checksums.json"
+    expected_checksum = _sha256_text(
+        binding["phase3_input_fingerprint"].get("canonical_checksum_ledger_sha256"),
+        "frozen canonical checksum ledger digest",
+    )
+    if not checksum_path.is_file() or sha256_file(checksum_path) != expected_checksum:
+        raise Phase4BoundaryError("Boundary accounting checksum ledger differs from the frozen fingerprint")
+    checksum_record = _read_json_object(checksum_path, "canonical checksum ledger")
+    if checksum_record.get("files", {}).get(canonical_path.name) != digest:
+        raise Phase4BoundaryError("Boundary accounting canonical digest differs from the frozen checksum ledger")
+    canonical = _read_exact_csv(canonical_path, LEDGER_COLUMNS, "canonical boundary accounting")
+    eligible, reconstructed = isolate_phase2_boundary_cohort(
+        canonical, primary_nodule_ids=primary_supervision,
+        source_provenance=payload["source_provenance"],
+    )
+    if sha256_file(canonical_path) != digest:
+        raise Phase4BoundaryError("Boundary accounting canonical ledger changed during validation")
+    if sha256_json(payload.get("source_validity_accounting")) != sha256_json(reconstructed["source_validity_accounting"]):
+        raise Phase4BoundaryError("Boundary source-validity accounting differs from the canonical ledger")
+    eligible_ids = reconstructed["ordered_identities"]
+    projected = [{key: row[key] for key in expected} for row, expected in zip(identities, eligible_ids)]
+    if len(identities) != len(eligible) or projected != eligible_ids:
+        raise Phase4BoundaryError("Evaluated boundary identities differ from the source-valid subset")
+
     calculated_binding = _primary_binding(primary_supervision, binding)
     for field in (
         "cohort_view",
@@ -1234,7 +1327,7 @@ def load_validated_phase2_boundary_source(
     )
     record.update(
         {
-            "schema_version": 2,
+            "schema_version": 3,
             "ordered_identities": identities,
             "boundary_cohort_sha256": sha256_json(logical),
             "ordered_boundary_cohort_sha256": sha256_json(identities),
@@ -1316,6 +1409,9 @@ construct_boundary_cohort = isolate_phase2_boundary_cohort
 
 
 __all__ = [
+    "BOUNDARY_EVALUATED_POPULATION",
+    "BOUNDARY_EXCLUSION_FIELDS",
+    "BOUNDARY_SOURCE_VALIDITY_NOTE",
     "BOUNDARY_LIMITATIONS",
     "BOUNDARY_RANGES",
     "BOUNDARY_RANGE_RECORDS",

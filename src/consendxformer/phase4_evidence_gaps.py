@@ -17,6 +17,7 @@ from .phase4_ablation_runner import (
 from .phase4_boundary import (
     BOUNDARY_LIMITATIONS, load_repository_phase4_boundary_source,
     assert_boundary_source_snapshot_unchanged, _phase2_mean_boundary,
+    BOUNDARY_EXCLUSION_FIELDS, BOUNDARY_EVALUATED_POPULATION, BOUNDARY_SOURCE_VALIDITY_NOTE,
 )
 from .phase4_evaluation_metrics import (
     UNCERTAINTY_DEFINITION, RISK_COVERAGE_DEFINITION, predictive_entropy,
@@ -212,6 +213,8 @@ def boundary_summary(results, supervision):
                           "n_patients": int(group.patient_id.nunique()),
                           **{f"mean_{column}": float(group[column].mean()) for column in values}})
     return {"warning": BOUNDARY_WARNING, "limitations": list(BOUNDARY_LIMITATIONS),
+            "evaluated_population": BOUNDARY_EVALUATED_POPULATION,
+            "source_validity_note": BOUNDARY_SOURCE_VALIDITY_NOTE,
             "n_nodules": len(pooled), "n_patients": len(patients),
             "patient_overlap_with_primary": overlap, "per_seed_regions": descriptive,
             "boundary_patients_absent_from_primary": sorted(patients - set(supervision.patient_id)),
@@ -306,13 +309,23 @@ def run_evidence_gap(*, analysis, full_source_dirs, off_source_dirs=(), output_r
         finally:
             torch.use_deterministic_algorithms(deterministic, warn_only=warn_only)
         summary, tables = boundary_summary(results, full[42].supervision)
+        accounting = boundary.provenance["source_validity_accounting"]
+        if summary["n_nodules"] != accounting["eligible_subset_count"]:
+            raise ValueError("Boundary summary count differs from the source-valid subset")
+        summary["source_validity_accounting"] = accounting
+        tables["boundary_source_invalid_exclusions.csv"] = pd.DataFrame(
+            accounting["exclusion_records"], columns=BOUNDARY_EXCLUSION_FIELDS)
     paths = [atomic_write_json(layout.output_dir / "evaluation.json", {
         "evaluation_id": evaluation_id, "analysis": analysis, "summary": summary,
         "training_performed": False, "model_selection_performed": False,
         "causal_superiority_claimed": False, "exploratory_post_hoc": True}),
         atomic_write_json(layout.provenance_dir / "provenance.json", identity),
         atomic_write_text(layout.output_dir / "README.md", WARNING + "\n\n" +
-                          (BOUNDARY_WARNING if boundary is not None else summary["pooling"]) + "\n")]
+                          (BOUNDARY_WARNING + "\n\n" + BOUNDARY_SOURCE_VALIDITY_NOTE + "\n" +
+                           f"Full boundary membership: {accounting['full_boundary_membership_count']}; "
+                           f"source-invalid exclusions: {accounting['source_invalid_exclusion_count']}; "
+                           f"evaluated source-valid subset: {accounting['eligible_subset_count']}."
+                           if boundary is not None else summary["pooling"]) + "\n")]
     for name, table in tables.items():
         paths.append(atomic_write_csv(layout.tables_dir / name, table))
     if curves:
