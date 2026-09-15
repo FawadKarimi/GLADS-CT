@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "source_final_model_commit": "e1b174490245c616e355ef7c0c6f7c3c239d3acd",
+  "final_seeds": [42, 43, 44],
+  "selected_lambdas": {
+    "lambda_ordinal": 0.5,
+    "lambda_attention": 0.05
+  },
+  "class_order": ["benign", "indeterminate", "malignant"],
+  "cohort": {
+    "cohort_view": "paper_aligned_multi_reader_2_to_4",
+    "sample_count": 1133,
+    "test_sample_count": 183,
+    "manifest_bundle_sha256": "0c983f0ebbc6dd70623b570c8a657aa14ccc550ac590b577648b3163bc8a01e3",
+    "supervision_sha256": "cbe4e402825665428ee890887963437d2bc480f8616bd7ec7999c667759ccc25",
+    "ordered_supervision_sha256": "2bae364b180f75cf2332714cc486a517540fcff3b9e94c48d83f59d0d9d6789a"
+  },
+  "calibration": {
+    "nll_probability_floor": 1e-15,
+    "brier_definition": "mean_sample_sum_class_squared_error",
+    "ece": {
+      "definition": "top_label_absolute_accuracy_confidence_gap",
+      "binning": "15_equal_width_bins_over_[0,1]_left_closed_right_open_except_last",
+      "bin_count": 15,
+      "bin_edges": [
+        0.0,
+        0.06666666666666667,
+        0.13333333333333333,
+        0.2,
+        0.26666666666666666,
+        0.3333333333333333,
+        0.4,
+        0.4666666666666667,
+        0.5333333333333333,
+        0.6,
+        0.6666666666666666,
+        0.7333333333333333,
+        0.8,
+        0.8666666666666667,
+        0.9333333333333333,
+        1.0
+      ]
+    }
+  },
+  "uncertainty": {
+    "predictive_entropy": "natural_log_nats",
+    "disagreement_threshold_rule": "median_of_frozen_training_split",
+    "disagreement_tie_policy": "high_if_greater_than_or_equal_to_threshold",
+    "pooled_rule": "mean_predictive_entropy_per_nodule_across_seeds_before_spearman",
+    "risk_coverage": {
+      "risk": "zero_one_classification_error",
+      "ordering": "ascending_predictive_entropy",
+      "tie_break": ["patient_id", "series_instance_uid", "nodule_id"],
+      "aurc": "right_endpoint_mean_of_risk_at_coverages_k_over_n_for_k_1_to_n"
+    }
+  },
+  "attention_alignment": {
+    "interpretation": "attention_alignment_spatial_correspondence_not_causal_explanation",
+    "kl_direction": "soft_consensus_target_to_dsa_attention",
+    "normalization": "nonnegative_unit_spatial_mass",
+    "soft_mask_threshold": 0.5,
+    "attention_threshold_rule": "per_map_quantile",
+    "attention_quantile": 0.9,
+    "quantile_method": "linear"
+  },
+  "boundary_stress": {
+    "authoritative_rule": "phase2_paper_mean_label_boundary_zone",
+    "lower_band": {"minimum_inclusive": 2.5, "maximum_exclusive": 3.0},
+    "upper_band": {"minimum_exclusive": 3.0, "maximum_inclusive": 3.5},
+    "primary_metrics_excluded": true,
+    "target_interpretation": "retain_boundary_zone_and_continuous_reader_targets_without_forcing_a_primary_true_class"
+  },
+  "bootstrap": {
+    "unit": "patient",
+    "seed": 20260914,
+    "resamples": 10000,
+    "confidence_level": 0.95,
+    "interval": "percentile",
+    "aggregate_standard_deviation_ddof": 1
+  },
+  "safety": {
+    "test_driven_tuning": false,
+    "temperature_scaling": false,
+    "threshold_tuning": false,
+    "model_retraining": false,
+    "ablation_training_in_this_milestone": false,
+    "overwrite_source_experiments": false,
+    "all_toggles_off_is_b1": false
+  }
+}

@@ -106,6 +106,9 @@ def test_dataset_returns_complete_multirater_supervision(tmp_path):
     assert sample["nodule_id"] == "LIDC-IDRI-0001__nodule-abc123"
     assert sample["series_instance_uid"] == "series-1"
     assert sample["true_class"] == "indeterminate"
+    assert sample["split"] == "train"
+    assert sample["nodule_sha256"] == "abc123"
+    assert sample["rendered_mask_path"] == "resolution_64/example_masks.npz"
 
 
 def test_dataset_preserves_baseline_label_order(tmp_path):

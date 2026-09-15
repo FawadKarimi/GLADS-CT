@@ -384,6 +384,14 @@ def _supervision_hashes(frame: pd.DataFrame) -> tuple[str, str]:
     return sha256_json(logical), sha256_json(ordered)
 
 
+def phase4_supervision_hashes(frame: pd.DataFrame) -> tuple[str, str]:
+    """Return the canonical logical/ordered hashes used by Phase 4 readiness."""
+
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError("frame must be a pandas DataFrame")
+    return _supervision_hashes(frame)
+
+
 def _split_counts(frame: pd.DataFrame) -> tuple[tuple[str, int], ...]:
     return tuple(
         (split, int((frame["split"].astype(str) == split).sum()))
