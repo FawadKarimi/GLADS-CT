@@ -1,10 +1,58 @@
-# Phase 4 evidence-gap analysis infrastructure
+# Phase 4 evidence gaps and boundary execution status
 
-This milestone implements analysis infrastructure only. It does not run the
-university analyses or establish any new research result. Do not retrain, tune,
-change thresholds/lambdas, or modify completed source bundles.
+## Completed boundary execution (supplied audit)
 
-## Future execution
+The user-supplied boundary audit records the following completed execution.
+These findings are transcribed from the supplied audit summary; this
+documentation update does not rerun or independently re-audit the server data.
+
+- Evaluation: `phase4-evaluation-febe8402535570e1`.
+- Execution commit: `b2a91901c022d73e94d3f683933dd74aced9eda0`.
+- Full boundary membership: 729 nodules; 3 pre-existing malformed-geometry
+  exclusions; source-valid evaluated subset: 726 nodules from 450 patients.
+- All three frozen seeds, 42/43/44, were evaluated. Class predictions varied
+  substantially across seeds; completion does not imply seed-stable behavior.
+- Primary-training patient overlap: 198 of 450 evaluated patients (44.0%).
+
+This is completed **descriptive stress analysis only**, not independent
+held-out performance. Exclusion of boundary nodules from the primary cohort
+does not remove the documented patient overlap. No superiority or causal
+superiority claim is supported by this execution, and its results must not be
+used for model selection, threshold changes or tuning.
+
+The boundary-execution evidence gap is now closed at this descriptive scope.
+The historical implementation and paused-execution notes below predate this
+audit; they are retained for provenance, not as the current execution status.
+The failed server attempt and all existing result bundles remain preserved.
+
+## Remaining evidence status
+
+- Verified limitation of the completed boundary evidence: it does not provide
+  independent held-out boundary performance or establish superiority. The
+  44.0% primary-training patient overlap and substantial seed variation must
+  remain explicit in interpretation.
+- Previously reported completed: the full-model versus
+  `disagreement_weighting`-OFF uncertainty comparison. Its completion and
+  audit evidence are not independently reverified by this boundary-only
+  documentation update. Preserve the existing uncertainty bundle; this
+  verification limitation is not a reason to rerun the comparison.
+  No uncertainty-result conclusions are established by the boundary audit.
+- Other primary, attention-comparison and ablation-analysis statuses are not
+  reassessed or marked complete by this update. Boundary completion is not
+  evidence of completion of those separate analyses.
+
+## Historical infrastructure milestone
+
+The original milestone implemented analysis infrastructure only; it did not run
+the university analyses or establish a new research result. The subsequent
+completed boundary execution is recorded above. The agreed methodology remains
+unchanged: do not retrain, tune, change thresholds/lambdas, or modify completed
+source bundles.
+
+## Execution commands (reference only)
+
+These commands are retained for reproducibility, not as a request to rerun the
+completed boundary evaluation. Any new execution requires separate authorization.
 
 Run from the clean repository root on `phase4-consendxformer` after review.
 Use the existing Python environment and frozen rendered inputs. Both commands
@@ -27,7 +75,7 @@ PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES="" python scripts/47_run_phase4_e
   --off-source "${OFF44:?Set completed disagreement-OFF seed 44 directory}"
 ```
 
-Boundary stress (Bash; frozen persisted-best checkpoint inference only):
+Boundary stress (historical command; frozen persisted-best checkpoint inference only):
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES="" python scripts/47_run_phase4_evidence_gaps.py boundary \
@@ -115,11 +163,12 @@ not imply patient non-overlap.
 Boundary results are **descriptive stress testing only**, not an independent
 held-out test set. No primary class target is invented and no accuracy, AUC,
 calibration-to-hard-label score or primary headline metric is computed. The
-results must not drive model selection, filtering or tuning. Actual boundary
-counts and patient overlaps are unknown until the reviewed future execution;
-this implementation makes no claims about them.
+results must not drive model selection, filtering or tuning. At the original
+implementation stage, actual boundary counts and patient overlaps were not yet
+established. The completed execution's audited counts and overlap are now
+recorded above; the methodological limits in this section still apply.
 
-### Source-validity accounting correction (inference remains paused)
+### Historical source-validity accounting correction (pre-execution)
 
 Boundary membership is determined by the same Phase 2 rule before source
 validity is considered. Identity, rating/marker, split and primary-nodule
@@ -151,14 +200,20 @@ Both boundary reporting entrypoints describe the evaluated population as the
 `boundary_source_invalid_exclusions.csv` separately from prediction tables.
 This does not turn boundary stress testing into primary held-out performance.
 
-The supplied server diagnostic reports 729 boundary members: 726 with `valid`
-status and three pre-existing malformed-geometry exclusions. These are supplied
-evidence, not locally verified data or production selection constants. Rendering
-integrity and evaluation eligibility of the 726 cases have not been established
-by that diagnostic or by this patch. Boundary inference remains paused pending
-patch review.
+At the time of this correction, the supplied server diagnostic reported 729
+boundary members: 726 with `valid` status and three pre-existing malformed-
+geometry exclusions. Those were supplied evidence, not locally verified data
+or production selection constants. That diagnostic and the patch alone had
+not established rendering integrity or evaluation eligibility of the 726 cases;
+boundary inference was paused pending patch review. This historical limitation
+of the diagnostic must not be confused with the later completed execution
+recorded above.
 
-### Boundary entropy numerical preparation
+### Historical boundary entropy correction and retained numerical policy
+
+This correction was published in execution commit
+`b2a91901c022d73e94d3f683933dd74aced9eda0`, before the completed evaluation above.
+Its entropy-only preparation policy remains part of the execution provenance.
 
 Boundary inference accepts finite class probabilities in `[0,1]` whose row
 sums satisfy `rtol=0, atol=1e-6`. Float32 probabilities promoted to float64 can
@@ -189,4 +244,5 @@ threshold or a change to the cohort. The supplied server population remains
 729 full boundary members, 3 source-invalid exclusions and 726 eligible members;
 the patch does not locally reverify these data or modify their accounting.
 The failed server attempt and all existing outputs must be retained. No real
-analyses or inference are performed as part of this implementation milestone.
+analyses or inference were performed as part of that implementation milestone;
+the later audited boundary execution is distinct from the implementation work.
