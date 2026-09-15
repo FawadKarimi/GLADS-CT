@@ -33,6 +33,7 @@ from .phase4_evaluation_runner import (
     aggregate_seed_records,
 )
 from .phase4_posthoc import load_frozen_final_best_model, predict_validated_boundary_cohort
+from .phase4_boundary_entropy import boundary_entropy_policy, prepare_boundary_entropy_inputs
 
 NAMESPACE = PROJECT_ROOT / "artifacts/phase4/evidence_gaps"
 WARNING = (
@@ -165,6 +166,7 @@ def boundary_summary(results, supervision):
     keys = ["patient_id", "nodule_id", "series_instance_uid", "split", "boundary_stratum",
             "mean_malignancy", "malignancy_score_sum", "n_valid_malignancy_ratings"]
     frames, reference = [], None
+    entropy_diagnostics = []
     for seed in FINAL_SEEDS:
         result = by_seed[seed]
         frame = pd.DataFrame(result["rows"])
@@ -181,7 +183,11 @@ def boundary_summary(results, supervision):
             raise ValueError("Boundary cohort/order differs across seeds")
         reference = identities
         probabilities = _probabilities(frame)
-        frame["predictive_entropy_nats"] = predictive_entropy(probabilities)
+        entropy_inputs, diagnostics = prepare_boundary_entropy_inputs(probabilities)
+        frame["predictive_entropy_nats"] = predictive_entropy(entropy_inputs)
+        for column, values in diagnostics["per_row"].items():
+            frame[column] = values
+        entropy_diagnostics.append({"seed": seed, **diagnostics["summary"]})
         if frame.predicted_class.tolist() != [CLASS_ORDER[int(index)] for index in probabilities.argmax(axis=1)]:
             raise ValueError("Boundary predicted class differs from probabilities")
         frame["confidence"] = probabilities.max(axis=1)
@@ -215,6 +221,8 @@ def boundary_summary(results, supervision):
     return {"warning": BOUNDARY_WARNING, "limitations": list(BOUNDARY_LIMITATIONS),
             "evaluated_population": BOUNDARY_EVALUATED_POPULATION,
             "source_validity_note": BOUNDARY_SOURCE_VALIDITY_NOTE,
+            "boundary_entropy_preparation_policy": boundary_entropy_policy(),
+            "boundary_entropy_diagnostics_per_seed": entropy_diagnostics,
             "n_nodules": len(pooled), "n_patients": len(patients),
             "patient_overlap_with_primary": overlap, "per_seed_regions": descriptive,
             "boundary_patients_absent_from_primary": sorted(patients - set(supervision.patient_id)),
@@ -280,6 +288,8 @@ def run_evidence_gap(*, analysis, full_source_dirs, off_source_dirs=(), output_r
                 "evaluation_config": config, "warning": WARNING,
                 "input_snapshot": snapshots,
                 "boundary_provenance": None if boundary is None else dict(boundary.provenance)}
+    if boundary is not None:
+        identity["boundary_entropy_preparation_policy"] = boundary_entropy_policy()
     evaluation_id = f"phase4-evaluation-{sha256_json(identity)[:16]}"
     root = guard_new_namespace(NAMESPACE / analysis if output_root is None else output_root)
     # Custom output roots must still use the distinct analysis namespace.
@@ -324,10 +334,24 @@ def run_evidence_gap(*, analysis, full_source_dirs, off_source_dirs=(), output_r
                           (BOUNDARY_WARNING + "\n\n" + BOUNDARY_SOURCE_VALIDITY_NOTE + "\n" +
                            f"Full boundary membership: {accounting['full_boundary_membership_count']}; "
                            f"source-invalid exclusions: {accounting['source_invalid_exclusion_count']}; "
-                           f"evaluated source-valid subset: {accounting['eligible_subset_count']}."
+                           f"evaluated source-valid subset: {accounting['eligible_subset_count']}.\n\n"
+                           "Entropy alone uses a private float64 copy normalized by row sums, "
+                           "after the unchanged inference tolerance (rtol=0, atol=1e-6) is checked. "
+                           "The shared entropy guard remains strict. Raw probabilities, classes, "
+                           "confidence and probability summaries are unchanged. Per-row numerical "
+                           "diagnostics are in boundary_predictions_per_seed.csv; the policy and "
+                           "per-seed diagnostics are in provenance/boundary_entropy_preparation.json."
                            if boundary is not None else summary["pooling"]) + "\n")]
     for name, table in tables.items():
         paths.append(atomic_write_csv(layout.tables_dir / name, table))
+    if boundary is not None:
+        paths.append(atomic_write_json(layout.provenance_dir / "boundary_entropy_preparation.json", {
+            "evaluation_id": evaluation_id,
+            "policy": summary["boundary_entropy_preparation_policy"],
+            "per_seed": summary["boundary_entropy_diagnostics_per_seed"],
+            "per_row_evidence": "tables/boundary_predictions_per_seed.csv",
+            "per_row_evidence_sha256": sha256_file(layout.tables_dir / "boundary_predictions_per_seed.csv"),
+        }))
     if curves:
         paths.append(atomic_write_json(layout.curves_dir / "risk_coverage.json", curves))
     def recheck():

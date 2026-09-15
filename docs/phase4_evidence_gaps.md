@@ -157,3 +157,36 @@ evidence, not locally verified data or production selection constants. Rendering
 integrity and evaluation eligibility of the 726 cases have not been established
 by that diagnostic or by this patch. Boundary inference remains paused pending
 patch review.
+
+### Boundary entropy numerical preparation
+
+Boundary inference accepts finite class probabilities in `[0,1]` whose row
+sums satisfy `rtol=0, atol=1e-6`. Float32 probabilities promoted to float64 can
+meet that contract but fail the shared entropy metric's unchanged `1e-8`
+row-sum guard. The boundary summary now prepares entropy inputs only: it copies
+probabilities into a private float64 `[N,3]` array in the existing class order,
+rejects empty/malformed/nonfinite/out-of-range or excessive-mass-error inputs,
+and only then divides a separate copy by its row sums. The existing
+`predictive_entropy` function validates that copy with its original strict
+guard and computes natural-log entropy. Nothing is clipped or dropped.
+
+Raw `prob_*` columns, predicted classes, confidence, row identities/order and
+probability summaries remain unchanged. Only entropy and summaries derived
+from entropy use the normalized copy. No normalization is added to primary or
+uncertainty evaluations, the inference guard, or source-validity accounting.
+
+The boundary evaluation identity/provenance and `evaluation.json` record
+`boundary_entropy_preparation_policy`. Raw prediction rows include the raw
+row sum, signed and absolute mass deviations, normalization factor, normalized
+sum and maximum absolute probability adjustment. Per-seed diagnostics report
+row counts, nonunit-mass counts and maximum corrections. These diagnostics and
+the policy are also exported to `provenance/boundary_entropy_preparation.json`,
+which binds the raw evidence table by SHA-256; the existing artifact manifest
+and completion marker cover both files.
+
+This is a numerical compatibility correction, not a new probability acceptance
+threshold or a change to the cohort. The supplied server population remains
+729 full boundary members, 3 source-invalid exclusions and 726 eligible members;
+the patch does not locally reverify these data or modify their accounting.
+The failed server attempt and all existing outputs must be retained. No real
+analyses or inference are performed as part of this implementation milestone.
