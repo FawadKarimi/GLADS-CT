@@ -10,6 +10,7 @@ artifacts/phase1/
 artifacts/phase2/runtime/
 artifacts/phase3/
 artifacts/phase4/
+artifacts/phase5/pointing_and_accuracy/
 external/LungDxFormer/
 data/
 *.dcm

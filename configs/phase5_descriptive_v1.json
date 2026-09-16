@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "protocol": "phase5_descriptive_v1",
+  "scope": "pointing_and_accuracy_only",
+  "proposal_sha256_lf": "4d3f7500071a5c352b2a918c0d26ffabc90b4e11af5982cdfdef7880e1054620",
+  "analysis_status": "exploratory_post_hoc",
+  "preregistered": false,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "models": [
+    "ConsenDxFormer",
+    "B1",
+    "attention_alignment_off",
+    "disagreement_weighting_off",
+    "ordinal_auxiliary_off",
+    "hierarchical_fusion_off"
+  ],
+  "test_nodules": 183,
+  "test_patients": 99,
+  "native_shape": [
+    8,
+    8
+  ],
+  "model_forwards": 0,
+  "training_permitted": false,
+  "pointing": {
+    "mask": "unnormalized_archived_native_soft_mask",
+    "threshold": 0.5,
+    "ties": "exact_maximum_then_first_row_major_index",
+    "empty_target": "miss_retained",
+    "prior": "existing_training_only_archive_once",
+    "flagged_nodule": "LIDC-IDRI-0052__nodule-49c6132bfb77f3f1",
+    "denominator": "all_183_nodules",
+    "causal_interpretation": false
+  },
+  "accuracy": {
+    "individual_intervals": 18,
+    "paired_intervals": 15,
+    "resamples": 10000,
+    "seed": 20260914,
+    "rng": "PCG64",
+    "unit": "patient",
+    "draws": "one_common_ledger_all_models_and_seeds",
+    "estimand": "nodule_weighted_accuracy",
+    "difference": "complete_minus_comparator",
+    "quantiles": [
+      0.025,
+      0.975
+    ],
+    "quantile_method": "linear",
+    "conditional_on_fit": true,
+    "descriptive": true,
+    "multiplicity_adjusted": false,
+    "simultaneous_coverage": false
+  },
+  "excluded": {
+    "insertion_deletion": "not_executed",
+    "formal_testing": "unresolved",
+    "multiplicity": "unresolved",
+    "patient_weighted_correctness": "not_computed",
+    "calibration_campaign": "not_executed"
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "C_B1_42",
+      "seed": 42,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_B1_43",
+      "seed": 43,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_B1_44",
+      "seed": 44,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_42",
+      "seed": 42,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_43",
+      "seed": 43,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_44",
+      "seed": 44,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_42",
+      "seed": 42,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_43",
+      "seed": 43,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_44",
+      "seed": 44,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_42",
+      "seed": 42,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_43",
+      "seed": 43,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_44",
+      "seed": 44,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_42",
+      "seed": 42,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_43",
+      "seed": 43,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_44",
+      "seed": 44,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    }
+  ],
+  "full_supplemental_completion": false
+}
