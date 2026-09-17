@@ -11,6 +11,9 @@ import sys
 import time
 from copy import deepcopy
 
+from .phase5_cuda_identity import (MAPPING_METHOD, query_driver_identity,
+                                  validate_driver_identity, pci_components)
+
 _BOOTSTRAP = None
 UUID_PATTERN = r"GPU-[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"
 
@@ -29,7 +32,8 @@ def gpu_inventory():
             raise ValueError("A full physical GPU UUID is required; MIG/abbreviations are not supported")
         record = dict(index=int(index), uuid=uuid, name=name, pci_bus_id=bus,
                       total_mib=int(total), used_mib=int(used), driver_version=driver)
-        if not name or not bus or not driver or not 0 <= record["used_mib"] <= record["total_mib"]:
+        pci_components(bus)
+        if not name or not driver or record["total_mib"] <= 0 or not 0 <= record["used_mib"] <= record["total_mib"]:
             raise ValueError("Invalid NVIDIA device inventory")
         rows.append(record)
     if not rows or len({r["uuid"] for r in rows}) != len(rows):
@@ -109,16 +113,28 @@ def verify_runtime_device(torch, device):
         raise ValueError("Missing/changed pre-import UUID isolation")
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise ValueError("Exactly one isolated CUDA device must be available; no fallback")
-    prop = torch.cuda.get_device_properties(0)
     gpu = record["physical_gpu"]
-    if prop.name != gpu["name"] or abs(prop.total_memory - gpu["total_mib"]*1024**2) > 1024**2:
+    direct = query_driver_identity()
+    validate_driver_identity(direct, gpu)
+    prop = torch.cuda.get_device_properties(0)
+    if prop.name != gpu["name"]:
         raise ValueError("Logical device properties disagree with selected physical GPU")
-    # torch 2.3 does not expose UUID in its device properties. NVIDIA's exact-UUID
-    # CUDA_VISIBLE_DEVICES mapping plus one-device enumeration supplies the binding.
+    memory = memory_diagnostics(gpu["total_mib"], prop.total_memory)
     return {"device": "cuda", "logical_device": "cuda:0", "physical_gpu": {
         k: gpu[k] for k in ("uuid", "name", "pci_bus_id", "total_mib", "driver_version")},
         "capability": [prop.major, prop.minor], "logical_total_bytes": prop.total_memory,
-        "mapping_verification": "exact_nvidia_smi_uuid_before_torch_import_and_single_logical_device"}
+        "logical_name": prop.name, "torch_device_count": 1, "direct_driver_identity": direct,
+        "memory_diagnostics": memory, "mapping_verification": MAPPING_METHOD}
+
+
+def memory_diagnostics(nvidia_total_mib, torch_total_bytes):
+    if any(type(v) is not int or v <= 0 for v in (nvidia_total_mib, torch_total_bytes)):
+        raise ValueError("GPU memory totals must be positive integers")
+    return {"schema": "phase5_gpu_memory_diagnostics_v1",
+            "nvidia_smi_total_mib": nvidia_total_mib,
+            "nvidia_smi_total_bytes": nvidia_total_mib * 1024**2,
+            "torch_device_properties_total_bytes": torch_total_bytes,
+            "torch_minus_nvidia_smi_bytes": torch_total_bytes - nvidia_total_mib * 1024**2}
 
 
 def bootstrap_record():
@@ -168,11 +184,20 @@ def validate_device_evidence(record, runtime):
             or runtime["logical_device"] != "cuda:0" or record["visible_devices"] != gpu["uuid"]
             or environment["CUBLAS_WORKSPACE_CONFIG"] != ":4096:8" or environment["CUDA_DEVICE_ORDER"] != "PCI_BUS_ID"
             or runtime["physical_gpu"] != {k: gpu[k] for k in ("uuid", "name", "pci_bus_id", "total_mib", "driver_version")}
-            or runtime["mapping_verification"] != "exact_nvidia_smi_uuid_before_torch_import_and_single_logical_device"
-            or abs(runtime["logical_total_bytes"] - gpu["total_mib"]*1024**2) > 1024**2):
+            or type(runtime["physical_gpu"].get("total_mib")) is not int
+            or runtime.get("mapping_verification") != MAPPING_METHOD
+            or runtime.get("logical_name") != gpu["name"]
+            or type(runtime.get("torch_device_count")) is not int or runtime["torch_device_count"] != 1):
         raise ValueError("Invalid physical/logical GPU binding")
+    validate_driver_identity(runtime.get("direct_driver_identity"), gpu)
+    expected_memory = memory_diagnostics(gpu.get("total_mib"), runtime.get("logical_total_bytes"))
+    memory = runtime.get("memory_diagnostics")
+    if (not isinstance(memory, dict) or memory != expected_memory
+            or any(type(memory.get(k)) is not int for k in expected_memory if k != "schema")):
+        raise ValueError("GPU memory diagnostics differ from raw source totals/delta")
     inventory = record["inventory"]
     if (len({g["uuid"] for g in inventory}) != len(inventory)
+            or any(type(g.get("total_mib")) is not int or g["total_mib"] <= 0 for g in inventory)
             or [g for g in inventory if g["uuid"] == gpu["uuid"]] != [gpu]
             or type(gpu["index"]) is not int or gpu["index"] < 0
             or type(gpu["used_mib"]) is not int or not 0 <= gpu["used_mib"] <= min(256, gpu["total_mib"])

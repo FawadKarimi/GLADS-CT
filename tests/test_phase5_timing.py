@@ -416,6 +416,11 @@ def test_uuid_bootstrap_before_torch_and_mapping_with_explicit_device_stubs(monk
     assert record["physical_gpu"]["index"] == 1 and os.environ["CUDA_VISIBLE_DEVICES"] == uuid
     fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: True, device_count=lambda: 1,
         get_device_properties=lambda i: SimpleNamespace(name=physical["name"], total_memory=11264*1024**2, major=7, minor=5)))
+    from consendxformer.phase5_cuda_identity import IDENTITY_SCHEMA, DRIVER_API
+    monkeypatch.setattr(device_api, "query_driver_identity", lambda: {
+        "schema": IDENTITY_SCHEMA, "api": DRIVER_API, "logical_ordinal": 0, "device_count": 1,
+        "uuid": uuid, "uuid_bytes_hex": uuid[4:].replace("-", ""),
+        "pci_bus_id": "0000:01:00.0", "pci_components": [0, 1, 0, 0]})  # Explicit identity stub.
     mapping = device_api.verify_runtime_device(fake_torch, "cuda")
     assert mapping["logical_device"] == "cuda:0" and mapping["physical_gpu"]["uuid"] == uuid
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "0")

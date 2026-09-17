@@ -70,14 +70,59 @@ is an operational safety ceiling, not a scientific threshold, an availability
 reservation or protection from later contention. Failure does not switch GPUs.
 
 The process sets `CUDA_VISIBLE_DEVICES` to the verified UUID and
-`CUDA_DEVICE_ORDER=PCI_BUS_ID`, then verifies exactly one available logical device
-`cuda:0` with matching name and total memory (NVIDIA MiB rounding allowance only).
-The full UUID and physical/logical mapping are recorded. PyTorch 2.3 does not
-expose UUID in device properties, so verification uses NVIDIA's full-UUID
-visibility mapping, not an unsupported PyTorch property. See
-[NVIDIA CUDA environment-variable semantics](https://docs.nvidia.com/cuda/cuda-c-programming-guide/#cuda-environment-variables)
-and the [PyTorch 2.3 device-property binding](https://github.com/pytorch/pytorch/blob/v2.3.0/torch/csrc/cuda/Module.cpp).
-CPU tests use explicit CUDA/device stubs; they do not validate real GPU behavior.
+`CUDA_DEVICE_ORDER=PCI_BUS_ID`. Both Torch and the CUDA driver must enumerate
+exactly one logical device. `phase5_cuda_identity` queries **ordinal 0**, not the
+NVIDIA management index, using `cuDeviceGet`, `cuDeviceGetUuid_v2` and
+`cuDeviceGetPCIBusId`. The directly queried 16 UUID bytes must identify the
+selected physical UUID. PCI domain/bus/device/function are parsed as numeric
+components and compared, so `00000000:3B:00.0` equals `0000:3b:00.0` without
+discarding either raw string. Full four- or eight-digit domains, two-digit bus
+and device, and a function in 0..7 are required; truncated/malformed addresses
+fail. The exact Torch/management name check remains auxiliary. Torch 2.3's
+missing UUID/PCI properties are not required, and neither name, memory, index
+nor the environment alone can substitute for a failed direct query.
+
+The small standard-library ctypes binding loads `libcuda.so.1` lazily through
+the Linux system loader only in the live CUDA path. It never searches toolkit
+stub paths, downloads libraries or tries an alternative driver/device. CUDA
+execution through this helper is Linux-only; Windows CPU execution remains
+supported. The declarations use Linux's C calling convention (`CDLL`), C `int`
+for `CUresult`/`CUdevice`, unsigned int for `cuInit` flags, a 16-byte `CUuuid`
+structure, and a writable 32-byte PCI buffer (at least the API's 13-byte minimum,
+also accommodating an eight-digit domain). Every required symbol and return code
+is checked, including `cuInit(0)`; a toolkit stub's non-success initialization
+cannot pass. An unterminated/non-ASCII buffer, zero UUID, wrong device count or
+identity mismatch fails before model construction/research loading. There are no
+contexts created by this helper, model probes, tensor allocations or kernel
+launches. See NVIDIA's [CUDA 12.1 device declarations and UUID semantics](https://docs.nvidia.com/cuda/archive/12.1.0/cuda-driver-api/group__CUDA__DEVICE.html),
+[PCI buffer contract](https://docs.nvidia.com/cuda/archive/12.1.0/cuda-driver-api/group__CUDA__MEM.html)
+and [initialization contract](https://docs.nvidia.com/cuda/archive/12.1.0/cuda-driver-api/group__CUDA__INITIALIZE.html).
+The [NVIDIA header's CUDAAPI definitions](https://docs.nvidia.com/cuda/cuda-driver-api/cuda_driver_api/cuda_8h_source.html)
+also distinguish Windows stdcall from the Linux C convention; no Windows CUDA
+calling-convention compatibility is inferred from these CPU tests.
+
+Timing specification container v1 now explicitly requires `evidence_revision: 2`
+and mapping marker `cuda_driver_uuid_pci_v2`. Runtime provenance includes
+`direct_driver_identity` (API, schema, queried ordinal/count, raw UUID bytes,
+canonical UUID, raw PCI and numeric components), Torch count and auxiliary name.
+Missing fields or the old environment-only method cannot certify this revision.
+Exact specification checks reject earlier timing evidence, without migrating or
+rewriting it. Historical research-v1 read-only validation remains untouched.
+The new fields participate in existing runtime/source hashes, run identity,
+research compatibility checks and embedded copy/readback. Offline validation
+checks recorded bindings without querying or loading any GPU driver. CPU tests
+exercise native signatures and buffers with explicitly labeled ctypes callbacks;
+they do not validate an actual CUDA installation or server compatibility.
+
+Memory equality across APIs is **not device identity**. Runtime diagnostics
+retain `nvidia_smi_total_mib`, its exact `nvidia_smi_total_bytes` conversion,
+`torch_device_properties_total_bytes`, and signed `torch_minus_nvidia_smi_bytes`.
+Positive integer totals and integer diagnostics are required; offline validation
+recomputes the conversion and delta. No tolerance, clipping or fitted offset
+connects these readings. They remain part of strict timing/research runtime
+compatibility, and existing allocator/free/peak consistency guards are unchanged.
+NVIDIA documents [framebuffer memory reporting/reservations](https://docs.nvidia.com/deploy/nvidia-smi/index.html#fb-memory-usage),
+but that does not identify the cause of any particular cross-API difference.
 
 Both entry points also capture the inherited raw `CUDA_LAUNCH_BLOCKING` value
 before PyTorch/CUDA initialization, without writing or normalizing it. Unset is
@@ -140,7 +185,7 @@ and clock overhead legitimately lengthen the loop. Warm-up stays excluded from
 extrapolation; preparation and bounded export remain separate and are not added
 to the loop's nested measurements.
 
-These are required corrections to the unpublished timing-evidence v1 contract,
+T1/T2 were required corrections to the then-unpublished timing-evidence v1 contract,
 not changes to the fixed benchmark schedule or frozen scientific protocol. Older
 candidate timing records missing these fields are not accepted as new evidence.
 Historical research v1 read-only validation remains unchanged and requires no
@@ -197,6 +242,46 @@ the full supplement and Stage A remain incomplete.
 
 ## Proposed future invocation — NOT executed or authorized here
 
+### Supplied failed attempt and zero-forward mapping check
+
+The supplied server record says `timing-review-01` failed at the old memory-based
+live identity guard, before model construction, forwards or output-directory
+creation. It produced no measurements or timing bundle. Its terminal evidence
+must be retained as-is; do not manufacture a failed/completed bundle for it or
+reuse its attempt ID. The supplied diagnostic reported management total 11,264
+MiB (11,811,160,064 bytes) and Torch total 11,546,394,624 bytes, a signed difference
+of -264,765,440 bytes (-252.5 MiB), with matching names and one logical device.
+This is not a measured leak, model allocation, insufficient-free-memory result
+or proven driver-overhead amount. These are supplied observations, not locally
+verified GPU measurements or production acceptance constants.
+
+After review/publication, a separately authorized operator should first run this
+**unexecuted zero-forward mapping check** from the university checkout, replacing
+the placeholder with a freshly verified full UUID. Bootstrap performs the fresh
+availability check. Do not set or normalize `CUDA_LAUNCH_BLOCKING`; its inherited
+raw value is captured. This command writes no bundle and constructs no models:
+
+```bash
+CUBLAS_WORKSPACE_CONFIG=:4096:8 \
+CUDA_VISIBLE_DEVICES=GPU-<freshly-verified-full-UUID> \
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+python -B - 'GPU-<freshly-verified-full-UUID>' <<'PY'
+import json, sys
+from consendxformer.phase5_device import bootstrap_device, validate_device_evidence
+bootstrap = bootstrap_device("cuda", sys.argv[1], torch_threads=32)
+from consendxformer.phase5_timing_runtime import runtime_environment
+observed = runtime_environment("cuda")
+validate_device_evidence(bootstrap, observed)
+print(json.dumps({"bootstrap": bootstrap, "runtime": observed,
+                  "model_forwards": 0, "timing_executed": False}, indent=2))
+PY
+```
+
+A successful mapping check is not authorization or proof of benchmark completion.
+Only afterward may a new timing attempt be considered under separate approval.
+
+### Later timing example (separate authorization)
+
 Supplied server observations, not locally reverified: Python 3.10.17;
 PyTorch 2.3.0+cu121; four RTX 2080 Ti GPUs, 11,264 MiB each; CPU affinity 64;
 PyTorch CPU threads 32. GPU 0 had 10,094 MiB occupied and GPUs 1–3 had 8 MiB each.
@@ -210,7 +295,7 @@ CUBLAS_WORKSPACE_CONFIG=:4096:8 \
 CUDA_VISIBLE_DEVICES=GPU-<freshly-verified-full-UUID> \
 PYTHONDONTWRITEBYTECODE=1 \
 python -B scripts/50_run_phase5_synthetic_timing.py \
-  --authorize-synthetic-timing --attempt-id timing-review-01 \
+  --authorize-synthetic-timing --attempt-id REPLACE_WITH_NEW_APPROVED_ATTEMPT_ID \
   --device cuda --gpu-uuid GPU-<freshly-verified-full-UUID> --torch-threads 32
 ```
 

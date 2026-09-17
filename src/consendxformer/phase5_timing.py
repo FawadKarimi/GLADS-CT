@@ -17,7 +17,7 @@ DURATION_FIELDS = ("input_construction", "adapter", "validation_hashing")
 
 
 def timing_specification():
-    return {"schema": "phase5_synthetic_timing_v1", "scope": SCOPE,
+    return {"schema": "phase5_synthetic_timing_v1", "evidence_revision": 2, "scope": SCOPE,
         "models": ["ConsenDxFormer", "B1"], "seeds": [42, 43, 44],
         "input_shape": [1, 1, 64, 64], "dtype": "float32", "input_seed": 20260917,
         "warmup_per_unit": 32, "blocks_per_unit": 3, "calls_per_block": 128,
@@ -32,6 +32,8 @@ def timing_specification():
         "execution": {"eval": True, "frozen": True, "gradients": False, "autocast": False,
                       "deterministic_algorithms": True, "warn_only": False, "cudnn_benchmark": False},
         "cuda": {"selection": "full_physical_UUID_before_torch_import", "logical_device": "cuda:0",
+                 "mapping_verification": "cuda_driver_uuid_pci_v2",
+                 "memory_totals": "separate_nvidia_smi_and_torch_diagnostics_no_cross_api_equality",
                  "cublas_workspace_config": ":4096:8", "max_startup_used_mib": 256,
                  "launch_blocking": "required_raw_pre_import_value_null_for_unset_no_default_or_mutation_exact_runtime_binding",
                  "active_compute_processes_allowed": 0, "automatic_switching": False},

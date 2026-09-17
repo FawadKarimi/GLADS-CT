@@ -1,5 +1,6 @@
 {
   "schema": "phase5_synthetic_timing_v1",
+  "evidence_revision": 2,
   "scope": "synthetic_timing_only",
   "models": [
     "ConsenDxFormer",
@@ -50,6 +51,8 @@
   "cuda": {
     "selection": "full_physical_UUID_before_torch_import",
     "logical_device": "cuda:0",
+    "mapping_verification": "cuda_driver_uuid_pci_v2",
+    "memory_totals": "separate_nvidia_smi_and_torch_diagnostics_no_cross_api_equality",
     "cublas_workspace_config": ":4096:8",
     "max_startup_used_mib": 256,
     "launch_blocking": "required_raw_pre_import_value_null_for_unset_no_default_or_mutation_exact_runtime_binding",
