@@ -50,6 +50,8 @@ def setup_sources(tmp_path, monkeypatch):
               "authorize_execution": True}
     monkeypatch.setattr(runner, "validate_evaluator_repository", lambda p: {"commit": "1d3f1157afe95415f68dcde5f8723588846cf061", "clean": True})
     monkeypatch.setattr(runner, "NAMESPACE", tmp_path / "insertion-only")
+    from test_phase5_timing import install_research_timing_fixture
+    kwargs.update(install_research_timing_fixture(tmp_path, monkeypatch, runner))
     return kwargs, all_sources, evidence
 
 
@@ -471,6 +473,14 @@ def test_full_synthetic_run_exact_417240_calls_exports_subset_and_no_old_analyse
     output = runner.run_insertion_deletion(**kwargs)
     assert len(calls) == 417240 and all(calls.count(k) == 183*380 for k in KEYS)
     marker = runner.validate_completed_perturbation(output)
+    assert marker["schema"] == "phase5_insertion_deletion_completion_v2"
+    evaluation = runner.read_json(output / "evaluation.json")
+    provenance = runner.read_json(output / "provenance/provenance.json")
+    assert evaluation["identity"]["timing_evidence"]["manifest_sha256"] == kwargs["timing_manifest_sha256"]
+    assert provenance["historical_protocol_timing_field"] is None
+    assert provenance["research_execution"]["curve_execution_wall_seconds"] >= 0
+    assert not provenance["research_execution"]["end_to_end_runtime_measured"]
+    assert (output / "provenance/timing/COMPLETED.json").is_file()
     assert marker["scope"] == "insertion_deletion_only" and marker["subset_completed"]
     assert not marker["full_supplemental_completion"] and not marker["stage_a_complete"]
     assert not marker["formal_tests_computed"] and len(marker["hypotheses"]) == 15
@@ -487,6 +497,27 @@ def test_full_synthetic_run_exact_417240_calls_exports_subset_and_no_old_analyse
     runner.assert_source_snapshot_unchanged(snapshot)
     with pytest.raises(FileExistsError): runner.run_insertion_deletion(**kwargs)
     assert len(calls) == 417240
+    # Re-seal synthetic metadata to exercise semantic timing/provenance validation,
+    # not just file checksums, without any additional forward calls.
+    import copy
+    saved_manifest = runner.read_json(output / "artifact_manifest.json")
+    def reseal_provenance(value):
+        atomic_write_json(output / "provenance/provenance.json", value, overwrite=True)
+        manifest = copy.deepcopy(saved_manifest)
+        manifest["files"]["provenance/provenance.json"] = sha256_file(output / "provenance/provenance.json")
+        manifest["bundle_sha256"] = sha256_json(manifest["files"])
+        atomic_write_json(output / "artifact_manifest.json", manifest, overwrite=True)
+        completion = {**marker, "artifact_manifest_sha256": sha256_file(output / "artifact_manifest.json")}
+        atomic_write_json(output / "COMPLETED.json", completion, overwrite=True)
+    for change, message in (("binding", "binding differs"), ("snapshot", "snapshot"), ("historical", "distinction")):
+        value = copy.deepcopy(provenance)
+        if change == "binding": value["timing_evidence"]["estimated_adapter_seconds"] += 1
+        elif change == "snapshot": value["timing_source_snapshot"].pop(next(iter(value["timing_source_snapshot"])))
+        else: value["historical_protocol_timing_field"] = "incorrectly replaced"
+        reseal_provenance(value)
+        with pytest.raises(ValueError, match=message): runner.validate_completed_perturbation(output)
+    reseal_provenance(provenance)
+    assert sha256_file(output / "artifact_manifest.json") == marker["artifact_manifest_sha256"]
     # Read-back must reject full-completion claims and changed table values, without any forward.
     original = dict(marker)
     marker["full_supplemental_completion"] = True

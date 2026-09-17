@@ -1,0 +1,93 @@
+{
+  "schema": "phase5_synthetic_timing_v1",
+  "scope": "synthetic_timing_only",
+  "models": [
+    "ConsenDxFormer",
+    "B1"
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "input_shape": [
+    1,
+    1,
+    64,
+    64
+  ],
+  "dtype": "float32",
+  "input_seed": 20260917,
+  "warmup_per_unit": 32,
+  "blocks_per_unit": 3,
+  "calls_per_block": 128,
+  "calls_per_unit": 416,
+  "warmup_calls": 192,
+  "measured_calls": 2304,
+  "total_calls": 2496,
+  "resident_models": 6,
+  "probe_calls": 0,
+  "automatic_retries": 0,
+  "sequence": {
+    "index": "j=0..415 independently repeated for each model/seed",
+    "image": "[zero,ramp,PCG64_random][j%3]",
+    "direction": "[insertion,deletion][(j//3)%2]",
+    "step": "(j//6)%65",
+    "order": "row_major_arange_64",
+    "tile_constructor": "phase5_perturbation.tile_input",
+    "ramp": "np.linspace(0,1,4096,dtype=float32).reshape(1,64,64)",
+    "random": "Generator(PCG64(20260917)).random((1,64,64),dtype=float32)"
+  },
+  "execution": {
+    "eval": true,
+    "frozen": true,
+    "gradients": false,
+    "autocast": false,
+    "deterministic_algorithms": true,
+    "warn_only": false,
+    "cudnn_benchmark": false
+  },
+  "cuda": {
+    "selection": "full_physical_UUID_before_torch_import",
+    "logical_device": "cuda:0",
+    "cublas_workspace_config": ":4096:8",
+    "max_startup_used_mib": 256,
+    "launch_blocking": "required_raw_pre_import_value_null_for_unset_no_default_or_mutation_exact_runtime_binding",
+    "active_compute_processes_allowed": 0,
+    "automatic_switching": false
+  },
+  "measurement": {
+    "clock": "time.perf_counter_ns",
+    "adapter": "pre_sync_then_start_adapter_post_sync_end",
+    "adapter_includes": "input guards/private copy/H2D/model/D2H/output copies/post-sync",
+    "disjoint_components": [
+      "input_construction",
+      "adapter",
+      "validation_hashing"
+    ],
+    "loop_envelope": {
+      "raw_unit": "integer_nanoseconds",
+      "includes": "all_2496_calls_including_warmup",
+      "seconds": "canonical_nanoseconds_divided_by_1e9",
+      "integer_guard": "loop_nanoseconds_at_least_exact_sum_of_all_disjoint_nanoseconds",
+      "float_guard": "loop_seconds_at_least_math_fsum_of_disjoint_seconds_minus_4_ulp_of_sum",
+      "equality_required": false
+    },
+    "envelopes_not_added": [
+      "preparation",
+      "loop_wall"
+    ],
+    "bounded_export": "one deterministic NPZ of 2496 raw logit/probability rows; write/hash/read-back"
+  },
+  "extrapolation": {
+    "research_calls_per_model_seed": 69540,
+    "research_calls_total": 417240,
+    "point": "mean of three block adapter seconds/call times 69540, sum six",
+    "range": "sum six per-unit block minima/maxima times 69540; not a CI"
+  },
+  "research_execution_authorized": false,
+  "research_forwards": 0,
+  "full_supplemental_completion": false,
+  "stage_a_complete": false,
+  "formal_tests_computed": false
+}

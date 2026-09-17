@@ -31,9 +31,14 @@ Explicit future options (not executed here):
 - `--attention-source DIR` for `phase4-evaluation-22cb656eabd040c2` and
   `--attention-manifest-sha256 HASH` for its explicitly approved manifest.
 - `--authorize-execution`, after separate authorization.
+- `--timing-bundle DIR` and `--timing-manifest-sha256 HASH` for separately reviewed
+  synthetic timing evidence; completion, counts, integrity and architecture/runtime/
+  device compatibility are checked before research source/data/checkpoint loading.
 - `--device cpu` (default) or explicitly authorized `cuda`. Deterministic CUDA
-  support requires the existing runtime prerequisites such as
-  `CUBLAS_WORKSPACE_CONFIG=:4096:8` before interpreter startup; unsupported
+  support now requires a full `--gpu-uuid`, fresh idle-device verification and
+  exact-UUID isolation before importing PyTorch, with
+  `CUBLAS_WORKSPACE_CONFIG=:4096:8` before interpreter startup. Optional
+  `--torch-threads N` must match the timing environment; unsupported
   deterministic operations fail, without tolerance changes or fallbacks.
 - Optional `--output-root DIR`, contained in the new namespace below.
 
@@ -115,9 +120,11 @@ New outputs use
 Identity distinguishes the proposal's base and publication commits from the
 clean implementation/execution checkout commit (the latter two are equal for
 this runner). It binds protocol/proposal, exact sources and
-snapshot hashes, attention manifest, runtime/device and frozen-loading provenance.
+snapshot hashes, attention manifest, runtime/device, approved timing evidence and
+frozen-loading provenance.
 Reject existing complete or partial paths, source/data overlaps, escaped or
-symlink paths and completed ancestors. This namespace is the only new ignore rule.
+symlink paths and completed ancestors. Timing uses its own separate protected
+namespace; neither namespace changes earlier result bundles.
 
 The bundle includes:
 
@@ -141,6 +148,10 @@ The bundle includes:
   `perturbation_paired_per_nodule.csv`, `perturbation_paired_descriptive.csv`,
   `perturbation_mean_curves.csv`, and the unresolved `hypothesis_register.csv`.
 - `call_ledger.json`, an artifact manifest and final `COMPLETED.json`.
+- For newly executed v2 bundles, the entire verified timing bundle under
+  `provenance/timing/`, its original source snapshot and identity/hash binding.
+  Offline validation checks this copy without live-source/model access. Historical
+  v1 completion remains read-only; it is not used for new executions.
 
 NPZs use the existing deterministic ZIP/array hash machinery and forbid object
 arrays/pickle. CSV numbers round-trip from promoted raw values. Before completion,
@@ -180,9 +191,14 @@ complete call/cache accounting and subset-only completion. A full synthetic
 a timing measurement. Historical source-loader fixtures are explicitly stubbed;
 the existing source-contract tests remain part of the full CPU suite.
 
-Research runtime and feasibility are unmeasured. The following is a proposed
-synthetic timing procedure for later review and separate authorization, not a
-benchmark run or permission to execute during this milestone:
+At the historical implementation milestone, research runtime and feasibility were
+unmeasured. The following original procedure motivated the separate implementation
+now documented in `phase5_synthetic_timing.md`; neither milestone itself executed
+an actual timing benchmark. New runtime evidence is distinguished from the frozen
+protocol's unchanged historical null. After separately authorized execution, v2
+provenance reports synthetic measurements/adapter-only estimates separately from
+observed research curve-execution wall time (not end-to-end runtime). The historical
+procedure below is retained, not a benchmark result or execution authorization:
 
 1. On the intended device, record hardware, package/source hashes, shapes,
    thread settings, memory and deterministic/no-autocast policy. Use the actual

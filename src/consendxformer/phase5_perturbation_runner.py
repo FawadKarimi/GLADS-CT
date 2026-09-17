@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 from pathlib import Path
-import platform
+import time
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,8 @@ from .phase5_descriptive import PROPOSAL_SHA256, unresolved_hypotheses
 from .phase5_perturbation import (SCOPE, KEYS, WARNING, CallLedger, perturbation_protocol, execute_curves)
 from .phase5_perturbation_sources import (read_json, merge_snapshot, load_perturbation_inputs, frozen_predictors)
 from .phase5_perturbation_exports import write_result, validate_result_exports
+from .phase5_timing_runtime import architecture_contract, runtime_environment
+from .phase5_timing_runner import (BUNDLE_FILES as TIMING_FILES, validate_timing_bundle, copy_timing_evidence)
 
 PROTOCOL_PATH = PROJECT_ROOT / "configs/phase5_insertion_deletion_v1.json"
 PROPOSAL_PATH = PROJECT_ROOT / "docs/phase5_supplemental_evaluation_proposal.md"
@@ -29,6 +31,8 @@ TABLES = {"units.csv", "perturbation_curves.csv", "perturbation_auc_per_nodule.c
 PAYLOADS = {*(f"tables/{name}" for name in TABLES), "protocol.json", "evaluation.json", "summary.md",
             "provenance/provenance.json", "provenance/reviewed_proposal.md", "orders.npz", "curves.npz",
             "baseline_cache.npz", "replay_cache.npz", "replay_barrier.json", "replay_checks.json", "call_ledger.json"}
+LEGACY_PAYLOADS = set(PAYLOADS)
+PAYLOADS |= {f"provenance/timing/{name}" for name in TIMING_FILES}
 
 
 def subset_status():
@@ -46,17 +50,6 @@ def load_protocol():
     if hashlib.sha256(document).hexdigest() != PROPOSAL_SHA256:
         raise ValueError("Reviewed proposal content differs")
     return protocol, document.decode("utf-8")
-
-
-def runtime_environment(device):
-    import torch
-
-    if device not in ("cpu", "cuda") or (device == "cuda" and not torch.cuda.is_available()):
-        raise ValueError("Requested execution device unavailable")
-    return {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__,
-            "torch": str(torch.__version__), "device": device, "torch_cuda_version": torch.version.cuda,
-            "torch_threads": torch.get_num_threads(), "deterministic_algorithms": True,
-            "autocast": False, "batch_size": 1, "synthetic_timing_evidence": None}
 
 
 def output_directory(root, evaluation_id, inputs):
@@ -94,12 +87,14 @@ def validate_completed_perturbation(directory):
     if (directory / "FAILED.json").exists():
         raise ValueError("A recorded failed attempt cannot certify subset completion")
     manifest, marker = read_json(directory / "artifact_manifest.json"), read_json(directory / "COMPLETED.json")
-    if (manifest.get("schema") != "phase5_insertion_deletion_artifacts_v1"
-            or marker.get("schema") != "phase5_insertion_deletion_completion_v1"
+    # Historical v1 validation remains read-only; only v2 can be newly executed.
+    version = 2 if marker.get("schema") == "phase5_insertion_deletion_completion_v2" else 1
+    if (manifest.get("schema") != f"phase5_insertion_deletion_artifacts_v{version}"
+            or marker.get("schema") != f"phase5_insertion_deletion_completion_v{version}"
             or marker.get("subset_completed") is not True
             or marker.get("artifact_manifest_sha256") != sha256_file(directory / "artifact_manifest.json")
             or marker.get("evaluation_id") != manifest.get("evaluation_id")
-            or set(manifest.get("files", {})) != PAYLOADS
+            or set(manifest.get("files", {})) != (PAYLOADS if version == 2 else LEGACY_PAYLOADS)
             or manifest.get("bundle_sha256") != sha256_json(manifest["files"])):
         raise ValueError("Invalid/incomplete insertion-deletion subset completion")
     for name, digest in manifest["files"].items():
@@ -118,6 +113,27 @@ def validate_completed_perturbation(directory):
         if sha256_json({k: record.get(k) for k in expected}) != sha256_json(expected):
             raise ValueError("Completion must certify insertion_deletion_only; formal family remains unresolved")
     identity = evaluation["identity"]
+    if version == 2:
+        binding = identity["timing_evidence"]
+        timing = validate_timing_bundle(directory / "provenance/timing", binding["manifest_sha256"],
+            expected_architecture=identity["timing_architecture"], expected_runtime=identity["environment"])
+        if ({k: v for k, v in binding.items() if k != "source_directory"} != timing["binding"]
+                or provenance.get("timing_evidence") != binding):
+            raise ValueError("Research run timing-evidence binding differs")
+        original_timing = provenance["timing_source_snapshot"]
+        expected_members = {binding["source_directory"].rstrip("/") + "/" + name:
+                            sha256_file(directory / "provenance/timing" / name) for name in TIMING_FILES}
+        if ({p.replace("\\", "/"): v for p, v in original_timing.items()} != expected_members
+                or any(provenance["source_snapshot"].get(p) != v for p, v in original_timing.items())):
+            raise ValueError("Timing source snapshot is not bound to embedded evidence")
+        execution = provenance["research_execution"]
+        duration = execution["curve_execution_wall_seconds"]
+        if (evaluation.get("research_execution") != execution or type(duration) not in (float, int)
+                or not np.isfinite(duration) or duration < 0 or execution["end_to_end_runtime_measured"] is not False
+                or execution["measurement_scope"] != "execute_curves including replays, construction, validation and replay-cache barrier I/O"
+                or provenance.get("historical_protocol_timing_field", "missing") != protocol["synthetic_timing_evidence"]
+                or execution["synthetic_adapter_estimate_seconds"] != timing["binding"]["estimated_adapter_seconds"]):
+            raise ValueError("Research execution/estimate distinction differs")
     if (identity != provenance["identity"] or identity["protocol"] != protocol
             or identity.get("execution_commit") != identity["implementation_commit"]
             or identity.get("proposal_published_commit") != "75b5d7ce895338e4b21747c05b039850eae2b936"
@@ -148,14 +164,24 @@ def validate_completed_perturbation(directory):
 
 
 def run_insertion_deletion(*, full_source_dirs, b1_source_dirs, attention_source, attention_manifest_sha256,
-                          authorize_execution=False, device="cpu", output_root=None):
+                          authorize_execution=False, device="cpu", output_root=None,
+                          timing_bundle=None, timing_manifest_sha256=None):
     if authorize_execution is not True:
         raise ValueError("Explicit --authorize-execution required for insertion/deletion")
+    if timing_bundle is None or timing_manifest_sha256 is None:
+        raise ValueError("Explicit timing bundle path and approved manifest SHA-256 required before research access")
     git = validate_evaluator_repository(PROJECT_ROOT)
     protocol, proposal = load_protocol()
     environment = runtime_environment(device)
+    timing_architecture, code_snapshot = architecture_contract()
+    timing = validate_timing_bundle(timing_bundle, timing_manifest_sha256,
+        expected_architecture=timing_architecture, expected_runtime=environment)
+    timing_binding = {**timing["binding"], "source_directory": Path(timing_bundle).resolve().as_posix()}
+    # This entire timing compatibility gate precedes research data/checkpoint loading.
     inputs = load_perturbation_inputs(full_source_dirs, b1_source_dirs, attention_source, attention_manifest_sha256)
     snapshot = dict(inputs.snapshot)
+    merge_snapshot(snapshot, timing["snapshot"])
+    merge_snapshot(snapshot, code_snapshot)
     merge_snapshot(snapshot, snapshot_source_files([PROTOCOL_PATH, PROPOSAL_PATH]))
     ledger, output, created = CallLedger(), None, False
     status = subset_status()
@@ -169,7 +195,8 @@ def run_insertion_deletion(*, full_source_dirs, b1_source_dirs, attention_source
                         "sources": [inputs.source_records[k] for k in KEYS],
                         "source_snapshot_sha256": sha256_json(snapshot),
                         "attention_manifest_sha256": attention_manifest_sha256,
-                        "environment": environment, "runtime": runtime}
+                        "environment": environment, "runtime": runtime,
+                        "timing_evidence": timing_binding, "timing_architecture": timing_architecture}
             evaluation_id = f"phase5-perturbation-{sha256_json(identity)[:16]}"
             output = output_directory(NAMESPACE if output_root is None else output_root, evaluation_id, inputs)
             assert_source_snapshot_unchanged(snapshot)
@@ -177,6 +204,7 @@ def run_insertion_deletion(*, full_source_dirs, b1_source_dirs, attention_source
             created = True
             atomic_write_json(output / "protocol.json", protocol)
             atomic_write_text(output / "provenance/reviewed_proposal.md", proposal)
+            copy_timing_evidence(timing_bundle, output / "provenance/timing", timing_manifest_sha256)
             archive_records = []
 
             def barrier(cache, binding, log):
@@ -191,27 +219,39 @@ def run_insertion_deletion(*, full_source_dirs, b1_source_dirs, attention_source
                 # All cache bytes were read back before granting the first nonoriginal call.
                 assert_source_snapshot_unchanged(snapshot)
 
+            research_start = time.perf_counter()
             result = execute_curves(inputs.ids, inputs.images, inputs.maps, inputs.prior, inputs.predictions,
                 predictors, source_binding=sha256_json(identity), source_records=inputs.source_records,
                 ledger=ledger, on_barrier=barrier)
+            research_execution = {"curve_execution_wall_seconds": time.perf_counter()-research_start,
+                "measurement_scope": "execute_curves including replays, construction, validation and replay-cache barrier I/O",
+                "end_to_end_runtime_measured": False,
+                "synthetic_adapter_estimate_seconds": timing["binding"]["estimated_adapter_seconds"]}
             assert_source_snapshot_unchanged(snapshot)
             archive_records.extend(write_result(output, result))
             atomic_write_json(output / "replay_checks.json", ledger.replays)
             atomic_write_json(output / "call_ledger.json", ledger.record())
             atomic_write_json(output / "evaluation.json", {"evaluation_id": evaluation_id, "identity": identity,
                 **status, "calls": ledger.record(), "successful_run_budget": protocol["successful_run_budget"],
+                "research_execution": research_execution,
                 "warning": WARNING, "n_nodules": 183, "n_patients": 99,
                 "per_seed_summaries": 36, "within_model_paired_summaries": 24})
             atomic_write_json(output / "provenance/provenance.json", {"identity": identity, **status,
                 "source_snapshot": snapshot, "archives": archive_records,
                 "evidence_provenance": inputs.evidence_provenance, "prior_recomputed": False,
                 "rankings_recomputed_after_perturbation": False, "masks_in_forward_or_ranking": False,
-                "synthetic_timing_evidence": None, "runtime_unmeasured": True})
+                "timing_evidence": timing_binding, "timing_source_snapshot": timing["snapshot"],
+                "research_execution": research_execution,
+                "historical_protocol_timing_field": protocol["synthetic_timing_evidence"]})
             atomic_write_text(output / "summary.md", f"# {evaluation_id}\n\n{WARNING}\n\n"
                 "All 183 nodules / 99 patients and all three seeds retained. See 36 per-seed "
                 "summaries, 24 within-model paired summaries and all 65 positions of 6,588 curves. "
                 "417,240 batch-one forwards; no retries or additional deduplication. "
-                "Runtime feasibility remains unmeasured; no synthetic timing evidence is claimed.\n")
+                f"Approved synthetic timing evidence: {timing_binding['timing_id']}. "
+                f"Synthetic adapter-only estimate: {timing_binding['estimated_adapter_seconds']:.9g} seconds. "
+                f"Observed curve-execution wall time: {research_execution['curve_execution_wall_seconds']:.9g} seconds "
+                "(not end-to-end runtime). Synthetic measurements/estimates are distinct from research execution; "
+                "the frozen protocol's historical null timing field is unchanged.\n")
             validate_result_exports(output, archive_records, ledger)
         # Includes pinned-source and in-memory frozen-weight checks on context exit.
         assert_source_snapshot_unchanged(snapshot)
@@ -221,11 +261,11 @@ def run_insertion_deletion(*, full_source_dirs, b1_source_dirs, attention_source
         if set(files) != PAYLOADS:
             raise ValueError("Incomplete or unexpected insertion/deletion exports")
         manifest = atomic_write_json(output / "artifact_manifest.json", {
-            "schema": "phase5_insertion_deletion_artifacts_v1", "evaluation_id": evaluation_id,
+            "schema": "phase5_insertion_deletion_artifacts_v2", "evaluation_id": evaluation_id,
             **status, "files": files, "bundle_sha256": sha256_json(files)})
         assert_source_snapshot_unchanged(snapshot)
         atomic_write_json(output / "COMPLETED.json", {
-            "schema": "phase5_insertion_deletion_completion_v1", "evaluation_id": evaluation_id,
+            "schema": "phase5_insertion_deletion_completion_v2", "evaluation_id": evaluation_id,
             "subset_completed": True, **status, "artifact_manifest_sha256": sha256_file(manifest)})
         validate_completed_perturbation(output)
         assert_source_snapshot_unchanged(snapshot)
@@ -257,12 +297,17 @@ def insertion_deletion_cli(argv=None):
     parser.add_argument("--attention-source", required=True)
     parser.add_argument("--attention-manifest-sha256", required=True)
     parser.add_argument("--authorize-execution", action="store_true")
+    parser.add_argument("--timing-bundle", type=Path)
+    parser.add_argument("--timing-manifest-sha256")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--gpu-uuid")
+    parser.add_argument("--torch-threads", type=int)
     parser.add_argument("--output-root", type=Path)
     args = parser.parse_args(argv)
     output = run_insertion_deletion(full_source_dirs=args.full_source, b1_source_dirs=args.b1_source,
         attention_source=args.attention_source, attention_manifest_sha256=args.attention_manifest_sha256,
-        authorize_execution=args.authorize_execution, device=args.device, output_root=args.output_root)
+        authorize_execution=args.authorize_execution, device=args.device, output_root=args.output_root,
+        timing_bundle=args.timing_bundle, timing_manifest_sha256=args.timing_manifest_sha256)
     print(f"OUTPUT_DIR={output}")
     print(f"COMPLETION_MARKER={output / 'COMPLETED.json'}")
     return 0
