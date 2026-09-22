@@ -13,6 +13,7 @@ artifacts/phase4/
 artifacts/phase5/pointing_and_accuracy/
 artifacts/phase5/insertion_deletion/
 artifacts/phase5/synthetic_timing/
+artifacts/phase5/paired_correctness/
 external/LungDxFormer/
 data/
 *.dcm
