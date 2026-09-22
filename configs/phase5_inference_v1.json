@@ -1,0 +1,67 @@
+{
+  "adjustment": "Holm_15",
+  "all_zero": "defined_p_one_after_valid_computation",
+  "analysis_status": "exploratory_post_hoc",
+  "core_lf_sha256": "9fd7927f8497ac54b4db8f0629de3aa1663252f16a3c55a2d79deca196c1c684",
+  "documents_lf_sha256": {
+    "phase5_inference_amendment_decision.md": "e3e6232cab56261a126122aa34ad9a6ef2ddde4c22036321349bc509f02dacda",
+    "phase5_inference_implementation_authorization.md": "f79711c9e6ca69d297b30e6ac87768930973d5959378ac6c2abe71159a968710",
+    "phase5_inference_resolution_proposal.md": "30a15d75f3bb09a6c44680c652100354713a492e2f0a5bfd2df3eed76699a315",
+    "phase5_supplemental_evaluation_proposal.md": "4d3f7500071a5c352b2a918c0d26ffabc90b4e11af5982cdfdef7880e1054620"
+  },
+  "existing_nodule_weighted_intervals": "unchanged_descriptive_unadjusted",
+  "family_alpha": "1/20",
+  "full_supplemental_completion": false,
+  "hypothesis_ids": [
+    "C_B1_42",
+    "C_B1_43",
+    "C_B1_44",
+    "C_attention_off_42",
+    "C_attention_off_43",
+    "C_attention_off_44",
+    "C_disagreement_off_42",
+    "C_disagreement_off_43",
+    "C_disagreement_off_44",
+    "C_ordinal_off_42",
+    "C_ordinal_off_43",
+    "C_ordinal_off_44",
+    "C_fusion_off_42",
+    "C_fusion_off_43",
+    "C_fusion_off_44"
+  ],
+  "logical_score_bounds": [
+    -1,
+    1
+  ],
+  "method": "hoeffding_equal_patient_two_sided_v1",
+  "model_forwards": 0,
+  "nodules": 183,
+  "null": "conditional_independent_heterogeneous_patient_mean_zero_v1",
+  "numerical_failure": "block_entire_family",
+  "patients": 99,
+  "precisions": [
+    80,
+    160,
+    320
+  ],
+  "primary_endpoint": "macro_F1",
+  "r_package": "clust.bin.pair_0.1.2",
+  "r_runtime": "3.6.3",
+  "requires_actual_r_outputs": true,
+  "review_zip_sha256": "6c6c6c0bb308813fdaea2217c131cd34465cbb46e1fae1c408d62ac48c2e1e47",
+  "schema": "phase5_inference_v1",
+  "scope": "paired_correctness_only",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "sources": {
+    "B1": 3,
+    "OFF": 12,
+    "complete": 3
+  },
+  "stage_a_complete": false,
+  "two_sided": true,
+  "weighting": "equal_patient"
+}

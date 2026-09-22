@@ -1,0 +1,3 @@
+# Existing repository dependencies and source-loader requirements still apply.
+# Independent arithmetic read-back; not a model/inference dependency.
+mpmath==1.3.0
