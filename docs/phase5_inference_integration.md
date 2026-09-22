@@ -1,5 +1,32 @@
 # Phase 5 Candidate C: saved-prediction integration for review
 
+## Current-status addendum — 2026-09-22
+
+The subsequent `paired_correctness_only` execution is completed and independently
+audited in the supplied `Phase5_Research_Results_Audit_79f6f8de6cab19b6.md`.
+See [the results and evidence-to-requirement record](phase5_paired_correctness_results.md).
+All 15 registered tests are now computed: raw and Holm-adjusted enclosures are
+`[1,1]`, with 0/15 rejections. Macro-F1 remains primary; full-supplement,
+Stage A and general research-readiness certification remain false.
+
+Subsequent events, not approvals at the historical milestone below, include
+verification of the actual five R output files, the exact-integer count-format
+correction and reviewed integration publication at `868af7306a4f41952941e2e27d68995200513fb6`,
+then the output-ignore correction publication at `4141ae78b8e0a28cbc5779cc4190f83bf7cdae8d`.
+The failed preflight `phase5-inference-preflight-f817aa9732d04827` remains preserved.
+The supplied audit records corrected preflight `phase5-inference-preflight-5b67b8e275de62f5`,
+subsequent explicit user research-execution release, and completed results
+`phase5-inference-results-79f6f8de6cab19b6` at the latter commit.
+This documentation task does not re-execute R or verify live-server state.
+
+The text below is retained unchanged as **historical implementation-stage
+documentation**. Its unresolved/future-gate statements describe that earlier
+stage, not the current test results. Historical `NOT_RUN` records, calibration
+failure, and the four hash-pinned governing documents are not rewritten or
+backdated. Candidate C's substitution does not repair the failed legacy test.
+
+## Historical implementation milestone
+
 Prepared 2026-09-22 against `ca6c018ffbedae12988074fb66052592212a3c2f`,
 branch `phase4-consendxformer`. This is an implementation/synthetic-test
 milestone, not a study-statistics execution, independent integrated-code
