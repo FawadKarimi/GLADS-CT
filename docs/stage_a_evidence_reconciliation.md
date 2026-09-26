@@ -1,5 +1,19 @@
 # Stage A evidence reconciliation — review, not certification
 
+## Accepted bounded R3 decision — 2026-09-27
+
+The owner accepts the final documentation review and closes R3
+only for the completed correct/incorrect and true
+indeterminate/definitive stored-entropy descriptive comparisons
+in r3-entropy-83023569d06acd93, conditional on the accepted
+archived_saved_records validation contract.
+
+This decision supersedes the pending-acceptance wording below.
+It does not establish model superiority or independently verify
+original prediction, supervision or checkpoint bytes. R4/R5
+remain unresolved; Stage A remains uncertified. Original result
+bundles and execution-time completion markers remain unchanged.
+
 Prepared 2026-09-22 against `63e2f6f73ba987f614866a7ad7535163cbba4fd8`
 on `phase4-consendxformer`. The checkout matched that HEAD and was clean before
 this document was added. No applicable ancestor/root/docs `AGENTS.md` was found.
@@ -8,6 +22,29 @@ no research calculation, test-suite rerun, R process, model forward, training,
 server command, source modification or completion-marker rewrite was performed.
 
 ## Recommendation
+
+### Current R3 review addendum — 2026-09-27, pending acceptance
+
+The completed saved-record bundle `r3-entropy-83023569d06acd93` now supplies the
+two exact descriptive entropy comparisons missing at the historical review below.
+The [R3 results and bounded closure proposal](r3_entropy_results_and_closure.md)
+records local archive/source/protocol binding checks and all six model/seed rows.
+Recommend R3 closure **only** for those comparisons under the explicitly accepted
+`archived_saved_records` contract, subject to final documentation review. The
+owner-provided ChatGPT conversation record now documents execution authorization
+at 2026-09-27 04:10:29, UTC+07:00, and reported completion at 04:11:39 for this
+bundle; U3 preserves the exact authorization statement. This resolves the missing
+authorization-record caveat. No separate receipt file was created, and no
+independently verified server authorization receipt is claimed. The historical
+implementation/publication authorization remains unchanged.
+
+This is a later recommendation, not adopted sign-off or a new analysis. R4's
+claim/packaging acceptance and R5's final bounded sign-off remain unresolved;
+Stage A remains uncertified. Preserve all historical findings below and the
+original execution-time `r3_review_closed=false` marker unchanged. The next actions
+are final documentation review, R4 and R5, not another run.
+
+### Historical recommendation — 2026-09-22
 
 **Do not yet issue an unconditional Stage A completion certificate.** The
 previously missing named Phase 5 supplemental endpoints now have completed,
@@ -45,6 +82,7 @@ no new amendment and does not rewrite the frozen records.
 | D | [Descriptive subset](phase5_descriptive_subset.md) and supplied `Phase5_Descriptive_Execution_Audit_04d6daaccc698431.md`: completed pointing and 33 accuracy intervals. |
 | I/T | [Insertion/deletion subset](phase5_insertion_deletion_subset.md), supplied `Phase5_Insertion_Deletion_Execution_Audit_5e31065629b5137c.md`, and [timing contract](phase5_synthetic_timing.md): completed perturbation with approved embedded synthetic timing. |
 | C | [Paired-correctness results](phase5_paired_correctness_results.md) and supplied `Phase5_Research_Results_Audit_79f6f8de6cab19b6.md`: completed, audited 15-test family. |
+| U3 (later addendum) | [R3 results and bounded closure proposal](r3_entropy_results_and_closure.md), supplied `r3-entropy-83023569d06acd93.zip`: completed saved-record descriptive exports; local integrity/identity read-back, not arithmetic rerun or independent original-file verification. Execution authorization is attributed to the owner-provided conversation record; bounded closure awaits final documentation review. |
 
 **Evidence levels:** tracked code/configuration proves implementation presence,
 not successful research execution. A checksum/provenance record binds content,
@@ -238,6 +276,14 @@ new comparisons.
 
 ### Cross-phase requirements and amendments that must not disappear
 
+**Later qualification to the historical Phase 5 entropy-separation row above:**
+U3 now demonstrates the exact two partitions, 24 group summaries and 12 saved
+descriptive contrasts for full/disagreement-weighting-OFF at seeds 42/43/44, with
+all 183 test nodules/99 patients retained per model/seed. The old “not demonstrated”
+finding describes the 2026-09-22 evidence available then; it is not a current
+implementation gap. Bounded R3 closure is recommended for review, not automatically
+adopted. Other Phase 5 statuses and the frozen methodology are unchanged.
+
 - **Run instructions and verification limits:** R0–R3 and Phase 4/5 docs provide
   entry points, expected outputs, failure guards and synthetic-test contracts.
   Test source presence is not a fresh test pass; no suite is rerun here. The
@@ -363,6 +409,22 @@ For reproducible navigation, retain the following already reported identities:
 
 These hashes are transcribed from the existing audited records, not a claim
 that all those archives/checkpoints were rehashed in this task.
+
+Later U3 locator (freshly checked in the documentation-only R3 review): result ZIP
+SHA-256 `840407afc53e0bc12d2525a6b124aeea789f862cc38526995506c99a4be00d40`,
+manifest `30c8a36003663c5a4521e8dfcbe08248ca473b97ef700d03f6cd0ef74b34beda`,
+and run ID `r3-entropy-83023569d06acd93`. Its embedded source ZIP remains
+`6530307c59cf9f8a58d41982b64eed8aaeff8b68c39e1ff24a55dde1543282bd`.
+The result adapter hashes match published implementation
+`7908b8d69a8064240ac7733d683c28489b0077a2`; no execution Git/approval receipt is
+invented from that code binding. See U3 for all payload hashes and verification
+limits. Original checkpoint/prediction/supervision bytes were not revalidated.
+
+The ledger below preserves the historical dispositions. Its R3 row is now
+superseded **as a missing-evidence finding** by U3; the later closure recommendation
+above remains pending final documentation review; execution authorization is now
+recorded from the supplied conversation record. R4/R5 remain
+unresolved exactly as recorded; no historical completion marker is edited.
 
 | Item | Exact next evidence or decision | Category / closure consequence |
 |---|---|---|
