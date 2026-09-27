@@ -1,5 +1,21 @@
 # Stage A evidence reconciliation — review, not certification
 
+## Accepted bounded R5 decision — 2026-09-27
+
+The owner accepts the bounded Stage A closure scope in section 4 of the
+[R5 sign-off record](stage_a_bounded_signoff.md), including its sections 5–6
+limitations. R5 is accepted and closed for that bounded scope. Stage A
+implementation/evidence work is complete within that scope.
+
+This is not unconditional certification, proof of superiority, clinical validation
+or a fully passing final test suite. All recorded limitations and the accepted
+R3/R4 boundaries remain applicable. Stage B remains a separate, unstarted task.
+
+This dated owner acceptance supersedes historical pending wording below. The
+historical proposal, evidence, original result bundles and execution-time
+completion markers remain unchanged. No new analyses, tests, training, server
+jobs or result modifications are authorized by this acceptance.
+
 ## Accepted bounded R4 decision — 2026-09-27
 
 The owner accepts R4 only for the documented distributed packaging, schema
@@ -38,6 +54,17 @@ no research calculation, test-suite rerun, R process, model forward, training,
 server command, source modification or completion-marker rewrite was performed.
 
 ## Recommendation
+
+### R5 bounded Stage A sign-off proposal — 2026-09-27, pending owner acceptance
+
+The [R5 bounded sign-off proposal](stage_a_bounded_signoff.md) consolidates the
+Phase 0–5 completion evidence and current R1–R4 dispositions. It recommends
+readiness for bounded acceptance, not unconditional certification, and separates
+remaining traceability/validation limits from superseded historical gaps. R3 and
+R4 remain accepted within their dated bounds above; no repeat approval is sought.
+R5 remains pending and Stage A remains uncertified. Historical text and original
+result/completion markers are preserved. This proposal does not authorize new
+execution, result repackaging or Stage B manuscript work.
 
 ### R4 claims-and-packaging proposal — 2026-09-27, pending owner acceptance
 
