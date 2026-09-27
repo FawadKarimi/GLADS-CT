@@ -1,5 +1,21 @@
 # Stage A evidence reconciliation — review, not certification
 
+## Accepted bounded R4 decision — 2026-09-27
+
+The owner accepts R4 only for the documented distributed packaging, schema
+equivalents, hash-bound external calibration evidence arrangement and bounded
+claim limits in the [R4 proposal](r4_claims_packaging_acceptance.md). Retain access
+to the exact external calibration archive identified there; no result repackaging
+is authorized or required. This is acceptance of separate existing bundles, not
+a claim that one combined supplement already exists.
+
+This dated decision supersedes the pending-R4 wording preserved below as
+historical proposal and review context. It does not claim permanent public
+availability, fresh original-checkpoint verification, model superiority or
+Stage A certification. All original bundles, results, historical completion
+markers and verification limitations remain unchanged. R3 remains accepted
+within its existing bounds. R5 remains unresolved; Stage A remains uncertified.
+
 ## Accepted bounded R3 decision — 2026-09-27
 
 The owner accepts the final documentation review and closes R3
@@ -22,6 +38,20 @@ no research calculation, test-suite rerun, R process, model forward, training,
 server command, source modification or completion-marker rewrite was performed.
 
 ## Recommendation
+
+### R4 claims-and-packaging proposal — 2026-09-27, pending owner acceptance
+
+The [R4 claims-and-packaging acceptance proposal](r4_claims_packaging_acceptance.md)
+maps section 3's original deliverables to the existing descriptive, perturbation,
+embedded timing and paired-correctness bundles, with exact archive/manifest
+identities, external calibration/R-reference locators and explicit schema
+differences. It proposes accepting distributed evidence, not an already-existing
+combined supplement, and preserves descriptive interval versus secondary
+Candidate C claim limits and adverse findings. Fresh metadata checks are separated
+from historical audit attribution. The accepted bounded R3 decision above is not
+reopened. R4 remains pending owner acceptance; R5 remains unresolved and Stage A
+uncertified. The historical review text and original result markers below remain
+unchanged by this proposal.
 
 ### Current R3 review addendum — 2026-09-27, pending acceptance
 
