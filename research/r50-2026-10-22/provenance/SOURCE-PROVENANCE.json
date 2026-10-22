@@ -1,0 +1,448 @@
+{
+  "ensemble_optimizer_source_sha256": "5acf3968198a016172ad0c2f8ccfdcdfbe6f037501b7961ea77466c55721cf29",
+  "exclusions": [
+    "research images and patient identifiers",
+    "DICOM headers",
+    "pretrained tensors and trained checkpoints",
+    "private authorizations, live budgets and account credentials",
+    "third-party source checkouts"
+  ],
+  "expanded_runner": {
+    "dependency_snapshot": [
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/__init__.py",
+        "replication_sha256": "a6d2c6b3e7465ede14d3652075739606b92fb476c19fbd4435ed8a513aad6090",
+        "sha256": "a6d2c6b3e7465ede14d3652075739606b92fb476c19fbd4435ed8a513aad6090"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/__init__.py",
+        "replication_sha256": "ec9d2065bddd417c24560387facef2ed234d84af138e1f630b1107e78f8c1620",
+        "sha256": "ec9d2065bddd417c24560387facef2ed234d84af138e1f630b1107e78f8c1620"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/bindings.py",
+        "replication_sha256": "98e0b0ea5ec006462d3c587c9b980d1d80d65cbd06ac6d0cdec031d88b013996",
+        "sha256": "98e0b0ea5ec006462d3c587c9b980d1d80d65cbd06ac6d0cdec031d88b013996"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/checkpoint.py",
+        "replication_sha256": "0b113a3183badd77b506d525bf6c9b6b6a971c23f7d3e41a9f2dd06b66556c52",
+        "sha256": "0b113a3183badd77b506d525bf6c9b6b6a971c23f7d3e41a9f2dd06b66556c52"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/cuda_identity.py",
+        "replication_sha256": "e07bcc9cbf90c36cb3229ca527190b30441c8cbe727baae41801b68ff9f30eef",
+        "sha256": "e07bcc9cbf90c36cb3229ca527190b30441c8cbe727baae41801b68ff9f30eef"
+      },
+      {
+        "matches_replication": false,
+        "path": "source-snapshot/consendxformer/performance_v2/durable_budget.py",
+        "replication_sha256": "4a182f0761c07cc0d82f3e0a5e8809f048d79bc24c7c9dc306ce8104e7083cc5",
+        "sha256": "4b71a97ed643c615026d88aca7e95d19f0921ab55b9a40e2f8aa67253c7d5cc1"
+      },
+      {
+        "matches_replication": false,
+        "path": "source-snapshot/consendxformer/performance_v2/durable_lifecycle.py",
+        "replication_sha256": "7715a593db2071b8e42613af6b191ef48d9957e07d57a5ebc3099afeda97b0f2",
+        "sha256": "3cd550e0de27f3d1d0db855ff11e23ca598e26609207e8186a975d561df22a89"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/evidence_mapping.py",
+        "replication_sha256": "d2250bcce1233b7d1a6c8502d94dd5708b7f4d9da38b746a1828e32b6b76695f",
+        "sha256": "d2250bcce1233b7d1a6c8502d94dd5708b7f4d9da38b746a1828e32b6b76695f"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/full_bootstrap.py",
+        "replication_sha256": "aae5771b352143c040e7285fcd7cd5348be21896225466362d88125f3a775778",
+        "sha256": "aae5771b352143c040e7285fcd7cd5348be21896225466362d88125f3a775778"
+      },
+      {
+        "matches_replication": false,
+        "path": "source-snapshot/consendxformer/performance_v2/full_supervisor.py",
+        "replication_sha256": "d9d459abfd9b7556cbac708e6893f9bdcd2e3c7da624fbf2d29f104fe689e861",
+        "sha256": "a4d3f5b9cac8031391817db32fa92c59aba3e02f84588f43c52b741f0837792a"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/full_training.py",
+        "replication_sha256": "7f87dd2036d2502ab0e19b0c24b46076e4671231360fa30ff8917691e2d6a83e",
+        "sha256": "7f87dd2036d2502ab0e19b0c24b46076e4671231360fa30ff8917691e2d6a83e"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/full_worker.py",
+        "replication_sha256": "448961f478dc2a94ce4e69596fa2cfe6bbe1cd792c3d9b9cedf5fecc6ebb8661",
+        "sha256": "448961f478dc2a94ce4e69596fa2cfe6bbe1cd792c3d9b9cedf5fecc6ebb8661"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/imagenet_initialization.py",
+        "replication_sha256": "4ded9807783c63e72bdaef37e4827af93b5f5209cb1b2761398c3d8895c28696",
+        "sha256": "4ded9807783c63e72bdaef37e4827af93b5f5209cb1b2761398c3d8895c28696"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/imagenet_legacy_receipt.py",
+        "replication_sha256": "6bc7862b8a80dec932cb427b18249bc98fdae0c010beade018d472cd3d583c01",
+        "sha256": "6bc7862b8a80dec932cb427b18249bc98fdae0c010beade018d472cd3d583c01"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/imagenet_mapping.py",
+        "replication_sha256": "381cfc080764c893f1095d1eaf8fbac96e20db15022c6fb4a4271c533ffaf936",
+        "sha256": "381cfc080764c893f1095d1eaf8fbac96e20db15022c6fb4a4271c533ffaf936"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/input_adapter.py",
+        "replication_sha256": "f47104b6bc140b9b829dd9e6dbf6cac3536a6f2d13bc572e965e1ab76f1717fa",
+        "sha256": "f47104b6bc140b9b829dd9e6dbf6cac3536a6f2d13bc572e965e1ab76f1717fa"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/launch_security.py",
+        "replication_sha256": "f33464f8e062bb33760c9257977f2a7543083181ae7888c8130b27be8299ae34",
+        "sha256": "f33464f8e062bb33760c9257977f2a7543083181ae7888c8130b27be8299ae34"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/lifecycle.py",
+        "replication_sha256": "64670c06b13f65b2b953bd72901da41bde18d663905b1b3567c7188590cae58e",
+        "sha256": "64670c06b13f65b2b953bd72901da41bde18d663905b1b3567c7188590cae58e"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/managed_cleanup.py",
+        "replication_sha256": "b8b3e267c9f5c84505b4ac45d4111a399c95b247a92ad1e34e6a05330c58bbf8",
+        "sha256": "b8b3e267c9f5c84505b4ac45d4111a399c95b247a92ad1e34e6a05330c58bbf8"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/managed_finalization.py",
+        "replication_sha256": "33d34bbec218d16f53f20c293f1ffb4fc5a59200bc98b43121451fa7515cefca",
+        "sha256": "33d34bbec218d16f53f20c293f1ffb4fc5a59200bc98b43121451fa7515cefca"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/materialization.py",
+        "replication_sha256": "4b07f8c0dcaf0fde235eaed37c005841d8f127f79ae88b8fb8e2dddad01b61a8",
+        "sha256": "4b07f8c0dcaf0fde235eaed37c005841d8f127f79ae88b8fb8e2dddad01b61a8"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/metrics.py",
+        "replication_sha256": "2d88aab642dacb582502027c2208ad265c07ae95e3de1a1d6b28ebed087d8f71",
+        "sha256": "2d88aab642dacb582502027c2208ad265c07ae95e3de1a1d6b28ebed087d8f71"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/model.py",
+        "replication_sha256": "5135a7f5556979f5f1ee1f152f5ca28457946f8c9acf53ad70dbb109180b2f7a",
+        "sha256": "5135a7f5556979f5f1ee1f152f5ca28457946f8c9acf53ad70dbb109180b2f7a"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/objectives.py",
+        "replication_sha256": "51f1cdd877a4235e3cf4d74a38649084bb9a62cc3baeca325143b0f2f0332f45",
+        "sha256": "51f1cdd877a4235e3cf4d74a38649084bb9a62cc3baeca325143b0f2f0332f45"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/optimization.py",
+        "replication_sha256": "22b07e932397fc2b068cd913559b475fdab2f90539a9985802434709f5960992",
+        "sha256": "22b07e932397fc2b068cd913559b475fdab2f90539a9985802434709f5960992"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/rad_export_codec.py",
+        "replication_sha256": "234b213b89706e5cb360c6aa9932c03b20297f9f656d207eeaf6b066a64e2a11",
+        "sha256": "234b213b89706e5cb360c6aa9932c03b20297f9f656d207eeaf6b066a64e2a11"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/rad_model_import.py",
+        "replication_sha256": "84e0f1bc1f2fe6aaa1e5735df40dcfbdf7ef14f96925bca12bb3e87df06834e2",
+        "sha256": "84e0f1bc1f2fe6aaa1e5735df40dcfbdf7ef14f96925bca12bb3e87df06834e2"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/radimagenet_initialization.py",
+        "replication_sha256": "64483b6cbd7e0a15e61774423b3b8d42593e63aa1f5baaaad7cebea04397bcea",
+        "sha256": "64483b6cbd7e0a15e61774423b3b8d42593e63aa1f5baaaad7cebea04397bcea"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/retention.py",
+        "replication_sha256": "f301f1db0e788e94f4effd5b249ca153709c5ac59600fae9894c70d37767a9c7",
+        "sha256": "f301f1db0e788e94f4effd5b249ca153709c5ac59600fae9894c70d37767a9c7"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/reuse.py",
+        "replication_sha256": "4132a26f6f864d17a1cc89ff1cbaebfb9471ab4c1fca142c97c814aea53397e8",
+        "sha256": "4132a26f6f864d17a1cc89ff1cbaebfb9471ab4c1fca142c97c814aea53397e8"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/rng.py",
+        "replication_sha256": "c3cf5f01fd0beff7480f7d8652888374d5cb197e8da69855ffc28b0a8a30fb30",
+        "sha256": "c3cf5f01fd0beff7480f7d8652888374d5cb197e8da69855ffc28b0a8a30fb30"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/runner.py",
+        "replication_sha256": "464ccc440407f85eb3550eee6ace802fb6d7e1e3bfe5d40b08a2b5326cd52cb9",
+        "sha256": "464ccc440407f85eb3550eee6ace802fb6d7e1e3bfe5d40b08a2b5326cd52cb9"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/runtime_inventory.py",
+        "replication_sha256": "54cbe5a8b353e24a8c79d2e89470f08cdd2e1413d59dfdb9d3844cc309757f17",
+        "sha256": "54cbe5a8b353e24a8c79d2e89470f08cdd2e1413d59dfdb9d3844cc309757f17"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/selection.py",
+        "replication_sha256": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585",
+        "sha256": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/storage_admission.py",
+        "replication_sha256": "ca72d3bade0541eed6de41b25622a77d42edaf9c4f13292da2b8f4d5a001c85b",
+        "sha256": "ca72d3bade0541eed6de41b25622a77d42edaf9c4f13292da2b8f4d5a001c85b"
+      },
+      {
+        "matches_replication": false,
+        "path": "source-snapshot/consendxformer/performance_v2/storage_bound.py",
+        "replication_sha256": "59808f78546fe4f8e6ff3eca4021c098a6895e5f90273853da5602e064adb221",
+        "sha256": "920699acd901d28d57566a0535b9345c343fa03bbdb0bf122fc36d6537256521"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/streams.py",
+        "replication_sha256": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14",
+        "sha256": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/supervision_admission.py",
+        "replication_sha256": "7e13bc30fe8929988897721e94d748c0bc4f06e6632a53ac5ed3157745f2f2b5",
+        "sha256": "7e13bc30fe8929988897721e94d748c0bc4f06e6632a53ac5ed3157745f2f2b5"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/supervisor_bootstrap.py",
+        "replication_sha256": "a28070f069fa71725fd167e093231c0564359afa264884e21c97d2d096a5205e",
+        "sha256": "a28070f069fa71725fd167e093231c0564359afa264884e21c97d2d096a5205e"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/timing_probe.py",
+        "replication_sha256": "a4d1ca39ef1f8374389c96e813886ff730c13d281cedf0e63a36db35bda525a0",
+        "sha256": "a4d1ca39ef1f8374389c96e813886ff730c13d281cedf0e63a36db35bda525a0"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/training_runner.py",
+        "replication_sha256": "fd4c10462a36b844e9622641554fd13a41fb1533b746e09f1a6fcb4767c0d78c",
+        "sha256": "fd4c10462a36b844e9622641554fd13a41fb1533b746e09f1a6fcb4767c0d78c"
+      },
+      {
+        "matches_replication": true,
+        "path": "source-snapshot/consendxformer/performance_v2/transport_denial.py",
+        "replication_sha256": "c8f12285fbfa0fc241ce134827107dd0da49ae67a188db36207613f65401a9ae",
+        "sha256": "c8f12285fbfa0fc241ce134827107dd0da49ae67a188db36207613f65401a9ae"
+      }
+    ],
+    "execution_time_full_source_closure_authenticated": false,
+    "matches_independently_retained_server_copy": true,
+    "sha256": "08664330728a5c95e227b5c9e23d62bb68bc331dd387beeab8b3ddf93c7cf902"
+  },
+  "historical_replication": {
+    "all_original_bindings_verified_locally": true,
+    "excluded_private_configuration_bindings": [
+      "configs/performance_v2/evidence_mapping_source_lock_v1.json",
+      "configs/performance_v2/imagenet_mapping_preparation_v1.json",
+      "configs/performance_v2/imagenet_receiver_bounded_acceptance_v1.json",
+      "configs/performance_v2/materialization_source_lock_v1.json",
+      "configs/performance_v2/materialization_synthetic_001_bounded_acceptance.json",
+      "configs/performance_v2/native_acceptance_source_lock.json",
+      "configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+      "configs/performance_v2/pilot_protocol_v1.json",
+      "configs/performance_v2/pilot_protocol_v2.json",
+      "configs/performance_v2/pretraining_provenance_v1.json",
+      "configs/performance_v2/r50_three_condition_design_v1.PROPOSED.json",
+      "configs/performance_v2/radimagenet_native_import_acceptance_v1.json",
+      "configs/performance_v2/reader_integration_001_bounded_acceptance.json",
+      "configs/performance_v2/runner_integration_source_lock_v1.json"
+    ],
+    "excluded_records_are_not_supplied_or_recreated": true,
+    "original_binding_count": 167,
+    "released_bindings": [
+      "src/consendxformer/__init__.py",
+      "src/consendxformer/baseline_config.py",
+      "src/consendxformer/baseline_evaluation.py",
+      "src/consendxformer/baseline_evaluator.py",
+      "src/consendxformer/baseline_metadata.py",
+      "src/consendxformer/baseline_metadata_export.py",
+      "src/consendxformer/baseline_provenance.py",
+      "src/consendxformer/baseline_runner.py",
+      "src/consendxformer/baseline_source.py",
+      "src/consendxformer/config.py",
+      "src/consendxformer/hashing.py",
+      "src/consendxformer/lidc_inventory.py",
+      "src/consendxformer/lidc_ledger.py",
+      "src/consendxformer/lidc_masks.py",
+      "src/consendxformer/lidc_pipeline.py",
+      "src/consendxformer/lidc_reconciliation.py",
+      "src/consendxformer/lidc_records.py",
+      "src/consendxformer/lidc_render.py",
+      "src/consendxformer/lidc_render_pipeline.py",
+      "src/consendxformer/lidc_targets.py",
+      "src/consendxformer/manifest.py",
+      "src/consendxformer/manifest_guard.py",
+      "src/consendxformer/performance_v2/__init__.py",
+      "src/consendxformer/performance_v2/auxiliary_caps.py",
+      "src/consendxformer/performance_v2/bindings.py",
+      "src/consendxformer/performance_v2/checkpoint.py",
+      "src/consendxformer/performance_v2/cuda_identity.py",
+      "src/consendxformer/performance_v2/durable_budget.py",
+      "src/consendxformer/performance_v2/durable_lifecycle.py",
+      "src/consendxformer/performance_v2/evidence_mapping.py",
+      "src/consendxformer/performance_v2/full_bootstrap.py",
+      "src/consendxformer/performance_v2/full_supervisor.py",
+      "src/consendxformer/performance_v2/full_training.py",
+      "src/consendxformer/performance_v2/full_worker.py",
+      "src/consendxformer/performance_v2/imagenet_initialization.py",
+      "src/consendxformer/performance_v2/imagenet_legacy_receipt.py",
+      "src/consendxformer/performance_v2/imagenet_mapping.py",
+      "src/consendxformer/performance_v2/input_adapter.py",
+      "src/consendxformer/performance_v2/launch_security.py",
+      "src/consendxformer/performance_v2/lifecycle.py",
+      "src/consendxformer/performance_v2/managed_cleanup.py",
+      "src/consendxformer/performance_v2/managed_finalization.py",
+      "src/consendxformer/performance_v2/materialization.py",
+      "src/consendxformer/performance_v2/metrics.py",
+      "src/consendxformer/performance_v2/model.py",
+      "src/consendxformer/performance_v2/objectives.py",
+      "src/consendxformer/performance_v2/optimization.py",
+      "src/consendxformer/performance_v2/rad_export_codec.py",
+      "src/consendxformer/performance_v2/rad_model_import.py",
+      "src/consendxformer/performance_v2/radimagenet_initialization.py",
+      "src/consendxformer/performance_v2/retention.py",
+      "src/consendxformer/performance_v2/reuse.py",
+      "src/consendxformer/performance_v2/rng.py",
+      "src/consendxformer/performance_v2/runner.py",
+      "src/consendxformer/performance_v2/runtime_inventory.py",
+      "src/consendxformer/performance_v2/selection.py",
+      "src/consendxformer/performance_v2/storage_admission.py",
+      "src/consendxformer/performance_v2/storage_bound.py",
+      "src/consendxformer/performance_v2/streams.py",
+      "src/consendxformer/performance_v2/supervision_admission.py",
+      "src/consendxformer/performance_v2/supervisor_bootstrap.py",
+      "src/consendxformer/performance_v2/timing_probe.py",
+      "src/consendxformer/performance_v2/training_runner.py",
+      "src/consendxformer/performance_v2/transport_denial.py",
+      "src/consendxformer/phase2_config.py",
+      "src/consendxformer/phase2_io.py",
+      "src/consendxformer/phase2_provenance.py",
+      "src/consendxformer/phase2_runtime.py",
+      "src/consendxformer/phase3_artifacts.py",
+      "src/consendxformer/phase3_checkpoints.py",
+      "src/consendxformer/phase3_comparison.py",
+      "src/consendxformer/phase3_config.py",
+      "src/consendxformer/phase3_execution.py",
+      "src/consendxformer/phase3_identity.py",
+      "src/consendxformer/phase3_orchestrator.py",
+      "src/consendxformer/phase3_predictions.py",
+      "src/consendxformer/phase3_readiness.py",
+      "src/consendxformer/phase3_runner.py",
+      "src/consendxformer/phase4_ablation_analysis.py",
+      "src/consendxformer/phase4_ablation_contracts.py",
+      "src/consendxformer/phase4_ablation_execution.py",
+      "src/consendxformer/phase4_ablation_launch.py",
+      "src/consendxformer/phase4_ablation_runner.py",
+      "src/consendxformer/phase4_ablations.py",
+      "src/consendxformer/phase4_artifacts.py",
+      "src/consendxformer/phase4_attention_comparison.py",
+      "src/consendxformer/phase4_attention_evidence.py",
+      "src/consendxformer/phase4_attention_runtime.py",
+      "src/consendxformer/phase4_bootstrap.py",
+      "src/consendxformer/phase4_boundary.py",
+      "src/consendxformer/phase4_boundary_dataset.py",
+      "src/consendxformer/phase4_boundary_entropy.py",
+      "src/consendxformer/phase4_checkpoints.py",
+      "src/consendxformer/phase4_config.py",
+      "src/consendxformer/phase4_dataset.py",
+      "src/consendxformer/phase4_evaluation_metrics.py",
+      "src/consendxformer/phase4_evaluation_runner.py",
+      "src/consendxformer/phase4_evidence_gaps.py",
+      "src/consendxformer/phase4_execution.py",
+      "src/consendxformer/phase4_input_lock.py",
+      "src/consendxformer/phase4_losses.py",
+      "src/consendxformer/phase4_model.py",
+      "src/consendxformer/phase4_posthoc.py",
+      "src/consendxformer/phase4_posthoc_runner.py",
+      "src/consendxformer/phase4_predictions.py",
+      "src/consendxformer/phase4_protocol.py",
+      "src/consendxformer/phase4_readiness.py",
+      "src/consendxformer/phase4_runner.py",
+      "src/consendxformer/phase4_supervision.py",
+      "src/consendxformer/phase4_training.py",
+      "src/consendxformer/phase5_bounded_mean.py",
+      "src/consendxformer/phase5_cuda_identity.py",
+      "src/consendxformer/phase5_descriptive.py",
+      "src/consendxformer/phase5_descriptive_runner.py",
+      "src/consendxformer/phase5_device.py",
+      "src/consendxformer/phase5_inference_evidence.py",
+      "src/consendxformer/phase5_inference_exports.py",
+      "src/consendxformer/phase5_inference_protocol.py",
+      "src/consendxformer/phase5_inference_runner.py",
+      "src/consendxformer/phase5_inference_sources.py",
+      "src/consendxformer/phase5_perturbation.py",
+      "src/consendxformer/phase5_perturbation_exports.py",
+      "src/consendxformer/phase5_perturbation_runner.py",
+      "src/consendxformer/phase5_perturbation_sources.py",
+      "src/consendxformer/phase5_timing.py",
+      "src/consendxformer/phase5_timing_runner.py",
+      "src/consendxformer/phase5_timing_runtime.py",
+      "src/consendxformer/pylidc_numpy_compat.py",
+      "src/consendxformer/pylidc_provider.py",
+      "src/consendxformer/r3_entropy.py",
+      "src/consendxformer/r3_entropy_source.py",
+      "src/consendxformer/reproducibility.py",
+      "tests/run_full_delta.py",
+      "tests/run_imagenet_delta.py",
+      "tests/test_full_training_delta.py",
+      "tests/test_imagenet_initialization_delta.py",
+      "tests/test_performance_v2_acceptance_entry.py",
+      "tests/test_performance_v2_checkpoint_inventory.py",
+      "tests/test_performance_v2_contracts.py",
+      "tests/test_performance_v2_diagnostics.py",
+      "tests/test_performance_v2_durable_lifecycle.py",
+      "tests/test_performance_v2_evidence_mapping.py",
+      "tests/test_performance_v2_imagenet_mapping.py",
+      "tests/test_performance_v2_implementation.py",
+      "tests/test_performance_v2_input_audit.py",
+      "tests/test_performance_v2_lifecycle.py",
+      "tests/test_performance_v2_materialization.py",
+      "tests/test_performance_v2_native_processes.py",
+      "tests/test_performance_v2_reader_files.py",
+      "tests/test_performance_v2_real_updates.py",
+      "tests/test_performance_v2_runner.py",
+      "tests/test_performance_v2_training_mode.py",
+      "tests/test_performance_v2_transform_probe.py"
+    ],
+    "source_lock_sha256": "d0deb9fb880b8a71e0364e26c5e87d8962b15d57c21bbe3cdcfff9f7c56fc51f"
+  },
+  "schema": "glads-ct-public-source-provenance-v1",
+  "scope": "Retained sources and aggregate records; not a new experiment or execution authorization"
+}

@@ -1,0 +1,7 @@
+# Retained evidence/source hashes refer to exact bytes on every platform.
+/research/r50-2026-10-22/** -text
+/tools/verify_publication_snapshot.py -text
+/README.md -text
+/CITATION.cff -text
+/LICENSE -text
+/THIRD_PARTY_NOTICES.md -text
