@@ -8,3 +8,4 @@
 
 # Preserve byte-identical documentation history.
 /docs/history/** -text
+/.gitattributes -text
