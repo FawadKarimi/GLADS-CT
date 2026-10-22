@@ -1,0 +1,30 @@
+{
+  "original_commit": "3cf719e932bc882ecf9045c6500c6a8738a1dd66",
+  "moves": [
+    {
+      "original_path": "README_PHASE0.md",
+      "archived_path": "docs/history/PHASE0.md",
+      "sha256": "6746604b503f995f9356c1f224c4d0be5f8069b4c3a30397ef410bb46e505014",
+      "bytes": 4804
+    },
+    {
+      "original_path": "README_PHASE1.md",
+      "archived_path": "docs/history/PHASE1.md",
+      "sha256": "2a5e8856744c6a19fca944f9d107799840a7c9fbf98750e330cbd9d89b8c9861",
+      "bytes": 9320
+    },
+    {
+      "original_path": "README.md",
+      "archived_path": "docs/history/PUBLICATION-OVERVIEW-20261022.md",
+      "sha256": "5d7a74556ecb3cd85ded4aeffd3a2b5cdd2dc697fa9e77313946a15e3c620d81",
+      "bytes": 3397
+    },
+    {
+      "original_path": "research/r50-2026-10-22/README.md",
+      "archived_path": "docs/history/R50-SOURCE-OVERVIEW-20261022.md",
+      "sha256": "f637232ab1ce96a33c9230b7fd6654bc28aba1d440b2f08dab1fa6864c7384ca",
+      "bytes": 1733
+    }
+  ],
+  "original_publication_ledger_sha256": "e22534b010cc009219e4cac2328aa6b77084b82c781ef943e37cf79110533a74"
+}

@@ -5,3 +5,6 @@
 /CITATION.cff -text
 /LICENSE -text
 /THIRD_PARTY_NOTICES.md -text
+
+# Preserve byte-identical documentation history.
+/docs/history/** -text
