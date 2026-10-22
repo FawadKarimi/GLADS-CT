@@ -1,0 +1,133 @@
+{
+  "classes": [
+    "benign",
+    "indeterminate",
+    "malignant"
+  ],
+  "expanded": {
+    "eligible_axial_views": 4273,
+    "single_reader_additions": 490,
+    "train_class_counts": [
+      582,
+      442,
+      273
+    ],
+    "train_nodules": 1297,
+    "train_patients": 529,
+    "training_view_rule": "one frozen scheduled axial view per nodule per epoch, equal nodule exposure"
+  },
+  "historical_test": {
+    "class_counts": [
+      98,
+      41,
+      44
+    ],
+    "historically_exposed": true,
+    "nodules": 183,
+    "patients": 99
+  },
+  "initialization": {
+    "common_normalization_differs_from_radimagenet_recommended_recipe": true,
+    "counter_reset_or_synthesis": false,
+    "mapped_backbone_entries": 318,
+    "new_modules": "matched within seed via independent initialization streams",
+    "pretraining_lidc_idri_overlap": "UNKNOWN",
+    "radimagenet_raw_bytes": 94345733,
+    "radimagenet_raw_member": "RadImageNet_pytorch/ResNet50.pt",
+    "radimagenet_raw_sha256": "08629f7e7bd3e29b8ee9522ca3f65ce4d010a7ddf74f0ea3c7e3f3d0bbab0734",
+    "supplied_batchnorm_counters": 53
+  },
+  "input": {
+    "augmentation": "independent horizontal/vertical flips p=0.5; rotation +/-10 degrees; translation +/-8%; zero fill",
+    "cached_crop": [
+      64,
+      64
+    ],
+    "channels": "grayscale repeated three times",
+    "conditional_division_by_255": "only if maximum > 1; inactive in inspected normalized crops",
+    "dtype": "float32",
+    "interpolation": "bilinear, antialias=True",
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "resize": [
+      224,
+      224
+    ]
+  },
+  "losses": {
+    "HARD": "class-weighted categorical cross-entropy, weighted numerator / sum of target class weights; no reader loss",
+    "LEGACY": "t=(1-u)*one_hot(y)+u*q; weighted negative log probabilities / total weighted target mass",
+    "SEPARATE-010": "HARD + 0.1*mean reader-distribution cross-entropy on separate 128-to-3 head",
+    "SHARED-010": "HARD + 0.1*mean reader-distribution cross-entropy on diagnostic logits",
+    "attention_loss_coefficient": 0,
+    "ordinal_coefficient": 0
+  },
+  "model": "performance_v2_r50_hybrid_v2",
+  "original": {
+    "train_class_counts": [
+      348,
+      224,
+      235
+    ],
+    "train_nodules": 807,
+    "train_patients": 437
+  },
+  "recorded_runtime": {
+    "fresh_environment_requalification_performed_for_public_release": false,
+    "gpu": "shared NVIDIA RTX 2080 Ti",
+    "python": "3.10.17",
+    "torch": "2.3.0+cu121",
+    "torchvision": "0.18.0+cu121"
+  },
+  "status": "DOCUMENTATION_ONLY; not an admitted execution specification",
+  "training": {
+    "backbone_feature_lr": 0.0001,
+    "batch_size": 16,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "gradient_norm_clip": 1.0,
+    "head_lr": 0.001,
+    "max_epochs": 100,
+    "min_epochs": 20,
+    "min_macro_f1_improvement": 0.0001,
+    "optimizer": "AdamW",
+    "patience": 15,
+    "precision": "FP32",
+    "schedule": "cosine through 100-epoch maximum",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "selection": "maximum validation Macro-F1, then minimum unweighted diagnostic CE, then earliest epoch",
+    "test_used_for_selection": false,
+    "warmup_epochs": 5,
+    "weight_decay": 0.0001,
+    "weight_decay_exclusions": [
+      "biases",
+      "normalization parameters",
+      "positional embeddings"
+    ]
+  },
+  "validation": {
+    "class_counts": [
+      65,
+      38,
+      40
+    ],
+    "nodules": 143,
+    "patients": 84,
+    "views": "one fixed representative per nodule"
+  }
+}

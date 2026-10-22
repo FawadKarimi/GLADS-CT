@@ -1,0 +1,316 @@
+{
+  "conditions": [
+    {
+      "TEST_metrics": {
+        "accuracy": 0.639344262295082,
+        "confusion_matrix": [
+          [
+            56,
+            38,
+            4
+          ],
+          [
+            10,
+            29,
+            2
+          ],
+          [
+            0,
+            12,
+            32
+          ]
+        ],
+        "diagnostic_ce": 0.7759022854772382,
+        "input_lock_sha256": "cad8c5d076d17b4157d2b192d62df40d84d9bba35a187b52f97755166b79b9e7",
+        "macro_f1": 0.6489159891598916,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.639344262295082,
+        "n": 183,
+        "per_class": {
+          "benign": {
+            "f1": 0.6829268292682927,
+            "precision": 0.8484848484848485,
+            "recall": 0.5714285714285714,
+            "support": 98
+          },
+          "indeterminate": {
+            "f1": 0.48333333333333334,
+            "precision": 0.3670886075949367,
+            "recall": 0.7073170731707317,
+            "support": 41
+          },
+          "malignant": {
+            "f1": 0.7804878048780488,
+            "precision": 0.8421052631578947,
+            "recall": 0.7272727272727273,
+            "support": 44
+          }
+        },
+        "prediction_identity_sha256": "00b44a409185f2518f1d8d676b2681bd65cf628d25b649087145cc8c0f7efd78",
+        "split": "test"
+      },
+      "condition": "RANDOM",
+      "selected_checkpoint_sha256": "69d1b7cd4adae9101b2ef4eae961d25bfb1302ea6ecac1de552d5bf4a3653262",
+      "selected_epoch": 53,
+      "spec_sha256": "5f7db4cb2d16d58b90f67039dcd57354d13cba07da5146b9be7d8e282d0f9732",
+      "stopping_epoch": 68,
+      "validation_metrics": {
+        "accuracy": 0.6783216783216783,
+        "confusion_matrix": [
+          [
+            49,
+            15,
+            1
+          ],
+          [
+            15,
+            18,
+            5
+          ],
+          [
+            0,
+            10,
+            30
+          ]
+        ],
+        "diagnostic_ce": 0.7584720940876205,
+        "input_lock_sha256": "863713e4c6c6ebb38cde494b851fc8e4756aa520531abc6e53527ae732a5b2e0",
+        "macro_f1": 0.6645360170451969,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.6783216783216783,
+        "n": 143,
+        "per_class": {
+          "benign": {
+            "f1": 0.7596899224806202,
+            "precision": 0.765625,
+            "recall": 0.7538461538461538,
+            "support": 65
+          },
+          "indeterminate": {
+            "f1": 0.4444444444444444,
+            "precision": 0.4186046511627907,
+            "recall": 0.47368421052631576,
+            "support": 38
+          },
+          "malignant": {
+            "f1": 0.7894736842105262,
+            "precision": 0.8333333333333334,
+            "recall": 0.75,
+            "support": 40
+          }
+        },
+        "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+        "split": "val"
+      }
+    },
+    {
+      "TEST_metrics": {
+        "accuracy": 0.6939890710382514,
+        "confusion_matrix": [
+          [
+            58,
+            37,
+            3
+          ],
+          [
+            7,
+            31,
+            3
+          ],
+          [
+            0,
+            6,
+            38
+          ]
+        ],
+        "diagnostic_ce": 0.8242727419058019,
+        "input_lock_sha256": "cad8c5d076d17b4157d2b192d62df40d84d9bba35a187b52f97755166b79b9e7",
+        "macro_f1": 0.7048077467122545,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.6939890710382514,
+        "n": 183,
+        "per_class": {
+          "benign": {
+            "f1": 0.7116564417177914,
+            "precision": 0.8923076923076924,
+            "recall": 0.5918367346938775,
+            "support": 98
+          },
+          "indeterminate": {
+            "f1": 0.5391304347826087,
+            "precision": 0.4189189189189189,
+            "recall": 0.7560975609756098,
+            "support": 41
+          },
+          "malignant": {
+            "f1": 0.8636363636363636,
+            "precision": 0.8636363636363636,
+            "recall": 0.8636363636363636,
+            "support": 44
+          }
+        },
+        "prediction_identity_sha256": "00b44a409185f2518f1d8d676b2681bd65cf628d25b649087145cc8c0f7efd78",
+        "split": "test"
+      },
+      "condition": "IMAGENET",
+      "selected_checkpoint_sha256": "57fff393a804b6042bacdceb94bdbc337a1da37573f6eca875564a76c0b20b69",
+      "selected_epoch": 26,
+      "spec_sha256": "8d80d33eb17640c23aacbfed1777138956e070b9897b0f953af0c35f0861abaf",
+      "stopping_epoch": 41,
+      "validation_metrics": {
+        "accuracy": 0.6993006993006993,
+        "confusion_matrix": [
+          [
+            45,
+            19,
+            1
+          ],
+          [
+            10,
+            22,
+            6
+          ],
+          [
+            1,
+            6,
+            33
+          ]
+        ],
+        "diagnostic_ce": 0.8327041521165961,
+        "input_lock_sha256": "863713e4c6c6ebb38cde494b851fc8e4756aa520531abc6e53527ae732a5b2e0",
+        "macro_f1": 0.6954829039053637,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.6993006993006993,
+        "n": 143,
+        "per_class": {
+          "benign": {
+            "f1": 0.7438016528925621,
+            "precision": 0.8035714285714286,
+            "recall": 0.6923076923076923,
+            "support": 65
+          },
+          "indeterminate": {
+            "f1": 0.5176470588235293,
+            "precision": 0.46808510638297873,
+            "recall": 0.5789473684210527,
+            "support": 38
+          },
+          "malignant": {
+            "f1": 0.825,
+            "precision": 0.825,
+            "recall": 0.825,
+            "support": 40
+          }
+        },
+        "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+        "split": "val"
+      }
+    },
+    {
+      "TEST_metrics": {
+        "accuracy": 0.6666666666666666,
+        "confusion_matrix": [
+          [
+            61,
+            35,
+            2
+          ],
+          [
+            10,
+            29,
+            2
+          ],
+          [
+            0,
+            12,
+            32
+          ]
+        ],
+        "diagnostic_ce": 0.9235091003796065,
+        "input_lock_sha256": "cad8c5d076d17b4157d2b192d62df40d84d9bba35a187b52f97755166b79b9e7",
+        "macro_f1": 0.6725399956169187,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.6666666666666666,
+        "n": 183,
+        "per_class": {
+          "benign": {
+            "f1": 0.7218934911242604,
+            "precision": 0.8591549295774648,
+            "recall": 0.6224489795918368,
+            "support": 98
+          },
+          "indeterminate": {
+            "f1": 0.4957264957264957,
+            "precision": 0.3815789473684211,
+            "recall": 0.7073170731707317,
+            "support": 41
+          },
+          "malignant": {
+            "f1": 0.7999999999999999,
+            "precision": 0.8888888888888888,
+            "recall": 0.7272727272727273,
+            "support": 44
+          }
+        },
+        "prediction_identity_sha256": "00b44a409185f2518f1d8d676b2681bd65cf628d25b649087145cc8c0f7efd78",
+        "split": "test"
+      },
+      "condition": "RADIMAGENET",
+      "selected_checkpoint_sha256": "bc23362715ca842698fe04ac92c3f96668023a18b78704506a828f16c26a20d4",
+      "selected_epoch": 38,
+      "spec_sha256": "1875ec1d7aeef5b7858836608ac8e815a272be1503bfde5a89b226ea97180bd1",
+      "stopping_epoch": 53,
+      "validation_metrics": {
+        "accuracy": 0.7062937062937062,
+        "confusion_matrix": [
+          [
+            44,
+            18,
+            3
+          ],
+          [
+            7,
+            26,
+            5
+          ],
+          [
+            2,
+            7,
+            31
+          ]
+        ],
+        "diagnostic_ce": 1.0430320214301418,
+        "input_lock_sha256": "863713e4c6c6ebb38cde494b851fc8e4756aa520531abc6e53527ae732a5b2e0",
+        "macro_f1": 0.7049475004560112,
+        "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+        "micro_f1": 0.7062937062937062,
+        "n": 143,
+        "per_class": {
+          "benign": {
+            "f1": 0.7457627118644068,
+            "precision": 0.8301886792452831,
+            "recall": 0.676923076923077,
+            "support": 65
+          },
+          "indeterminate": {
+            "f1": 0.5842696629213484,
+            "precision": 0.5098039215686274,
+            "recall": 0.6842105263157895,
+            "support": 38
+          },
+          "malignant": {
+            "f1": 0.7848101265822786,
+            "precision": 0.7948717948717948,
+            "recall": 0.775,
+            "support": 40
+          }
+        },
+        "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+        "split": "val"
+      }
+    }
+  ],
+  "parent_record_sha256": "16818c3468777e319ef5a75d9ff5cb146dde06751af42c9a1ef6f28c5326313e",
+  "scope": "Seed-42 initialization comparison; TEST was historically exposed and cannot change nomination",
+  "validation_nomination": "RADIMAGENET"
+}

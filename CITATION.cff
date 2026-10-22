@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Please cite this software snapshot using the exact Git commit; the manuscript is not an accepted publication."
+type: software
+title: "GLADS-CT research code and evidence snapshot"
+authors:
+  - family-names: Karimi
+    given-names: Mohammad Fawad
+repository-code: "https://github.com/FawadKarimi/GLADS-CT"
+url: "https://github.com/FawadKarimi/GLADS-CT"
+version: "2026.10.22"
+date-released: "2026-10-22"
+license: MIT
+keywords:
+  - computed tomography
+  - lung-nodule assessment
+  - multi-reader supervision
+  - reproducibility
