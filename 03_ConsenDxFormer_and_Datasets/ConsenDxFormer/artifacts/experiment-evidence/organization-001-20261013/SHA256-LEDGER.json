@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "bytes": 7596136,
+      "file": "INVENTORY.json",
+      "sha256": "b6687b0f9cfee840c44b0f008dfe2a04d462861f041b92af40059e451da9c9e6"
+    },
+    {
+      "bytes": 20790,
+      "file": "INDEX.json",
+      "sha256": "e0d555ccef694dada2aace80e46122401ce696337adb8b6b76b075631f8b0061"
+    },
+    {
+      "bytes": 217,
+      "file": "CLEANUP-LOG.json",
+      "sha256": "27dd2e9046e0e72c9b9e26f5b2f5cc1e040f4731320c1b890ed116c653f4965a"
+    },
+    {
+      "bytes": 464,
+      "file": "CAPACITY.json",
+      "sha256": "bfce5fa09a966c35617f1941b0d93627c6810aa404600776514305f7aa76384b"
+    }
+  ]
+}

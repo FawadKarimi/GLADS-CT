@@ -1,0 +1,24 @@
+baseline_name: LungDxFormer
+lock_created_date: 2026-09-05
+
+paper:
+  publisher: Nature Scientific Reports
+  url: https://www.nature.com/articles/s41598-026-50449-7
+
+code:
+  repository: https://github.com/Srinivasa459/LungDxFormer.git
+  branch_observed: main
+  commit_sha: 0e5bcadcadfce5ea99df8484d23705d7bd4d778a
+  commit_observed_date_utc: 2026-04-19T08:00:24Z
+  verification_note: >-
+    The commit SHA was read from the public GitHub main branch on 2026-09-05.
+    Experiments must use this exact SHA when referring to the locked official-code baseline.
+
+archive:
+  doi: 10.5281/zenodo.19649897
+  url: https://doi.org/10.5281/zenodo.19649897
+  verification_status: user_supplied_identifier
+  verification_note: >-
+    The DOI is pinned exactly as supplied for this project. Phase 0 does not
+    claim byte-level identity between the Zenodo archive and the GitHub commit
+    because no archive checksum is available in this scaffold.

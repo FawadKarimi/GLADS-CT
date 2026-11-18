@@ -1,0 +1,26 @@
+extends: baseline_common.yaml
+
+experiment:
+  name: lungdxformer_b1_paper_aligned
+  baseline_mode: B1
+  protocol: paper-aligned-released-architecture
+
+# Paper-aligned values that the released implementation can accept through an
+# external config. Architecture/source code remains exactly the B0 source.
+dataset:
+  image_size: 64
+  batch_size: 32
+
+augmentation:
+  train:
+    hflip: true
+    vflip: true
+    rotation_deg: 10
+
+model:
+  dropout: 0.5
+
+training:
+  epochs: 100
+  lr: 0.0001
+  early_stopping_patience: 10

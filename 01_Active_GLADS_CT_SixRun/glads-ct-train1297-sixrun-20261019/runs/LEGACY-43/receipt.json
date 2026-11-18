@@ -1,0 +1,20 @@
+{
+  "best_checkpoint_sha256": "3b14c1e246708f7f29572fdedcbf751c7ae21168c00f2d9b0a9950889bfe2412",
+  "objective": "LEGACY",
+  "retained_checkpoints": {
+    "epoch-011.state.json": {
+      "sha256": "3b14c1e246708f7f29572fdedcbf751c7ae21168c00f2d9b0a9950889bfe2412",
+      "size_bytes": 400870333
+    },
+    "epoch-026.state.json": {
+      "sha256": "d7ab650aec8fc6c6a36a7aa716d7988635abfed1df576a294eec09904c3b908e",
+      "size_bytes": 400872715
+    }
+  },
+  "run_id": "LEGACY-43",
+  "seed": 43,
+  "selected_epoch": 11,
+  "status": "complete",
+  "stopped_epoch": 26,
+  "summary_sha256": "91ae55b6886918f1d85a674aa442af97bc2cd9e65618f398150d675783b2d2d7"
+}

@@ -1,0 +1,70 @@
+{
+  "access-preflight.json": {
+    "bytes": 411,
+    "sha256": "77e998ba284a66c646ed69c1b5f7eddf6fbf918fa5ee30efd240987b2ee7ffd7"
+  },
+  "after-source.json": {
+    "bytes": 133,
+    "sha256": "9c47ddc93ebfd3eef48c9ffff1f50d2bffee39b086a25b80894fb69d915135d6"
+  },
+  "before-source.json": {
+    "bytes": 133,
+    "sha256": "9c47ddc93ebfd3eef48c9ffff1f50d2bffee39b086a25b80894fb69d915135d6"
+  },
+  "child.json": {
+    "bytes": 283,
+    "sha256": "3e0bb14e2805e84e732973171d07380e445d53b0a6b82f26663df1785f687bdf"
+  },
+  "controller.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "controller.stdout.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "finalization-errors.json": {
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native-seal-001.exit.txt": {
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "native-seal-001.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-seal-001.stdout.json": {
+    "bytes": 764332,
+    "sha256": "206b3f2238474a1d4e1c4a182f4164a2e14dff624a9ca151df5e9230551a684d"
+  },
+  "outer-status.json": {
+    "bytes": 78,
+    "sha256": "3877f1a3314c59e99d8d9ba667bf1632368143194393af4f1e70f455edd77270"
+  },
+  "owner-authorization.json": {
+    "bytes": 419,
+    "sha256": "56f2f6776ea0ba3c7f8f2fc47e535747ed5e947282dc7a0699d455ed8f10f685"
+  },
+  "processes.json": {
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "runtime.exit.json": {
+    "bytes": 97,
+    "sha256": "888988081bdd9d8f670ef2d31ba103c943d7a6f3e205314eb1b8e14455627b98"
+  },
+  "runtime.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "runtime.stdout.json": {
+    "bytes": 372,
+    "sha256": "d466bae86b05bbeeb14ca34dc223fd19ac756319018c0bf49eb7ed6c62def1cb"
+  },
+  "staging-receipt.json": {
+    "bytes": 545,
+    "sha256": "a690abe46c025a554952e41489b849e1381e506f17d93016ac95a3320e28f32f"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "schema": "performance_v2_pretraining_provenance_v1",
+  "recorded": "2026-09-27",
+  "pilot_execution_authorized": false,
+  "status_vocabulary": ["verified_within_stated_evidence", "unresolved", "known_overlap"],
+  "checkpoint_downloaded_or_loaded": true,
+  "checkpoint_downloaded": true,
+  "checkpoint_loaded": false,
+  "combined_flag_explanation": "ImageNet V1 byte acquisition only on 2026-09-27; no deserialization, conversion or model execution",
+  "diagnostic_audit": {
+    "archive": "audit-20260927T100333767013Z-539541171cb6.zip",
+    "archive_sha256": "e5663b68523b345a3b270108e6958e1f49498e3bec14ef6959e9f4d53394e36b",
+    "artifact_manifest_sha256": "59d80e704803de57d38a5f9228cfdb20aa9ff763f1f9ef8e8a09ccb3e1c28781",
+    "extractor_sha256": "1b3ad98fbe8acd572f1427586c31f755d6457b49640ce8a95eebb8b74e09b01d",
+    "historical_status": "partial",
+    "desktop_readback": "six B1 YAML snapshots safely parsed and matched their server-recorded raw hashes; no weight or checkpoint bytes inspected",
+    "server_python": "3.10.17",
+    "installed_package_metadata": "resolved_as_owner_report_only_see_environment_metadata"
+  },
+  "environment_metadata": {
+    "recorded": "2026-09-27",
+    "source": "owner-provided conversation record of the supplied university-server importlib.metadata command",
+    "independent_execution_observed": false,
+    "separate_receipt_supplied": false,
+    "reported_output": {
+      "packages": {"Pillow": "12.3.0", "PyYAML": "6.0.3", "numpy": "2.2.6", "opencv-python": "5.0.0.93", "torch": "2.3.0+cu121", "torchvision": "0.18.0+cu121"},
+      "python": "3.10.17"
+    },
+    "resolution_scope": "installed-version metadata only; observations are not approved runtime pins",
+    "imports_verified": false,
+    "binary_compatibility_verified": false,
+    "cuda_determinism_verified": false,
+    "transform_equivalence_verified": false,
+    "pretrained_weight_compatibility_verified": false
+  },
+  "cpu_bridge_evidence": {
+    "source": "owner-provided server output in conversation, received 2026-09-27; execution not independently observed",
+    "separate_script_hash_or_receipt_supplied": false,
+    "reported_output": {
+      "model_forwards": 0,
+      "passed_steps": ["import_numpy", "import_torch", "import_torchvision", "import_PIL", "import_cv2", "import_yaml", "round_trip_zeros", "round_trip_ones", "round_trip_ramp", "round_trip_checkerboard", "shared_storage_and_copy_isolation"],
+      "pilot_execution_authorized": false,
+      "python": "3.10.17",
+      "runtime_versions": {"PIL": "12.3.0", "cv2": "5.0.0", "numpy": "2.2.6", "torch": "2.3.0+cu121", "torchvision": "0.18.0+cu121", "yaml": "6.0.3"},
+      "scope": "cpu_imports_and_numpy_torch_bridge_only",
+      "status": "passed",
+      "training_performed": false,
+      "transforms_checked": false,
+      "warnings": []
+    },
+    "resolution_scope": "owner-reported six imports, four array round trips, shared storage and copy isolation; no warnings reported",
+    "not_established": ["transform compatibility or Stage A equivalence", "CUDA behavior or determinism", "pretrained-weight compatibility"],
+    "prior_environment_metadata_flags": "historical metadata-only evidence; later bridge evidence does not rewrite those observations"
+  },
+  "cpu_transform_evidence": {
+    "source": "owner-supplied university report.json; read-back verified 2026-09-27 without rerunning probe",
+    "report_sha256": "3e79f956d99d39e79cd81dd218397f66f8bc4faa71ce07ccb62220ed3a69c894",
+    "script_sha256": "3203c0d99072e2bc03574b67e1ad47a8ea61bf5dbef3ee8572594274897efab6",
+    "accepted_scope": "24 reported steps exercising synthetic CPU transforms only; 17 numerical comparisons within declared tolerances",
+    "execution_independently_observed": false,
+    "versions": {"python": "3.10.17", "numpy": "2.2.6", "torch": "2.3.0+cu121", "torchvision": "0.18.0+cu121"},
+    "preserved_limits": ["oblique partially supported edges not numerically certified", "no Stage A equivalence", "no research input decoding", "no CUDA determinism", "no pretrained compatibility"],
+    "prior_reports": "preserved as historical; local missing-torchvision failure is not replaced"
+  },
+  "input_audit_acceptance": {
+    "scope": "bounded archived-report acceptance; original server image/source bytes not independently reopened",
+    "archive_sha256": "1dbea55d35db44743e9d5c78f4e40a73d13d6fc8355f250208e65835f09761e7",
+    "manifest_sha256": "d1e68d9c2af5ed480f5b1433efc2db30596e8c9b2ea4e79b176848b9bbc32ff8",
+    "cohort_ledger_sha256": "74ade0365dc6b7ea5593b4736692956b863b4245e122829e2921b0937663b5b1",
+    "train_nodules": 807, "train_patients": 437,
+    "validation_nodules": 143, "validation_patients": 84,
+    "patient_intersection": 0, "ledger_records": 950,
+    "archived_source_references": 972,
+    "historical_run_copies_matched": 18,
+    "reported_division_by_255_count": 0,
+    "audit_rerun": false,
+    "full_original_bundles_verified": false,
+    "details": "docs/performance_v2_input_acceptance_and_acquisition.md"
+  },
+  "acquisition_plan": "docs/performance_v2_pretraining_acquisition_plan.md; historical plan retained; later byte acquisition recorded separately",
+  "acquisition_evidence": {
+    "recorded": "2026-09-27",
+    "external_root": "C:/Users/Lenovo y520/Documents/Playground/performance-v2-acquisition-20260927-authorized",
+    "receipt": "acquisition-receipt.json",
+    "receipt_sha256": "d170a6fd6cc23b54a169e405b959d931f4012f86ffb8b8b93de6dcca5b92c046",
+    "source_documents": 15,
+    "source_hashes_urls_dates_redirects": "enumerated in receipt; raw documents preserved under sources/",
+    "torchvision_commit": "6043bc250768b129e90a5321e318c1d51ee48a5c",
+    "torch_commit": "97ff6cfd9c86c5c09d7ce775ab64ec5c99230f5d",
+    "radimagenet_commit": "0ce16f7375db4236e646829d1eca61cdb4282133",
+    "installed_binary_identity_verified": false,
+    "terms_clearance_complete": false,
+    "compatibility_verified": false,
+    "model_forwards": 0,
+    "historical_reference_sources_below": "preserved observations; new immutable pins supersede their unresolved commit fields only",
+    "details": "docs/performance_v2_input_acceptance_and_acquisition.md"
+  },
+  "reference_sources": [
+    {"url": "https://github.com/BMEII-AI/RadImageNet", "status": "inspected_official_landing_page_not_byte_pin", "commit": null, "finding": "official repository identifies an MIT-licensed code repository and links a PyTorch bundle; this does not establish the separate weight artifact's terms or bytes"},
+    {"url": "https://raw.githubusercontent.com/BMEII-AI/RadImageNet/main/pytorch_example.ipynb", "status": "read_as_text_not_executed_moving_main", "commit": null, "finding": "torchvision resnet50 backbone children[:9]; resnet50_torch.pt; cv2.imread and (image-127.5)*2/255 before resize; NOT proposed ImageNet mean/std"},
+    {"url": "https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html", "status": "inspected_reference_installed_version_unresolved", "finding": "torchvision V1.5 stride in 3x3; IMAGENET1K_V1 explicit, not DEFAULT"},
+    {"url": "https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py", "status": "inspected_source_reference_not_runtime_pin", "commit": null},
+    {"url": "https://arxiv.org/abs/2302.08272v3", "title": "Revisiting Hidden Representations in Transfer Learning for Medical Imaging", "finding": "transfer results do not establish universal RadImageNet advantage"},
+    {"url": "https://arxiv.org/abs/2308.06534v4", "title": "Self-Supervised Pre-Training with Contrastive and Masked Autoencoder Methods for Dealing with Small Datasets in Deep Learning for Medical Imaging", "finding": "CT pretraining motivates source-patient overlap review; abstract inspection does not establish checkpoint-specific overlap"}
+  ],
+  "RANDOM": {
+    "status": "unresolved", "organization": "pytorch", "repository": "https://github.com/pytorch/vision", "version_commit": "6043bc250768b129e90a5321e318c1d51ee48a5c",
+    "checkpoint_url": null, "checkpoint_filename": null, "acquisition_date": null, "license": "pinned torchvision BSD-style code license preserved; no pretraining artifact", "raw_sha256": null, "initial_state_sha256": null,
+    "architecture": "common torchvision-compatible ResNet50 V1.5 plus new 2048-to-3 head", "stride_convention": "downsampling in bottleneck 3x3; verify installed constructor",
+    "channel_order": "replicated grayscale three channels", "range_normalization": "proposed [0,1] then ImageNet mean/std", "resolution": [224, 224],
+    "key_shape_mapping": "no weight import; constructor/version and synthetic shape checks pending", "training_datasets_patients": "no pretraining", "overlap_assessment_all_splits": "not applicable to random pretraining; project split integrity still required"
+  },
+  "IMAGENET": {
+    "status": "unresolved", "organization": "pytorch", "repository": "https://github.com/pytorch/vision", "version_commit": "6043bc250768b129e90a5321e318c1d51ee48a5c", "torch_version": null, "torchvision_version": null,
+    "weights_enum": "ResNet50_Weights.IMAGENET1K_V1", "checkpoint_url": "https://download.pytorch.org/models/resnet50-0676ba61.pth", "checkpoint_filename": "resnet50-0676ba61.pth", "acquisition_date": "2026-09-27", "license": "code BSD-style and ImageNet database access terms preserved; checkpoint use/redistribution applicability unresolved", "raw_sha256": "0676ba61b6795bbe1773cffd859882e5e297624d384b6993f7c9e683e722fb8a",
+    "size_bytes": 102530333,
+    "acquisition_status": "acquired_bytes_only_not_deserialized",
+    "redirects": [],
+    "publisher_checksum_evidence": "filename SHA-256 prefix 0676ba61 matched; no independent full publisher digest/signature established",
+    "architecture": "ResNet50 V1.5", "stride_convention": "3x3 downsampling; installed definition pending", "channel_order": "RGB reference; replicated grayscale pilot", "range_normalization": "[0,1] then mean [0.485,0.456,0.406], std [0.229,0.224,0.225]", "resolution": [224, 224],
+    "reference_resize_crop": "256 resize then 224 center crop; pilot deliberately resizes same ROI without crop, not stock inference transform",
+    "key_shape_mapping": "encoder strict key/shape audit; replace 1000-class fc with independently initialized 3-class head; not executed", "training_datasets_patients": "ImageNet-1K per reference, patient list unavailable", "overlap_assessment_all_splits": "unresolved; no patient-identity comparison performed; dataset name is not proof"
+  },
+  "RADIMAGENET": {
+    "status": "unresolved", "blocked": true, "organization": "BMEII-AI", "repository": "https://github.com/BMEII-AI/RadImageNet", "version_commit": "0ce16f7375db4236e646829d1eca61cdb4282133",
+    "acquisition_status": "blocked; official README and Drive title RadImageNet_pytorch.zip verified, but release-specific acquisition/use/redistribution conditions and authenticated member mapping remain unavailable",
+    "official_pytorch_bundle_link": "https://drive.google.com/file/d/1RHt2GnuOYlc_gcoTETtBDSW73mFyRAtR/view?usp=sharing", "checkpoint_url": null, "checkpoint_filename": "resnet50_torch.pt (example reference; actual artifact unverified)", "acquisition_date": null, "license": "repository shows MIT; weight/dataset terms not yet verified", "raw_sha256": null,
+    "architecture": "example uses torchvision ResNet50 first nine children; actual weights unverified", "stride_convention": null, "channel_order": "example cv2.imread suggests BGR; release-specific channel contract unresolved", "range_normalization": "example maps image intensities by (image-127.5)*2/255; differs from proposed common ImageNet transform", "resolution": [224, 224],
+    "key_shape_mapping": null, "training_datasets_patients": "RadImageNet per official source; exact patient membership unavailable", "overlap_assessment_all_splits": "unresolved; require evidence against ALL frozen project split identities, no absence-of-list inference",
+    "release_requirements": ["official exact bytes/hash/license/pinned source", "stem/stride/pooling/BN/convolution topology equivalence not just shapes", "strict key mapping", "validated common numerical interface OR explicit checkpoint-plus-preprocessing amendment", "overlap review", "no silent conversion or mirror substitution"]
+  }
+}

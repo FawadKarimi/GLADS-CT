@@ -1,0 +1,19 @@
+{
+  "aggregate_gate_bytes": 28991029248,
+  "aggregate_space_pass": true,
+  "available_GiB": 30.692668914794922,
+  "available_bytes": 32956002304,
+  "filesystem": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n"
+  },
+  "free_inodes": 27845407,
+  "path": "/home/chaidir",
+  "per_attempt_gate_bytes": 12884901888,
+  "quota": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "quota command unavailable\n"
+  }
+}

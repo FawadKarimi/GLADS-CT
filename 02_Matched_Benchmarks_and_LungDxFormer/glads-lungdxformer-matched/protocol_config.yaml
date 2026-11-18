@@ -1,0 +1,78 @@
+dataset:
+  image_size: 64                 # PAPER: "resized to 64 × 64 pixels"; I_roi in R^{64x64}
+  num_classes: 3                 # PAPER
+  class_names: [benign, indeterminate, malignant] # PAPER (y in {0,1,2})
+  label_rule:
+    benign: "mean < 2.5"         # PAPER
+    indeterminate: "mean == 3.0" # PAPER
+    malignant: "mean > 3.5"      # PAPER
+    discard_gaps: true           # PAPER: "discard patches that fall between decision boundaries"
+    min_readers: 1               # NR: include nodules annotated by >=1 reader
+  hu_window: [-1000, 400]        # NR: Standard thoracic CT window in LungDxFormer repository
+  unit_of_analysis: "per_slice"  # USER DIRECTIVE & PAPER: one per CT slice (matches 4,095 sample scale)
+  split_mode: "patient"          # PAPER: "patient-level split ... no patients shared"
+  train_ratio: 0.70              # PAPER
+  val_ratio: 0.15                # PAPER
+  test_ratio: 0.15               # PAPER
+  batch_size: 32                 # PAPER
+  num_workers: 4                 # NR: loader worker threads
+  in_channels: 1                 # INFERRED: single grayscale CT channel
+
+augmentation:
+  train:
+    hflip: 0.5                   # PAPER: "Random Horizontal Flip (50%)"
+    vflip: 0.5                   # PAPER: "Random Vertical Flip (50%)"
+    rotation_deg: 10             # PAPER: "Random Rotation (+- 10)"
+    scale: [0.9, 1.1]            # PAPER: "Random Scale (0.9 to 1.1)"
+    translation_frac: 0.05       # NR: "small translations"
+    intensity_jitter: 0.10       # NR: "intensity scaling", "Random Contrast"
+    gaussian_noise_std: 0.01     # NR: "with Gaussian noise"
+  eval:
+    enabled: false               # INFERRED: training-only augmentation
+
+model_baseline_lungdxformer:
+  name: "LungDxFormer_B0"
+  cnn_channels: [32, 64, 128]    # NR: progressive conv encoder
+  embed_dim: 128                 # NR
+  transformer_heads: 4           # NR
+  transformer_layers: 2          # NR
+  transformer_mlp_ratio: 2.0     # NR
+  dropout: 0.1                   # NR
+  attention_dropout: 0.1         # NR
+  classifier_hidden_dim: 128     # NR
+  classifier_dropout: 0.5        # PAPER: "0.5 Dropout layers are added after all the dense layers"
+  use_transformer: true          # PAPER
+  use_positional_encoding: true  # PAPER: learnable PE
+  use_spatial_attention: true    # PAPER: 1x1 conv -> softmax -> Hadamard product
+  fusion_type: "concat"          # PAPER: Eq. 7 and Eq. 13 concatenation
+
+model_glads_ct:
+  name: "GLADS_CT_Slice"
+  backbone: "resnet18_slice"     # GLADS adapted for 64x64 single slice
+  embed_dim: 128
+  transformer_heads: 4
+  transformer_layers: 2
+  fusion_type: "gated"           # GLADS-CT signature coarse-to-fine lateral gate
+  supervision: "disagreement_aware" # GLADS-CT signature: entropy/disagreement-modulated loss
+
+training:
+  epochs: 100                    # PAPER
+  optimizer: "adam"              # PAPER
+  lr: 0.0001                     # PAPER
+  weight_decay: 0.0001           # NR: L2 regularization
+  label_smoothing: 0.0           # PAPER: one-hot categorical CE (Eq. 16)
+  class_weights: "inverse_frequency" # PAPER
+  early_stopping_patience: 10    # PAPER: monitors validation loss
+  scheduler: "reduce_on_plateau" # INFERRED
+  scheduler_patience: 5          # NR
+  scheduler_factor: 0.5          # NR
+  amp: true                      # NR: automatic mixed precision
+  grad_clip_norm: 1.0            # NR
+  seeds: [42, 43, 44]            # Registered seeds
+
+evaluation:
+  save_confusion_matrix: true    # PAPER: test-set confusion matrix
+  save_roc_curves: true          # PAPER: per-class one-vs-rest AUC
+  save_predictions_csv: true     # Standard audit practice
+  tta: true                      # USER DIRECTIVE: maximum accuracy/F1
+  temperature_scaling: true      # USER DIRECTIVE: optimal calibration

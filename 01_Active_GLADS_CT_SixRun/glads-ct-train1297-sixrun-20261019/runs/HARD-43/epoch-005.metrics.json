@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.404141664505005,
+  "epoch": 5,
+  "learning_rates": {
+    "encoder_bias_normalization": 0.0001,
+    "encoder_weights": 0.0001,
+    "head_bias_normalization": 0.001,
+    "head_weights": 0.001
+  },
+  "objective": "HARD",
+  "patience": {
+    "best": 0.628552672227371,
+    "last_epoch": 5,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 1
+  },
+  "run_id": "HARD-43",
+  "seed": 43,
+  "selected_so_far": {
+    "diagnostic_ce": 0.7424726049884685,
+    "epoch": 4,
+    "macro_f1": 0.628552672227371
+  },
+  "train": {
+    "accuracy": 0.5797995373939862,
+    "confusion_matrix": [
+      [
+        315,
+        207,
+        60
+      ],
+      [
+        102,
+        262,
+        78
+      ],
+      [
+        23,
+        75,
+        175
+      ]
+    ],
+    "diagnostic_ce": 0.8541058636666832,
+    "epoch_objective_loss": 0.8470418480378872,
+    "exposed_views_sha256": "30b3711613ebe6ea04f8d220135cad50d90f667aefdc0fc147b6c25d82bd7eea",
+    "loss_totals": {
+      "hard": 0.8470418480378872,
+      "legacy": 0.0,
+      "reader": 0.0
+    },
+    "macro_f1": 0.5817160476698559,
+    "max_grad_norm": 7.544449329376221,
+    "mean_batch_objective_loss": 0.8475035741561796,
+    "mean_grad_norm": 3.3676884174346924,
+    "per_class": {
+      "0": {
+        "f1": 0.6164383561643836,
+        "precision": 0.7159090909090909,
+        "recall": 0.5412371134020618,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.5314401622718053,
+        "precision": 0.48161764705882354,
+        "recall": 0.5927601809954751,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.5972696245733788,
+        "precision": 0.5591054313099042,
+        "recall": 0.6410256410256411,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.6164383561643836,
+        "precision": 0.7159090909090909,
+        "recall": 0.5412371134020618,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.5314401622718053,
+        "precision": 0.48161764705882354,
+        "recall": 0.5927601809954751,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.5972696245733788,
+        "precision": 0.5591054313099042,
+        "recall": 0.6410256410256411,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8470418630694262
+  },
+  "validation": {
+    "accuracy": 0.5874125874125874,
+    "confusion_matrix": [
+      [
+        33,
+        31,
+        1
+      ],
+      [
+        9,
+        21,
+        8
+      ],
+      [
+        3,
+        7,
+        30
+      ]
+    ],
+    "diagnostic_ce": 0.7840806605665573,
+    "macro_f1": 0.5974944538692418,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5874125874125874,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.6,
+        "precision": 0.7333333333333333,
+        "recall": 0.5076923076923077,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.4329896907216495,
+        "precision": 0.3559322033898305,
+        "recall": 0.5526315789473685,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7594936708860761,
+        "precision": 0.7692307692307693,
+        "recall": 0.75,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.6,
+        "precision": 0.7333333333333333,
+        "recall": 0.5076923076923077,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.4329896907216495,
+        "precision": 0.3559322033898305,
+        "recall": 0.5526315789473685,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7594936708860761,
+        "precision": 0.7692307692307693,
+        "recall": 0.75,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.7415020286091052
+  }
+}

@@ -1,0 +1,498 @@
+{
+  "files": {
+    "ACCEPTANCE-COMMANDS.md": {
+      "bytes": 4235,
+      "sha256": "7a4087523cf03619f148a211b763e8f1b83b0899c153b874bea48c3c7e2ebdbe"
+    },
+    "COMPLETE-WORKTREE.diff": {
+      "bytes": 603814,
+      "sha256": "e4c3f69e53af5c0f6952883157f9255f67b99435aa0cf740eab58aefed0dd105"
+    },
+    "FOCUSED-TESTS.json": {
+      "bytes": 860,
+      "sha256": "7d9dee991800496dd9a318133d4277f35568b58159af3a2f5c6dad111af9c913"
+    },
+    "FOCUSED-TESTS.log": {
+      "bytes": 2114,
+      "sha256": "abfc775a01a014b25b7588a14a7711301184b7a2540fd5e82f0a34af10d02f91"
+    },
+    "FOCUSED.diff": {
+      "bytes": 23844,
+      "sha256": "7c1911b91d9edf4d5b6b4689ab519ab93970f47a3d4cd6bd951341f6b5673361"
+    },
+    "HOME-INSPECTION.md": {
+      "bytes": 2519,
+      "sha256": "440e8dd2df69e6d54810acf273eacf6b38217d92d10978cfcac8a13e488af136"
+    },
+    "REVIEW.md": {
+      "bytes": 6136,
+      "sha256": "a2a4e52b9311b30f6e6a415ad655cfd91ee601a0c2972a6c38918f5514c12c49"
+    },
+    "SHA256-LEDGER.json": {
+      "bytes": 861,
+      "sha256": "374725470ecb5d5a9322f60c9f6d967b45ea9b75f8e10a69136cd9eba1cf01c4"
+    },
+    "SOURCE-LOCK.sha256": {
+      "bytes": 134,
+      "sha256": "b2bbea3eb7ea5056071ce5581f4a12ff7c9462d33284e46f1a2e7ab3b48f7ca1"
+    },
+    "VALIDATION.json": {
+      "bytes": 1581,
+      "sha256": "c6190e99d26c917e68712836a4240c230972992cb9fc7ab8bf9a7ad08e5e3dfc"
+    },
+    "before.json": {
+      "bytes": 38930,
+      "sha256": "02e25f316c32dbdfe9dcc130da974b5f9ebf2e6012b5ecd5405e6383af37cbd6"
+    },
+    "before/configs/performance_v2/native_acceptance_source_lock.json": {
+      "bytes": 6964,
+      "sha256": "4a8b34884d0760f93336fc14b80f634b0d7eaa9be113762e04f09a907465edba"
+    },
+    "before/configs/performance_v2/pilot_protocol_v1.json": {
+      "bytes": 9257,
+      "sha256": "93c1e3c9f9d4216a65b05cbdda4e40b2a62e8d6f085c80504d5c683800e6dcbd"
+    },
+    "before/configs/performance_v2/pilot_protocol_v2.json": {
+      "bytes": 25883,
+      "sha256": "53f5c9f0939086f300fd2e10baaf6a5b66d1288aeff0fa80cae609b10253e43e"
+    },
+    "before/configs/performance_v2/pretraining_provenance_v1.json": {
+      "bytes": 12276,
+      "sha256": "ec3a487005bb8328aea01177bb7cc399adb6ebeb4cde8f10ebcb1cc2b6dabab7"
+    },
+    "before/docs/performance_v2_compute_efficient_amendment.md": {
+      "bytes": 12604,
+      "sha256": "94330c1604d793d975e2137e608d9229601495308134ee57b9c6d123d14f9472"
+    },
+    "before/docs/performance_v2_diagnostic_audit_plan.md": {
+      "bytes": 10035,
+      "sha256": "4d13d3b4431cfb15b6dcc35a9159638fd3a8f24c987d46fce539de8d4f39409a"
+    },
+    "before/docs/performance_v2_durable_lifecycle_preparation.md": {
+      "bytes": 5429,
+      "sha256": "354a3db0c0fd127a6a939402ec36283de26805f544c7635f6d23410abd37bd22"
+    },
+    "before/docs/performance_v2_implementation_preparation.md": {
+      "bytes": 8315,
+      "sha256": "1c83035fb9676805e083faf1aac5f07ba33aa332658809d7832a4b0a113938e9"
+    },
+    "before/docs/performance_v2_input_acceptance_and_acquisition.md": {
+      "bytes": 12987,
+      "sha256": "bb895f8b53b610b2308be1802767d8bf9a55ccadda971033c07ebb96ffcc31ca"
+    },
+    "before/docs/performance_v2_input_audit_plan.md": {
+      "bytes": 6913,
+      "sha256": "a55c14e15825fed868a143c634194eb9dad4b26c80823dc779485ffbcbdadbf5"
+    },
+    "before/docs/performance_v2_lifecycle_preparation.md": {
+      "bytes": 15054,
+      "sha256": "28ec4c969f446efc74a51f6554eb353a0a67e86b3f06fb0b24ef6a49f58488aa"
+    },
+    "before/docs/performance_v2_model_topology_v2.md": {
+      "bytes": 9443,
+      "sha256": "3ff5823cd5fa653fcbff44e4a1acf4102f01dd66d85fa7bfa1211079af4aa4f0"
+    },
+    "before/docs/performance_v2_native_acceptance_checklist.md": {
+      "bytes": 10783,
+      "sha256": "ead2e774d9ae7197dab76ea6e7682c19971d61c95106c84befabc2fc012e4e7f"
+    },
+    "before/docs/performance_v2_phase1_implementation_proposal.md": {
+      "bytes": 23222,
+      "sha256": "bfc108b4845e188d4cdd69b5dd726af6d55995b600c640e4d6bb3d981ce6720c"
+    },
+    "before/docs/performance_v2_pretraining_acquisition_plan.md": {
+      "bytes": 9689,
+      "sha256": "70be706389a6f559d1d5bfbd542288e45c950bb0d0458e5a29523a03715142f5"
+    },
+    "before/docs/performance_v2_protocol.md": {
+      "bytes": 16877,
+      "sha256": "cbd3067cce8c0d97c52c6fbd0dbf195be60d7d1c7e0cb09563530a3e727d47ff"
+    },
+    "before/docs/performance_v2_stage_a_diagnostic_review.md": {
+      "bytes": 8804,
+      "sha256": "dd2cee7b48f4e60b6c8674bc2f6117d502f17b9fe81070a32d1ce27cabe89fea"
+    },
+    "before/scripts/53_extract_performance_v2_diagnostics.py": {
+      "bytes": 36738,
+      "sha256": "1b3ad98fbe8acd572f1427586c31f755d6457b49640ce8a95eebb8b74e09b01d"
+    },
+    "before/scripts/54_probe_performance_v2_transforms.py": {
+      "bytes": 15969,
+      "sha256": "3203c0d99072e2bc03574b67e1ad47a8ea61bf5dbef3ee8572594274897efab6"
+    },
+    "before/scripts/55_audit_performance_v2_inputs.py": {
+      "bytes": 20551,
+      "sha256": "84090d157959a2b4c525484504c1fc14f398d36fb20b58f34a5a6097321d6bed"
+    },
+    "before/scripts/performance_v2_native_acceptance.py": {
+      "bytes": 19020,
+      "sha256": "ca6ac84fd6c70824534fa88984517e302eb094aa0f1d659dc7b74844a6d4334c"
+    },
+    "before/src/consendxformer/performance_v2/__init__.py": {
+      "bytes": 119,
+      "sha256": "ec9d2065bddd417c24560387facef2ed234d84af138e1f630b1107e78f8c1620"
+    },
+    "before/src/consendxformer/performance_v2/bindings.py": {
+      "bytes": 7184,
+      "sha256": "98e0b0ea5ec006462d3c587c9b980d1d80d65cbd06ac6d0cdec031d88b013996"
+    },
+    "before/src/consendxformer/performance_v2/checkpoint.py": {
+      "bytes": 18184,
+      "sha256": "5089a91693350fcad6592a7ab0c2d0f919dccd6eeb3568d4689d101b8ba88127"
+    },
+    "before/src/consendxformer/performance_v2/durable_budget.py": {
+      "bytes": 34072,
+      "sha256": "388391dd6af01dfdbac142034cc3828bc380dc0fda9804e665c614328256f67f"
+    },
+    "before/src/consendxformer/performance_v2/durable_lifecycle.py": {
+      "bytes": 6738,
+      "sha256": "475f58c136006c2943f82c23c27775f16c6d24309806cb67f449e986191af621"
+    },
+    "before/src/consendxformer/performance_v2/lifecycle.py": {
+      "bytes": 23060,
+      "sha256": "0514b2476956bb55d6b5f9ec4b64c4e7eecb0c9ee75e39089ba4a3ec41eb63d5"
+    },
+    "before/src/consendxformer/performance_v2/metrics.py": {
+      "bytes": 3817,
+      "sha256": "2d88aab642dacb582502027c2208ad265c07ae95e3de1a1d6b28ebed087d8f71"
+    },
+    "before/src/consendxformer/performance_v2/model.py": {
+      "bytes": 8958,
+      "sha256": "5135a7f5556979f5f1ee1f152f5ca28457946f8c9acf53ad70dbb109180b2f7a"
+    },
+    "before/src/consendxformer/performance_v2/objectives.py": {
+      "bytes": 4482,
+      "sha256": "51f1cdd877a4235e3cf4d74a38649084bb9a62cc3baeca325143b0f2f0332f45"
+    },
+    "before/src/consendxformer/performance_v2/optimization.py": {
+      "bytes": 3798,
+      "sha256": "22b07e932397fc2b068cd913559b475fdab2f90539a9985802434709f5960992"
+    },
+    "before/src/consendxformer/performance_v2/reuse.py": {
+      "bytes": 4830,
+      "sha256": "4132a26f6f864d17a1cc89ff1cbaebfb9471ab4c1fca142c97c814aea53397e8"
+    },
+    "before/src/consendxformer/performance_v2/rng.py": {
+      "bytes": 1702,
+      "sha256": "c3cf5f01fd0beff7480f7d8652888374d5cb197e8da69855ffc28b0a8a30fb30"
+    },
+    "before/src/consendxformer/performance_v2/selection.py": {
+      "bytes": 5214,
+      "sha256": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585"
+    },
+    "before/src/consendxformer/performance_v2/streams.py": {
+      "bytes": 5290,
+      "sha256": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14"
+    },
+    "before/tests/test_performance_v2_acceptance_entry.py": {
+      "bytes": 3211,
+      "sha256": "c4925da045cf142d880fe87ce18cb83418d1180f2cd86ca911c92aca24059b97"
+    },
+    "before/tests/test_performance_v2_checkpoint_inventory.py": {
+      "bytes": 11750,
+      "sha256": "9b060c8aba2db2b7ed70563e58ca763800da2aed85f7b6df23d44cbebda473ca"
+    },
+    "before/tests/test_performance_v2_contracts.py": {
+      "bytes": 9480,
+      "sha256": "9453910900dcc60f1ee67b0838a869d0f8ac9c0eaf12aa1dcef2901fcc456685"
+    },
+    "before/tests/test_performance_v2_diagnostics.py": {
+      "bytes": 20304,
+      "sha256": "b387bd65fb41068070d1c78355f7abb983a0dc599220d514f7ff8a0b740bfe16"
+    },
+    "before/tests/test_performance_v2_durable_lifecycle.py": {
+      "bytes": 25019,
+      "sha256": "a391b762b586649756290ce7184110aeb71e6595b46a5badda32b4f773bddbca"
+    },
+    "before/tests/test_performance_v2_implementation.py": {
+      "bytes": 12951,
+      "sha256": "affd9dab442a0dbc04a5dcc92311e35c9f6ed1b6ca5dfc00552f2c9c6ff29d7c"
+    },
+    "before/tests/test_performance_v2_input_audit.py": {
+      "bytes": 7256,
+      "sha256": "92a56d3bc87448e08778fd7eb8844e53edfb0e1c193a6467af2f34313247f7b7"
+    },
+    "before/tests/test_performance_v2_lifecycle.py": {
+      "bytes": 31762,
+      "sha256": "ae85f1d79f176a09a3eafcb41fda4cc3154787ee5187b58fc2a66705dcb265a6"
+    },
+    "before/tests/test_performance_v2_native_processes.py": {
+      "bytes": 10624,
+      "sha256": "00b5887ec4d952d745d887f3763baa961b3955a4666ea0f0b5000cb1f451167f"
+    },
+    "before/tests/test_performance_v2_training_mode.py": {
+      "bytes": 7142,
+      "sha256": "7d10dca8bb83a788d64e5d0154e93dc725b7303537b7dab4f550dd7c3d1aadf6"
+    },
+    "before/tests/test_performance_v2_transform_probe.py": {
+      "bytes": 4097,
+      "sha256": "07ea2c91f5da79f95c255a9f2d09d304a9fce706d17279e4cf8287c15126fd17"
+    },
+    "candidate/configs/performance_v2/native_acceptance_source_lock.json": {
+      "bytes": 6964,
+      "sha256": "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e"
+    },
+    "candidate/configs/performance_v2/pilot_protocol_v1.json": {
+      "bytes": 9257,
+      "sha256": "93c1e3c9f9d4216a65b05cbdda4e40b2a62e8d6f085c80504d5c683800e6dcbd"
+    },
+    "candidate/configs/performance_v2/pilot_protocol_v2.json": {
+      "bytes": 25883,
+      "sha256": "53f5c9f0939086f300fd2e10baaf6a5b66d1288aeff0fa80cae609b10253e43e"
+    },
+    "candidate/configs/performance_v2/pretraining_provenance_v1.json": {
+      "bytes": 12276,
+      "sha256": "ec3a487005bb8328aea01177bb7cc399adb6ebeb4cde8f10ebcb1cc2b6dabab7"
+    },
+    "candidate/docs/performance_v2_compute_efficient_amendment.md": {
+      "bytes": 12604,
+      "sha256": "94330c1604d793d975e2137e608d9229601495308134ee57b9c6d123d14f9472"
+    },
+    "candidate/docs/performance_v2_diagnostic_audit_plan.md": {
+      "bytes": 10035,
+      "sha256": "4d13d3b4431cfb15b6dcc35a9159638fd3a8f24c987d46fce539de8d4f39409a"
+    },
+    "candidate/docs/performance_v2_durable_lifecycle_preparation.md": {
+      "bytes": 5429,
+      "sha256": "354a3db0c0fd127a6a939402ec36283de26805f544c7635f6d23410abd37bd22"
+    },
+    "candidate/docs/performance_v2_implementation_preparation.md": {
+      "bytes": 8315,
+      "sha256": "1c83035fb9676805e083faf1aac5f07ba33aa332658809d7832a4b0a113938e9"
+    },
+    "candidate/docs/performance_v2_input_acceptance_and_acquisition.md": {
+      "bytes": 12987,
+      "sha256": "bb895f8b53b610b2308be1802767d8bf9a55ccadda971033c07ebb96ffcc31ca"
+    },
+    "candidate/docs/performance_v2_input_audit_plan.md": {
+      "bytes": 6913,
+      "sha256": "a55c14e15825fed868a143c634194eb9dad4b26c80823dc779485ffbcbdadbf5"
+    },
+    "candidate/docs/performance_v2_lifecycle_preparation.md": {
+      "bytes": 15054,
+      "sha256": "28ec4c969f446efc74a51f6554eb353a0a67e86b3f06fb0b24ef6a49f58488aa"
+    },
+    "candidate/docs/performance_v2_model_topology_v2.md": {
+      "bytes": 9443,
+      "sha256": "3ff5823cd5fa653fcbff44e4a1acf4102f01dd66d85fa7bfa1211079af4aa4f0"
+    },
+    "candidate/docs/performance_v2_native_acceptance_checklist.md": {
+      "bytes": 12117,
+      "sha256": "20297f90c7bf1a4314776d320716450593dab5285df1ce1e57eb059dbb969e79"
+    },
+    "candidate/docs/performance_v2_phase1_implementation_proposal.md": {
+      "bytes": 23222,
+      "sha256": "bfc108b4845e188d4cdd69b5dd726af6d55995b600c640e4d6bb3d981ce6720c"
+    },
+    "candidate/docs/performance_v2_pretraining_acquisition_plan.md": {
+      "bytes": 9689,
+      "sha256": "70be706389a6f559d1d5bfbd542288e45c950bb0d0458e5a29523a03715142f5"
+    },
+    "candidate/docs/performance_v2_protocol.md": {
+      "bytes": 16877,
+      "sha256": "cbd3067cce8c0d97c52c6fbd0dbf195be60d7d1c7e0cb09563530a3e727d47ff"
+    },
+    "candidate/docs/performance_v2_stage_a_diagnostic_review.md": {
+      "bytes": 8804,
+      "sha256": "dd2cee7b48f4e60b6c8674bc2f6117d502f17b9fe81070a32d1ce27cabe89fea"
+    },
+    "candidate/docs/r3_entropy_results_and_closure.md": {
+      "bytes": 15701,
+      "sha256": "f8568924b7b55d2c8c4e764fd735535ff88f731dc6fe0e8a79e93833e704cce0"
+    },
+    "candidate/docs/r4_claims_packaging_acceptance.md": {
+      "bytes": 24176,
+      "sha256": "d5072b48b5f322efd53f8d428ead327b59e7d8dcd973a122078f7bb2a99efaa6"
+    },
+    "candidate/docs/stage_a_bounded_signoff.md": {
+      "bytes": 17408,
+      "sha256": "8329fa6fd09f32a85a5066a1642a8884184aeb1b1883e6c0153ebe2accbe390f"
+    },
+    "candidate/docs/stage_a_evidence_reconciliation.md": {
+      "bytes": 50095,
+      "sha256": "de51801a44b0b710c8a77a506b1c49c0bd77d1998413805557eae9bfdad18ea2"
+    },
+    "candidate/requirements-phase0.txt": {
+      "bytes": 62,
+      "sha256": "ed5dd71f66a175dd894c21d51408e97a845d230351381e92c75b35417ff7c40d"
+    },
+    "candidate/requirements-phase1.txt": {
+      "bytes": 28,
+      "sha256": "96804c21f7c7fccefc8ba8bfbd646b1a6092c3b7dbd68c26176194b2f388002e"
+    },
+    "candidate/requirements-phase2-pylidc.txt": {
+      "bytes": 63,
+      "sha256": "2b86074f0f22a5b625ffa4694a0dafc7004b37b4479cb4472b373d3f761ae9b5"
+    },
+    "candidate/requirements-phase2.txt": {
+      "bytes": 45,
+      "sha256": "4f7885c8bf0c70950361d2c38cc802b84762f92edee92d704f4af6e7ce4cf096"
+    },
+    "candidate/requirements-phase5-inference.txt": {
+      "bytes": 166,
+      "sha256": "eb7687b821479a9222bf37c3d0b3b711e50f361d023052040cfc6f24333758d6"
+    },
+    "candidate/requirements-phase5-synthetic-validation.txt": {
+      "bytes": 293,
+      "sha256": "028e2d6369727e0911a7ccacd5bc3db5b861ab8ec237a48366980c1391359cb5"
+    },
+    "candidate/scripts/53_extract_performance_v2_diagnostics.py": {
+      "bytes": 36738,
+      "sha256": "1b3ad98fbe8acd572f1427586c31f755d6457b49640ce8a95eebb8b74e09b01d"
+    },
+    "candidate/scripts/54_probe_performance_v2_transforms.py": {
+      "bytes": 15969,
+      "sha256": "3203c0d99072e2bc03574b67e1ad47a8ea61bf5dbef3ee8572594274897efab6"
+    },
+    "candidate/scripts/55_audit_performance_v2_inputs.py": {
+      "bytes": 20551,
+      "sha256": "84090d157959a2b4c525484504c1fc14f398d36fb20b58f34a5a6097321d6bed"
+    },
+    "candidate/scripts/performance_v2_native_acceptance.py": {
+      "bytes": 25335,
+      "sha256": "57448da2b905e40716564349db03b3390b2034cd682bff7c53c4c6fe777a4ebd"
+    },
+    "candidate/src/consendxformer/__init__.py": {
+      "bytes": 63,
+      "sha256": "a6d2c6b3e7465ede14d3652075739606b92fb476c19fbd4435ed8a513aad6090"
+    },
+    "candidate/src/consendxformer/performance_v2/__init__.py": {
+      "bytes": 119,
+      "sha256": "ec9d2065bddd417c24560387facef2ed234d84af138e1f630b1107e78f8c1620"
+    },
+    "candidate/src/consendxformer/performance_v2/bindings.py": {
+      "bytes": 7184,
+      "sha256": "98e0b0ea5ec006462d3c587c9b980d1d80d65cbd06ac6d0cdec031d88b013996"
+    },
+    "candidate/src/consendxformer/performance_v2/checkpoint.py": {
+      "bytes": 18184,
+      "sha256": "5089a91693350fcad6592a7ab0c2d0f919dccd6eeb3568d4689d101b8ba88127"
+    },
+    "candidate/src/consendxformer/performance_v2/durable_budget.py": {
+      "bytes": 34072,
+      "sha256": "388391dd6af01dfdbac142034cc3828bc380dc0fda9804e665c614328256f67f"
+    },
+    "candidate/src/consendxformer/performance_v2/durable_lifecycle.py": {
+      "bytes": 6738,
+      "sha256": "475f58c136006c2943f82c23c27775f16c6d24309806cb67f449e986191af621"
+    },
+    "candidate/src/consendxformer/performance_v2/lifecycle.py": {
+      "bytes": 23060,
+      "sha256": "0514b2476956bb55d6b5f9ec4b64c4e7eecb0c9ee75e39089ba4a3ec41eb63d5"
+    },
+    "candidate/src/consendxformer/performance_v2/metrics.py": {
+      "bytes": 3817,
+      "sha256": "2d88aab642dacb582502027c2208ad265c07ae95e3de1a1d6b28ebed087d8f71"
+    },
+    "candidate/src/consendxformer/performance_v2/model.py": {
+      "bytes": 8958,
+      "sha256": "5135a7f5556979f5f1ee1f152f5ca28457946f8c9acf53ad70dbb109180b2f7a"
+    },
+    "candidate/src/consendxformer/performance_v2/objectives.py": {
+      "bytes": 4482,
+      "sha256": "51f1cdd877a4235e3cf4d74a38649084bb9a62cc3baeca325143b0f2f0332f45"
+    },
+    "candidate/src/consendxformer/performance_v2/optimization.py": {
+      "bytes": 3798,
+      "sha256": "22b07e932397fc2b068cd913559b475fdab2f90539a9985802434709f5960992"
+    },
+    "candidate/src/consendxformer/performance_v2/reuse.py": {
+      "bytes": 4830,
+      "sha256": "4132a26f6f864d17a1cc89ff1cbaebfb9471ab4c1fca142c97c814aea53397e8"
+    },
+    "candidate/src/consendxformer/performance_v2/rng.py": {
+      "bytes": 1702,
+      "sha256": "c3cf5f01fd0beff7480f7d8652888374d5cb197e8da69855ffc28b0a8a30fb30"
+    },
+    "candidate/src/consendxformer/performance_v2/selection.py": {
+      "bytes": 5214,
+      "sha256": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585"
+    },
+    "candidate/src/consendxformer/performance_v2/streams.py": {
+      "bytes": 5290,
+      "sha256": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14"
+    },
+    "candidate/src/consendxformer/phase4_model.py": {
+      "bytes": 16189,
+      "sha256": "06fef01fffdb2b4ae9ec2c1b611547a4768bd9b9f548072def1c455394e1ed89"
+    },
+    "candidate/tests/test_performance_v2_acceptance_entry.py": {
+      "bytes": 11503,
+      "sha256": "bae7f5e7283333fc606151b98ed840d1070f71248ddc1d8341a0d7ec410027d6"
+    },
+    "candidate/tests/test_performance_v2_checkpoint_inventory.py": {
+      "bytes": 11750,
+      "sha256": "9b060c8aba2db2b7ed70563e58ca763800da2aed85f7b6df23d44cbebda473ca"
+    },
+    "candidate/tests/test_performance_v2_contracts.py": {
+      "bytes": 9480,
+      "sha256": "9453910900dcc60f1ee67b0838a869d0f8ac9c0eaf12aa1dcef2901fcc456685"
+    },
+    "candidate/tests/test_performance_v2_diagnostics.py": {
+      "bytes": 20304,
+      "sha256": "b387bd65fb41068070d1c78355f7abb983a0dc599220d514f7ff8a0b740bfe16"
+    },
+    "candidate/tests/test_performance_v2_durable_lifecycle.py": {
+      "bytes": 25019,
+      "sha256": "a391b762b586649756290ce7184110aeb71e6595b46a5badda32b4f773bddbca"
+    },
+    "candidate/tests/test_performance_v2_implementation.py": {
+      "bytes": 12951,
+      "sha256": "affd9dab442a0dbc04a5dcc92311e35c9f6ed1b6ca5dfc00552f2c9c6ff29d7c"
+    },
+    "candidate/tests/test_performance_v2_input_audit.py": {
+      "bytes": 7256,
+      "sha256": "92a56d3bc87448e08778fd7eb8844e53edfb0e1c193a6467af2f34313247f7b7"
+    },
+    "candidate/tests/test_performance_v2_lifecycle.py": {
+      "bytes": 31762,
+      "sha256": "ae85f1d79f176a09a3eafcb41fda4cc3154787ee5187b58fc2a66705dcb265a6"
+    },
+    "candidate/tests/test_performance_v2_native_processes.py": {
+      "bytes": 10624,
+      "sha256": "00b5887ec4d952d745d887f3763baa961b3955a4666ea0f0b5000cb1f451167f"
+    },
+    "candidate/tests/test_performance_v2_training_mode.py": {
+      "bytes": 7142,
+      "sha256": "7d10dca8bb83a788d64e5d0154e93dc725b7303537b7dab4f550dd7c3d1aadf6"
+    },
+    "candidate/tests/test_performance_v2_transform_probe.py": {
+      "bytes": 4097,
+      "sha256": "07ea2c91f5da79f95c255a9f2d09d304a9fce706d17279e4cf8287c15126fd17"
+    },
+    "freeze.py": {
+      "bytes": 1943,
+      "sha256": "8b1c20f0dc736d59ac15e121f9eb67f69f4c7804b081b9ec3bb65df326606639"
+    },
+    "package_review.py": {
+      "bytes": 7022,
+      "sha256": "ce56af17af6b020889dd6e87f6abc6ab4c86680c8030e86c45e8f599cf1ce731"
+    },
+    "references/performance-v2-consolidated-native-acceptance-REVIEW-20261007.zip": {
+      "bytes": 58955860,
+      "sha256": "92d59995665782e0aa7ca1912a2bddc29d5c60b9842cc597627d08a1be25e7aa"
+    },
+    "references/prior-preflight-REVIEW.md": {
+      "bytes": 3722,
+      "sha256": "3c52662bd9b28da07ef884ce94ac3a2edec608de1f406f7e1002d79695a9b99e"
+    },
+    "references/prior-preflight-SHA256-LEDGER.json": {
+      "bytes": 435,
+      "sha256": "709ebd5bc94231d34ca686a7afc62ea7f1aafb4e3b3f91ca14187eca12ad5f03"
+    },
+    "references/prior-preflight-STDOUT-STDERR.txt": {
+      "bytes": 5862,
+      "sha256": "da78c28f13bc8dbfdf0372941e9303d91aa9cd5e8918e654b5d8ca3a31dc16b0"
+    },
+    "run_focused_tests.py": {
+      "bytes": 2004,
+      "sha256": "bee88a53a994a3944cd65d65cb7a66505e62ab7d3452964a58ab10167fca747a"
+    },
+    "snapshot.py": {
+      "bytes": 1104,
+      "sha256": "a0b7f2ff031682ebf1976d825784cd1bde53249dfee986cc8dcec481b86aadcc"
+    }
+  },
+  "pilot_execution_authorized": false,
+  "self_excluded": true
+}

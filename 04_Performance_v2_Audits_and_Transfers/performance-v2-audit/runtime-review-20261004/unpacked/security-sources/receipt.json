@@ -1,0 +1,189 @@
+{
+  "retrieved_utc": "2026-09-28T11:19:00.454004+00:00",
+  "sources": [],
+  "errors": [
+    {
+      "file": "debian-tracker.json",
+      "url": "https://security-tracker.debian.org/tracker/data/json",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-0.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=torch%402.10.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-1.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=torchvision%400.25.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-2.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=numpy%402.2.6&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-3.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=pillow%4012.3.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-4.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=fsspec%402026.9.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-5.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=networkx%403.4.2&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-6.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=sympy%401.14.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-7.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=mpmath%401.3.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-8.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=typing_extensions%404.16.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-9.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=filelock%404.0.4&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-10.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=Jinja2%403.1.6&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-11.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=MarkupSafe%403.0.3&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-12.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=setuptools%4084.0.0&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-13.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=pip%4023.0.1&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-14.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=setuptools%4065.5.1&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "pip-15.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=wheel%400.45.1&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "checkout.json",
+      "url": "https://api.github.com/advisories?ecosystem=actions&affects=actions/checkout%404.2.2&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "upload-artifact.json",
+      "url": "https://api.github.com/advisories?ecosystem=actions&affects=actions/upload-artifact%404.6.2&per_page=100",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "python-31018.html",
+      "url": "https://www.python.org/downloads/release/python-31018/",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "python-31019.html",
+      "url": "https://www.python.org/downloads/release/python-31019/",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "python-31020.html",
+      "url": "https://www.python.org/downloads/release/python-31020/",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    },
+    {
+      "file": "python-31021.html",
+      "url": "https://www.python.org/downloads/release/python-31021/",
+      "error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+    }
+  ],
+  "inventory_sha256": "2c94569c99ce23a1ed4bf6ff5e2ff091e1dcf1d97076c79066cb96033d8207ab",
+  "lock_sha256": "176630ef627d3e25b970a2493aa8d6742cd1c9ab4d989607f8ad9396c2996faf",
+  "python_queries": [
+    [
+      "torch",
+      "2.10.0"
+    ],
+    [
+      "torchvision",
+      "0.25.0"
+    ],
+    [
+      "numpy",
+      "2.2.6"
+    ],
+    [
+      "pillow",
+      "12.3.0"
+    ],
+    [
+      "fsspec",
+      "2026.9.0"
+    ],
+    [
+      "networkx",
+      "3.4.2"
+    ],
+    [
+      "sympy",
+      "1.14.0"
+    ],
+    [
+      "mpmath",
+      "1.3.0"
+    ],
+    [
+      "typing_extensions",
+      "4.16.0"
+    ],
+    [
+      "filelock",
+      "4.0.4"
+    ],
+    [
+      "Jinja2",
+      "3.1.6"
+    ],
+    [
+      "MarkupSafe",
+      "3.0.3"
+    ],
+    [
+      "setuptools",
+      "84.0.0"
+    ],
+    [
+      "pip",
+      "23.0.1"
+    ],
+    [
+      "setuptools",
+      "65.5.1"
+    ],
+    [
+      "wheel",
+      "0.45.1"
+    ]
+  ]
+}

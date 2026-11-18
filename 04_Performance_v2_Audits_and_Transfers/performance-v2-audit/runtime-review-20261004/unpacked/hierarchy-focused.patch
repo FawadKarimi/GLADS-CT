@@ -1,0 +1,1035 @@
+--- /dev/null
++++ b/HIERARCHY_MOUNT_REVIEW.md
+@@ -0,0 +1,104 @@
++# Focused hierarchy and mount-lifetime correction
++
++2026-09-28. Preparation and mocked testing only. Approvals remain false;
++Stage B paused, Stage A and production dependency pins unchanged.
++
++Parent ZIP SHA-256:
++`c56f961ce6103877607f5608ddb6535bba800dd34d972b3e20c885b298ef0610`.
++All 79 parent ledger entries are verified by the package generator. Historical
++reports remain historical; this document describes this correction. The accepted
++persistence finalizer, directory-fsync implementation and Python compatibility
++fallback are unchanged. No live Linux operation or dependency acquisition ran.
++
++## Systemd ownership correction
++
++The previous hyphenated control slice was a descendant of the workload slice.
++The replacement uses separate manager-owned transient units:
++`pv2work<TOKEN>.slice` and `pv2guard<TOKEN>.slice`. The already bounded controller
++must be in its own systemd service outside the workload branch. Source code
++obtains paths from systemd ControlGroup and verifies them against /proc and
++recorded inode/boot identities. It does not derive authority from a unit-name
++string or a fake assumed cgroup path.
++
++systemd exclusively creates and removes these slices through StartTransientUnit
++and stop operations. Memory/swap/CPU/task properties are passed to the manager
++and independently read back. No mkdir, resource-control writes, subtree-control
++writes, cgroup.kill write or rmdir is performed on systemd-owned cgroups.
++Termination enumerates services/scopes, selects only manager-reported descendants,
++rechecks each path, and signals those units through systemd. It retains deadline,
++empty-census/listener checks, fresh termination receipts and error separation.
++Final slice stop requires the original inode and verifies manager inactivity and
++native path absence. The external watchdog is not selected by workload kills.
++
++The infrastructure-only daemon setting changes from cgroupfs to systemd; Docker
++receives the workload slice unit as cgroup-parent. Runtime scopes therefore use
++systemd's supported management model, not direct manipulation of the slice tree.
++No delegation is requested on a slice. The inspection scientific protocol and
++dependency pins are unchanged; future container commands must retain this parent.
++
++Official interface basis reviewed during this task:
++
++- [systemd cgroup ownership, hierarchy and delegation](https://systemd.io/CGROUP_DELEGATION/)
++- [systemd transient slice support](https://github.com/systemd/systemd/blob/main/docs/TRANSIENT-SETTINGS.md)
++- [Docker systemd cgroup-parent rules](https://docs.docker.com/reference/cli/dockerd/)
++
++These documents justify the interface choice, not compatibility or deployment
++clearance for any particular installed host version. Two freedesktop manual-page
++fetches returned HTTP 403; no content was inferred from those failed fetches.
++
++The integrated ownership record is now pv2_ownership_v3 and binds the workload,
++guard and controller unit/path identities. Historical v2 fake records remain
++usable by their retained unit tests; the integrated coordinator emits v3 only.
++Old journal records are not silently migrated into new slice ownership.
++
++## Filesystem lifetime correction
++
++Directory, mountpoint, backing and configuration identities now record the
++containing mount (ID, device, mount/root path, filesystem type and source).
++They explicitly distinguish host entries from entries internal to the data,
++evidence or runtime filesystem. Mountpoints are recorded before mounting, so
++their identities are the underlying host directory identities.
++
++After verified unmount and export-before-disposal, internal data/tmp and
++data/downloads entries are retired with their disposed filesystem. They are
++not statted or removed using an old inode against the uncovered host path.
++Host mountpoints and backing files still require their original inode AND
++containing-filesystem binding before nonrecursive removal. Replaced mountpoints,
++unknown filesystems and nonempty host directories fail closed. Backing removal
++still requires loop absence and a fresh termination receipt.
++
++## Mock improvements and regression scope
++
++The fake expands foo-bar-baz.slice into its documented hierarchy. It demonstrates
++the previous nesting error, and proves that workload signalling leaves the
++independently bounded watchdog and external controller alive. It rejects manual
++writes/removal in manager-owned cgroups. Unit stop and cgroup absence are modeled.
++
++The fake preserves covered host mountpoints, exposes distinct mounted roots,
++hides mounted contents on unmount, and raises for missing paths/nonempty
++directories. Tests cover complete finalization, forbidden lookups of hidden
++children, replacement inode/path refusal, interruptions before evidence unmount
++and before backing disposal, and preservation of unrelated host children.
++No successful test response is native Linux acceptance.
++
++## Remaining implementation/acceptance gaps
++
++- Public live entry and controller/watchdog executable launcher binding remain
++  disabled. No historical workflow is published or connected to this candidate.
++- Actual systemd transient-property support, Docker scope parent propagation,
++  systemd unit garbage collection/stop semantics, cgroup quotas, process races,
++  mount/unmount behavior and directory durability require separately authorized
++  disposable Linux acceptance. Unexpected unit disappearance/errors fail closed.
++- Interrupted teardown preserves a failed partial report and remaining resources;
++  this does not add automatic resume after every irreversible deletion. Recovery
++  still refuses ambiguous intent-without-observation and missing owned slices.
++  No guessed deletion or automatic retry is introduced.
++- Linux must independently establish that all operation/container units remain
++  below the workload branch. An enumerated snapshot is not a security proof of
++  all future privileged behavior or guaranteed termination of kernel-stuck I/O.
++- Metadata/binary verification, approved immutable dependency/security inventory,
++  compatibility review, remote evidence transport and fresh zero-paid-usage gates
++  remain outstanding. There is no loading, pilot or deployment authorization.
++
++See HIERARCHY_VALIDATION.json and hierarchy-tests.log for actual local runtime,
++commands and results. Review artifacts are outside the research repository.
+--- a/linux_integration.py
++++ b/linux_integration.py
+@@ -12,7 +12,7 @@
+ from pathlib import Path
+ 
+ from linux_lifecycle import LinuxLifecycle
+-from linux_host import mount_records
++from linux_host import mount_records, resolve_cgroup
+ from supervisor_v2 import POLICY, Supervisor, require, within, validate_record
+ 
+ 
+@@ -70,7 +70,7 @@
+         require(role in ('containerd', 'dockerd', 'watchdog'), 'service role')
+         unit = 'pv2-' + self.l.token + '-' + role + '.service'
+         self.arguments[role] = list(argv)
+-        slice_name = 'pv2-' + self.l.token + (('-control.slice') if outside else '.slice')
++        slice_name = self.l.manager.guard_unit if outside else self.l.manager.work_unit
+         command = ['systemd-run', '--unit=' + unit, '--slice=' + slice_name, '--service-type=exec',
+                    '--property=Restart=no', '--property=KillMode=control-group',
+                    '--property=TimeoutStopSec=10', '--property=RuntimeMaxSec=1200',
+@@ -81,7 +81,9 @@
+                    '--property=StandardError=inherit', '--setenv=TMPDIR=' + self.l.root + '/data/tmp', '--', *argv]
+         def observe():
+             p = self.inspect(unit)
+-            require(within(p['cgroup'], '/pv2-' + self.l.token + '.slice') is not outside, 'service escaped boundary')
++            expected = self.l.manager.show(slice_name)['ControlGroup']
++            require(within(p['cgroup'], expected), 'service escaped reported slice')
++            require(not outside or not within(p['cgroup'], self.l.work_path), 'watchdog in workload')
+             return dict(p, role=role, unit=unit)
+         return self.l.acquire('service', unit, lambda: self.host.command(command, 10), observe)
+ 
+@@ -110,14 +112,14 @@
+             p = self.host.process(int(path.name))
+             argv = self.host.text(str(path) + '/cmdline')
+             baseline = getattr(self.host, 'baseline_processes', {})
+-            if any(name in argv for name in ('containerd-shim', '/runc', '/dockerd', '/containerd')) and not within(p['cgroup'], '/pv2-' + self.l.token + '.slice'):
++            if any(name in argv for name in ('containerd-shim', '/runc', '/dockerd', '/containerd')) and not within(p['cgroup'], self.l.work_path):
+                 require(baseline.get(p['pid']) == p, 'new or changed external runtime process; ownership inconclusive')
+-            belongs = self.l.token in argv or within(p['cgroup'], '/pv2-' + self.l.token + '.slice')
++            belongs = self.l.token in argv or within(p['cgroup'], self.l.work_path)
+             if not belongs:
+                 continue
+-            if '-watchdog.service' in p['cgroup'] or '-control.slice' in p['cgroup']:
++            if (self.l.guard_path and within(p['cgroup'], self.l.guard_path)) or within(p['cgroup'], self.l.parent):
+                 continue
+-            if not within(p['cgroup'], '/pv2-' + self.l.token + '.slice'):
++            if not within(p['cgroup'], self.l.work_path):
+                 escaped.append(p)
+             else:
+                 owned.append(p)
+@@ -125,6 +127,11 @@
+ 
+     def snapshot(self, record):
+         identity = self.l.cgroup_identity()
++        owner = record['systemd_owner']
++        require(self.l.manager.show(owner['guard_unit'])['ControlGroup'] == owner['guard_path'], 'guard slice path changed')
++        require(self.l.manager.show(owner['controller_unit'])['ControlGroup'] == owner['controller_path'], 'controller unit path changed')
++        _, controller_path = resolve_cgroup(self.host.text('/proc/self/mountinfo'), self.host.text('/proc/self/cgroup'))
++        require(controller_path == owner['controller_path'], 'controller process moved')
+         require(identity['inode'] == record['cgroup_inode'] and identity['boot_id'] == record['boot_id'], 'cgroup changed')
+         policy = {'memory_max': int(self.host.text(self.l.cg + '/memory.max')),
+                   'swap_max': int(self.host.text(self.l.cg + '/memory.swap.max')),
+@@ -199,7 +206,7 @@
+             # systemd-run service stays below the parent; killing its client is
+             # not the cleanup mechanism. No shell expansion or shared socket.
+             argv = ['systemd-run', '--pipe', '--wait', '--unit=pv2-' + self.l.token + '-operation.service',
+-                    '--slice=pv2-' + self.l.token + '.slice', '--property=RuntimeMaxSec=60',
++                    '--slice=' + self.l.manager.work_unit, '--property=RuntimeMaxSec=60',
+                     '--property=KillMode=control-group', '--', *self.operation]
+             self.handle = self.host.start(argv)
+             return {'handle': 'operation', 'deadline_seconds': 60}
+@@ -209,9 +216,7 @@
+             self.l.admission = False
+             return {}
+         if action == 'term_service':
+-            self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=TERM',
+-                               'pv2-' + self.l.token + '-dockerd.service',
+-                               'pv2-' + self.l.token + '-containerd.service'], 10)
++            self.l.manager.kill_members(self.l.manager.work_unit, self.l.work_path, 'TERM')
+             return {}
+         if action in ('kill_subtree', 'wait_empty'):
+             self.terminated = self.l.terminate(self.l.cgroup_identity())
+@@ -254,13 +259,16 @@
+                 0 < int(host.text(control + '/pids.max')) <= 16, 'controller enforced bounds required')
+         quota, period = [int(x) for x in host.text(control + '/cpu.max').split()]
+         require(0 < quota <= period // 4, 'controller CPU bound')
+-        host.workload_slice = 'pv2-' + token + '.slice'
++        controller_unit = 'pv2-' + token + '-controller.service'
++        require(self.l.manager.show(controller_unit)['ControlGroup'] == self.l.parent, 'controller manager/proc binding')
++        self.controller_unit = controller_unit
++        host.workload_slice = self.l.manager.work_unit
+         host.baseline_processes = {int(p.name): host.process(int(p.name)) for p in host.children('/proc') if p.name.isdigit()}
+         self.services = Services(host, self.l)
+ 
+     def directory(self, path):
+         return self.l.acquire('directory', path, lambda: self.host.mkdir(path),
+-                              lambda: {'path': path, 'inode': self.host.stat(path).st_ino})
++                              lambda: self.l.entry_identity(path))
+ 
+     def provision(self, inventory, watchdog_argv, operation, run_id, attempt):
+         # No daemon before durable volume/cgroup records and armed watchdog.
+@@ -291,18 +299,21 @@
+                    'containerd': (l.runtime + '/containerd.toml', b'version = 2\ndisabled_plugins = ["io.containerd.grpc.v1.cri"]\n')}
+         for role, (path, raw) in configs.items():
+             l.acquire('configuration', path, lambda p=path, b=raw: self.host.write_exclusive(p, b),
+-                      lambda p=path, b=raw: {'path': p, 'sha256': hashlib.sha256(b).hexdigest(), 'inode': self.host.stat(p).st_ino})
++                      lambda p=path, b=raw: dict(l.entry_identity(p), sha256=hashlib.sha256(b).hexdigest()))
+             args[role].extend((['--config-file', path] if role == 'dockerd' else ['--config', path]))
+         processes = []
+         for role in ('containerd', 'dockerd'):
+             p = self.services.start(role, args[role])
+             processes.append({k: p[k] for k in ('role', 'pid', 'start_ticks', 'executable_sha256', 'cgroup')})
+-        r = {'schema': 'pv2_ownership_v2', 'token': l.token, 'run_id': run_id, 'attempt': attempt,
+-             'root': l.root, 'runtime_root': l.runtime, 'cgroup': '/pv2-' + l.token + '.slice',
++        r = {'schema': 'pv2_ownership_v3', 'token': l.token, 'run_id': run_id, 'attempt': attempt,
++             'root': l.root, 'runtime_root': l.runtime, 'cgroup': l.work_path,
++             'systemd_owner': {'workload_unit': l.manager.work_unit, 'workload_path': l.work_path,
++                               'guard_unit': l.manager.guard_unit, 'guard_path': l.guard_path,
++                               'controller_unit': self.controller_unit, 'controller_path': l.parent},
+              'cgroup_inode': identity['inode'], 'boot_id': identity['boot_id'], 'policy': deepcopy(POLICY),
+              'service': 'pv2-' + l.token + '.service', 'runtime_tmpfs_bytes': 64 * 1024**2,
+              'network': {'bridge': False, 'iptables': False, 'ip_forward': False},
+-             'container_cgroup_parent': '/pv2-' + l.token + '.slice', 'supervisor_cgroup': l.parent,
++             'container_cgroup_parent': l.manager.work_unit, 'supervisor_cgroup': l.parent,
+              'watchdog': wd, 'processes': processes,
+              'volumes': {role: volume_record(v, self.host) for role, v in volumes.items()},
+              'paths': {'docker_socket': l.runtime + '/docker.sock', 'containerd_socket': l.runtime + '/containerd.sock',
+@@ -321,8 +332,13 @@
+         recovered = recover_records(root, self.l.token, self.l.boot)
+         self.l.resources = recovered['observed']
+         require(not recovered['unresolved_intents'], 'recovery blocked: intent without observed identity')
++        self.l.owned_slices = {x['requested']: x['identity'] for x in recovered['observed'] if x['kind'] == 'systemd-slice'}
++        require(set(self.l.owned_slices) == {self.l.manager.work_unit, self.l.manager.guard_unit}, 'recovery slice ownership incomplete')
++        identity = self.l.cgroup_identity()
++        self.l.guard_path = self.l.manager.show(self.l.manager.guard_unit)['ControlGroup']
++        require(not within(self.l.guard_path, self.l.work_path) and not within(self.l.work_path, self.l.guard_path), 'recovered branches nested')
+         self.l.admission = False
+-        result = self.l.terminate(self.l.cgroup_identity())
++        result = self.l.terminate(identity)
+         return self.l.partial_cleanup(result)
+ 
+     def finalize(self, backend, exporter, manifest, final_sink):
+@@ -342,7 +358,8 @@
+             evidence = next(x['identity'] for x in l.resources if x['kind'] == 'mount' and x['identity']['mount']['mount'] == l.root + '/evidence')
+             # Stop the external writer before copying a stable evidence snapshot.
+             wd = self.services.inspect('pv2-' + l.token + '-watchdog.service')
+-            require(wd['cgroup'].startswith('/pv2-' + l.token + '-control.slice/'), 'watchdog ownership')
++            require(within(wd['cgroup'], l.manager.show(l.manager.guard_unit)['ControlGroup']) and not within(wd['cgroup'], l.work_path), 'watchdog ownership')
++            require(all(wd[k] == backend.record['watchdog'][k] for k in ('pid', 'start_ticks', 'cgroup', 'executable_sha256')), 'watchdog identity replaced')
+             self.host.command(['systemctl', 'stop', 'pv2-' + l.token + '-watchdog.service'], 10)
+             try:
+                 self.host.process(wd['pid'])
+@@ -367,23 +384,23 @@
+                 loops = json.loads(self.host.command(['losetup', '--json', '--associated', v['path'], '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
+                 require(loops == [], 'backing still attached')
+                 l.require_termination(fresh)
++                l.verify_entry(v)
+                 self.host.remove_owned(v['path'], v['inode'])
+-            # Child service cgroups must already be empty. Native rmdir does not
+-            # recursively erase anything and fails closed on unexpected content.
+-            for child in reversed(self.host.children(l.cg)):
+-                if child.is_dir():
+-                    self.host.remove_owned(str(child), self.host.stat(str(child)).st_ino, directory=True)
+             l.require_termination(fresh)
+-            self.host.remove_owned(l.cg, fresh['ownership']['inode'], directory=True)
+-            control_root = l.cgmount + '/pv2-' + l.token + '-control.slice'
+-            for child in reversed(self.host.children(control_root)):
+-                if child.is_dir():
+-                    require(self.host.text(str(child) + '/cgroup.procs').strip() == '', 'control tasks survive')
+-                    self.host.remove_owned(str(child), self.host.stat(str(child)).st_ino, directory=True)
+-            self.host.remove_owned(control_root, self.host.stat(control_root).st_ino, directory=True)
++            # systemd is the sole cgroup owner: stop units, never rmdir its tree.
++            l.manager.stop(l.manager.work_unit, l.work_path, l.owned_slices[l.manager.work_unit]['inode'])
++            l.manager.stop(l.manager.guard_unit, l.guard_path, l.owned_slices[l.manager.guard_unit]['inode'])
++            report['filesystem_internal_entries_retired'] = []
++            detached = {x['identity']['mount']['id'] for x in l.resources if x['kind'] == 'mount'} | {runtime['id']}
+             for item in reversed(l.resources):
+                 if item['kind'] in ('directory', 'mount-directory'):
+                     v = item['identity']
++                    if v['disposition'] == 'filesystem-internal':
++                        require(v['filesystem']['id'] in detached, 'unknown internal filesystem')
++                        require(not any(m['id'] == v['filesystem']['id'] for m in mount_records(self.host.text('/proc/self/mountinfo'))), 'internal filesystem still mounted')
++                        report['filesystem_internal_entries_retired'].append(v)
++                        continue  # identities belong to disposed FS, never stat uncovered paths
++                    l.verify_entry(v)
+                     self.host.remove_owned(v['path'], v['inode'], directory=True)
+             report['complete'] = True
+         except BaseException as exc:
+--- a/linux_lifecycle.py
++++ b/linux_lifecycle.py
+@@ -13,6 +13,7 @@
+ 
+ from supervisor_v2 import POLICY, require, within
+ from linux_host import mount_records, resolve_cgroup
++from systemd_ownership import SystemdOwnership
+ 
+ 
+ class LinuxLifecycle:
+@@ -27,7 +28,11 @@
+         self.reserve_checked = False
+         self.latest_termination = None
+         self.cgmount, self.parent = resolve_cgroup(host.text('/proc/self/mountinfo'), host.text('/proc/self/cgroup'))
+-        self.cg = self.cgmount + '/pv2-' + token + '.slice'
++        self.manager = SystemdOwnership(host, token, self.cgmount)
++        self.cg = None
++        self.work_path = None
++        self.guard_path = None
++        self.owned_slices = {}
+         self.boot = host.text('/proc/sys/kernel/random/boot_id').strip()
+ 
+     def acquire(self, kind, identity, mutate, observe):
+@@ -43,21 +48,58 @@
+         self.journal.seal()
+         return observed
+ 
++    def entry_identity(self, path):
++        mounts = [m for m in mount_records(self.host.text('/proc/self/mountinfo')) if within(path, m['mount'])]
++        require(mounts, 'containing filesystem unavailable')
++        owner = max(mounts, key=lambda m: len(m['mount']))
++        internal = owner['mount'] in (self.root + '/data', self.root + '/evidence', self.runtime)
++        return {'path': path, 'inode': self.host.stat(path).st_ino, 'filesystem': owner,
++                'disposition': 'filesystem-internal' if internal else 'host-entry'}
++
++    def verify_entry(self, identity):
++        require(self.entry_identity(identity['path']) == identity, 'filesystem-bound entry changed')
++
+     def cgroup_identity(self):
+-        return {'path': self.cg, 'inode': self.host.stat(self.cg).st_ino,
+-                'boot_id': self.host.text('/proc/sys/kernel/random/boot_id').strip()}
++        path = self.manager.show(self.manager.work_unit)['ControlGroup']
++        require(self.work_path is None or self.work_path == path, 'reported workload path changed')
++        self.work_path, self.cg = path, self.cgmount + path
++        observed = {'path': self.cg, 'inode': self.host.stat(self.cg).st_ino,
++                    'boot_id': self.host.text('/proc/sys/kernel/random/boot_id').strip()}
++        expected = self.owned_slices.get(self.manager.work_unit)
++        require(expected is None or expected == observed, 'owned workload slice replaced')
++        return observed
+ 
+     def provision_cgroup(self):
+         controllers = set(self.host.text(self.cgmount + '/cgroup.controllers').split())
+-        enabled = set(self.host.text(self.cgmount + '/cgroup.subtree_control').split())
+-        require({'memory', 'cpu', 'pids'} <= controllers & enabled, 'required delegated controllers unavailable')
+-        identity = self.acquire('cgroup', self.cg, lambda: self.host.mkdir(self.cg), self.cgroup_identity)
++        require({'memory', 'cpu', 'pids'} <= controllers, 'required controllers unavailable')
++        identity = self.acquire('systemd-slice', self.manager.work_unit,
++                                lambda: self.manager.create(self.manager.work_unit, POLICY['memory_max'], 1500000, 256),
++                                self.cgroup_identity)
++        self.owned_slices[self.manager.work_unit] = deepcopy(identity)
+         for filename, value in (('memory.max', str(POLICY['memory_max'])), ('memory.swap.max', '0'),
+                                 ('cpu.max', '150000 100000'), ('pids.max', '256')):
+             self.assert_cgroup(identity)
+-            self.host.put(self.cg + '/' + filename, value)
+-            require(self.host.text(self.cg + '/' + filename).strip() == value, 'limit read-back ' + filename)
+-        self.host.put(self.cg + '/cgroup.subtree_control', '+memory +cpu +pids')
++            actual = self.host.text(self.cg + '/' + filename).strip()
++            if filename == 'cpu.max':
++                quota, period = [int(x) for x in actual.split()]
++                require(quota > 0 and quota * 100000 == 150000 * period, 'CPU quota read-back')
++            else:
++                require(actual == value, 'limit read-back ' + filename)
++        def guard_identity():
++            self.guard_path = self.manager.show(self.manager.guard_unit)['ControlGroup']
++            require(not within(self.guard_path, self.work_path) and not within(self.work_path, self.guard_path), 'nested independent branches')
++            require(not within(self.parent, self.work_path), 'controller in workload')
++            path = self.cgmount + self.guard_path
++            require(self.host.text(path + '/memory.max').strip() == str(256 * 1024**2) and
++                    self.host.text(path + '/memory.swap.max').strip() == '0' and
++                    self.host.text(path + '/pids.max').strip() == '16', 'guard slice controls')
++            quota, period = [int(x) for x in self.host.text(path + '/cpu.max').split()]
++            require(quota > 0 and quota * 4 == period, 'guard slice CPU control')
++            return {'path': self.cgmount + self.guard_path, 'inode': self.host.stat(self.cgmount + self.guard_path).st_ino,
++                    'boot_id': self.boot}
++        guard = self.acquire('systemd-slice', self.manager.guard_unit,
++                             lambda: self.manager.create(self.manager.guard_unit, 256 * 1024**2, 250000, 16), guard_identity)
++        self.owned_slices[self.manager.guard_unit] = deepcopy(guard)
+         return identity
+ 
+     def assert_cgroup(self, identity):
+@@ -69,7 +111,7 @@
+         result = []
+         for pid in self.host.text(path + '/cgroup.procs').split():
+             p = self.host.process(int(pid))
+-            require(within(p['cgroup'], '/pv2-' + self.token + '.slice'), 'process escape')
++            require(within(p['cgroup'], self.work_path), 'process escape')
+             result.append(p)
+         for child in self.host.children(path):
+             if child.is_dir() and not child.is_symlink():
+@@ -83,11 +125,9 @@
+             try:
+                 self.assert_cgroup(identity)
+                 if action == 'term':
+-                    self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=TERM',
+-                                       'pv2-' + self.token + '-dockerd.service',
+-                                       'pv2-' + self.token + '-containerd.service'], 10)
++                    self.manager.kill_members(self.manager.work_unit, self.work_path, 'TERM')
+                 else:
+-                    self.host.put(self.cg + '/cgroup.kill', '1')
++                    self.manager.kill_members(self.manager.work_unit, self.work_path, 'KILL')
+             except BaseException as exc:
+                 errors.append(action + ': ' + repr(exc))
+         deadline = self.host.now() + 10
+@@ -140,8 +180,9 @@
+                 continue
+             p = self.host.process(int(entry.name))
+             argv = self.host.text(str(entry) + '/cmdline')
+-            if self.token in argv or within(p['cgroup'], '/pv2-' + self.token + '.slice'):
+-                require(within(p['cgroup'], '/pv2-' + self.token + '-control.slice'), 'owned process survives outside empty subtree')
++            if self.token in argv or within(p['cgroup'], self.work_path):
++                require((self.guard_path and within(p['cgroup'], self.guard_path)) or within(p['cgroup'], self.parent),
++                        'owned process survives outside empty subtree')
+         return True
+ 
+     def volume_identity(self, role, loop):
+@@ -165,7 +206,7 @@
+             require(self.host.free_bytes(self.root) >= 10 * 1024**3, 'host disk reserve')
+             self.reserve_checked = True
+         self.acquire('backing', backing, lambda: self.host.allocate_exclusive(backing, capacity),
+-                     lambda: {'path': backing, 'inode': self.host.stat(backing).st_ino})
++                     lambda: self.entry_identity(backing))
+         st = self.host.stat(backing)
+         require(st.st_size == capacity and st.st_blocks * 512 >= capacity, 'sparse backing refused')
+         loop = self.acquire('loop', backing,
+@@ -173,7 +214,7 @@
+                             lambda: self.find_loop(backing))['loop']
+         self.host.command(['mkfs.ext4', '-F', '-m', '0', backing], 60)
+         self.acquire('mount-directory', target, lambda: self.host.mkdir(target),
+-                     lambda: {'path': target, 'inode': self.host.stat(target).st_ino})
++                     lambda: self.entry_identity(target))
+         return self.acquire('mount', target,
+                             lambda: self.host.command(['mount', '-t', 'ext4', '-o', 'nodev,nosuid', loop, target], 10),
+                             lambda: self.volume_identity(role, loop))
+@@ -193,7 +234,7 @@
+                   '--pidfile=' + self.runtime + '/dockerd.pid', '--exec-root=' + self.runtime + '/exec',
+                   '--data-root=' + self.root + '/data/docker', '--containerd=' + self.runtime + '/containerd.sock',
+                   '--bridge=none', '--iptables=false', '--ip-forward=false', '--ip-masq=false',
+-                  '--exec-opt=native.cgroupdriver=cgroupfs', '--cgroup-parent=/pv2-' + self.token + '.slice',
++                  '--exec-opt=native.cgroupdriver=systemd', '--cgroup-parent=' + self.manager.work_unit,
+                   '--log-driver=none']
+         containerd = ['/usr/bin/containerd', '--root', self.root + '/data/containerd',
+                       '--state', self.runtime + '/containerd', '--address', self.runtime + '/containerd.sock']
+--- /dev/null
++++ b/package_hierarchy.py
+@@ -0,0 +1,69 @@
++"""Explicit local review generation; no native Linux actions or network."""
++import argparse
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++
++BASE = 'c56f961ce6103877607f5608ddb6535bba800dd34d972b3e20c885b298ef0610'
++EDITED = {'linux_lifecycle.py', 'linux_integration.py', 'supervisor_v2.py', 'watchdog_worker.py',
++          'test_linux_integration.py', 'test_linux_lifecycle.py', 'file-hashes.json'}
++
++def digest(raw): return hashlib.sha256(raw).hexdigest()
++
++def write(path, obj): path.write_text(json.dumps(obj, indent=2, sort_keys=True) + '\n', encoding='utf-8')
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): p.add_argument('--' + name, type=Path, required=True)
++    a = p.parse_args(); root = a.root.resolve()
++    if digest(a.base.read_bytes()) != BASE: raise ValueError('base mismatch')
++    with zipfile.ZipFile(a.base) as base:
++        old = json.loads(base.read('file-hashes.json'))
++        if set(base.namelist()) != set(old) | {'file-hashes.json'}: raise ValueError('base coverage')
++        for name, entry in old.items():
++            raw = base.read(name)
++            if digest(raw) != entry['sha256'] or len(raw) != entry['size_bytes']: raise ValueError(name)
++            if name not in EDITED and (root / name).read_bytes() != raw: raise ValueError('unexpected edit ' + name)
++        (root / 'history' / 'integrated-file-hashes.json').write_bytes(base.read('file-hashes.json'))
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        command = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        tested = subprocess.run(command, cwd=root, env=env, text=True, capture_output=True, timeout=120)
++        (root / 'hierarchy-tests.log').write_text(tested.stdout + tested.stderr, encoding='utf-8')
++        if tested.returncode: raise RuntimeError('tests failed; see hierarchy-tests.log')
++        summary = re.search(r'Ran \d+ tests in [^\n]+', tested.stderr).group()
++        for path in root.glob('*.py'): compile(path.read_text(encoding='utf-8'), str(path), 'exec')
++        files, diff = [], []
++        for path in sorted(root.iterdir()):
++            if path.suffix not in ('.py', '.md'): continue
++            before = base.read(path.name).decode().splitlines(True) if path.name in base.namelist() else []
++            after = path.read_text(encoding='utf-8').splitlines(True)
++            if before == after: continue
++            if any(s.rstrip('\r\n').rstrip() != s.rstrip('\r\n') for s in after): raise ValueError('whitespace ' + path.name)
++            files.append(path.name)
++            diff.extend(difflib.unified_diff(before, after, fromfile='a/' + path.name if before else '/dev/null', tofile='b/' + path.name))
++        (root / 'hierarchy-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root / 'HIERARCHY_VALIDATION.json', {'parent_sha256': BASE, 'parent_entries_verified': len(old),
++              'command': command, 'summary': summary, 'exit_code': tested.returncode, 'changed_source_documents': files,
++              'python': sys.version, 'platform': platform.platform(), 'linux_acceptance': False,
++              'execution_approved': False, 'stage_b': 'paused', 'production_pins_unchanged': True,
++              'original_15_regressions_unchanged': True, 'scope': 'fake systemd and mount namespace only',
++              'warning': 'Unchanged acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14'})
++    ledger = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path != root / 'file-hashes.json':
++            raw = path.read_bytes(); ledger[path.relative_to(root).as_posix()] = {'sha256': digest(raw), 'size_bytes': len(raw)}
++    write(root / 'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.output, 'x', zipfile.ZIP_DEFLATED) as out:
++        for name in [*sorted(ledger), 'file-hashes.json']: out.write(root / name, name)
++    print(json.dumps({'archive': str(a.output.resolve()), 'sha256': digest(a.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': summary}, indent=2))
++
++if __name__ == '__main__': main()
+--- a/supervisor_v2.py
++++ b/supervisor_v2.py
+@@ -50,13 +50,23 @@
+ 
+ def validate_record(r):
+     require(len(json.dumps(r).encode('utf-8')) <= 65536, 'ownership record bound')
+-    require(r.get('schema') == 'pv2_ownership_v2', 'ownership schema')
++    require(r.get('schema') in ('pv2_ownership_v2', 'pv2_ownership_v3'), 'ownership schema')
+     token = r.get('token', '')
+     require(re.fullmatch('[0-9a-f]{32}', token) is not None, 'ownership token')
+     require(r.get('run_id', '').isdigit() and r.get('attempt', '').isdigit(), 'run/attempt')
+     base, runtime = '/var/tmp/pv2-' + token, '/run/pv2-' + token
+     require(r.get('root') == base and r.get('runtime_root') == runtime, 'private roots')
+-    require(r.get('cgroup') == '/pv2-' + token + '.slice', 'private cgroup')
++    if r['schema'] == 'pv2_ownership_v3':
++        owner = r.get('systemd_owner', {})
++        require(owner.get('workload_unit') == 'pv2work' + token + '.slice' and
++                owner.get('guard_unit') == 'pv2guard' + token + '.slice', 'private systemd units')
++        require(owner.get('workload_path') == r.get('cgroup') and within(r.get('cgroup'), '/'), 'reported workload path')
++        require(owner.get('guard_path') and not within(owner['guard_path'], r['cgroup']) and
++                not within(r['cgroup'], owner['guard_path']), 'independent systemd branches')
++        require(owner.get('controller_path') == r.get('supervisor_cgroup'), 'reported controller path')
++        require(r.get('container_cgroup_parent') == owner['workload_unit'], 'systemd container parent')
++    else:
++        require(r.get('cgroup') == '/pv2-' + token + '.slice', 'private cgroup')
+     require(r.get('cgroup_inode', 0) > 0 and r.get('boot_id'), 'cgroup identity/boot')
+     require(r.get('policy') == POLICY, 'policy mismatch')
+     required_paths = {'docker_socket': runtime + '/docker.sock', 'containerd_socket': runtime + '/containerd.sock',
+@@ -68,7 +78,8 @@
+     require(r.get('runtime_tmpfs_bytes') == 64 * 1024**2, 'runtime tmpfs bound')
+     require(r.get('service') == 'pv2-' + token + '.service', 'private service')
+     require(r.get('network') == {'bridge': False, 'iptables': False, 'ip_forward': False}, 'daemon network effects')
+-    require(r.get('container_cgroup_parent') == r['cgroup'], 'container parent')
++    if r['schema'] == 'pv2_ownership_v2':
++        require(r.get('container_cgroup_parent') == r['cgroup'], 'container parent')
+     for role, capacity in (('data', 8 * GIB), ('evidence', 512 * 1024**2)):
+         v = r.get('volumes', {}).get(role, {})
+         require(v.get('mount') == base + '/' + role and v.get('backing') == base + '/' + role + '.ext4', 'volume path')
+--- /dev/null
++++ b/systemd_ownership.py
+@@ -0,0 +1,64 @@
++"""Manager-owned transient slices. Never mkdir/write/rmdir systemd cgroups."""
++import json
++from supervisor_v2 import require, within
++
++
++class SystemdOwnership:
++    def __init__(self, host, token, mount):
++        self.host, self.token, self.mount = host, token, mount
++        # No hyphens: distinct top-level branches, not encoded descendants.
++        self.work_unit = 'pv2work' + token + '.slice'
++        self.guard_unit = 'pv2guard' + token + '.slice'
++
++    def show(self, unit, active=True):
++        text = self.host.command(['systemctl', 'show', unit,
++                                  '--property=Id,ActiveState,ControlGroup'], 10).decode()
++        row = dict(line.split('=', 1) for line in text.splitlines() if '=' in line)
++        require(row.get('Id') == unit, 'systemd unit identity')
++        if active:
++            require(row.get('ActiveState') == 'active', 'systemd unit inactive')
++            path = row.get('ControlGroup', '')
++            require(path.startswith('/') and path != '/' and '..' not in path.split('/'), 'invalid reported ControlGroup')
++        return row
++
++    def create(self, unit, memory, quota, pids):
++        require(unit in (self.work_unit, self.guard_unit), 'unowned slice')
++        # fail mode does not replace an existing unit. UUID token must be new.
++        self.host.command(['busctl', 'call', 'org.freedesktop.systemd1', '/org/freedesktop/systemd1',
++                           'org.freedesktop.systemd1.Manager', 'StartTransientUnit', 'ssa(sv)a(sa(sv))',
++                           unit, 'fail', '5', 'Description', 's', 'pv2 isolated ' + self.token,
++                           'MemoryMax', 't', str(memory), 'MemorySwapMax', 't', '0',
++                           'CPUQuotaPerSecUSec', 't', str(quota), 'TasksMax', 't', str(pids), '0'], 10)
++        return self.show(unit)
++
++    def kill_members(self, unit, expected_path, signal):
++        require(self.show(unit)['ControlGroup'] == expected_path, 'slice path changed')
++        require(signal in ('TERM', 'KILL'), 'signal')
++        deadline = self.host.now() + 10
++        rows = json.loads(self.host.command(['systemctl', 'list-units', '--all', '--output=json',
++                                            '--type=service,scope', '--no-pager'], 10))
++        require(type(rows) is list and len(rows) <= 4096, 'unit inventory bound')
++        for row in rows:
++            name = row['unit']
++            require(name.endswith(('.service', '.scope')) and '/' not in name, 'unit inventory name')
++            observed = self.show(name, active=False)
++            path = observed.get('ControlGroup', '')
++            if path and within(path, expected_path):
++                require(self.host.now() < deadline, 'unit kill deadline')
++                # Re-read immediately before signalling; never signal a name
++                # that has moved outside the owned manager-reported branch.
++                require(self.show(name, active=False).get('ControlGroup') == path, 'unit moved before signal')
++                self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=' + signal, name],
++                                  min(10, deadline - self.host.now()))
++
++    def stop(self, unit, expected_path, inode):
++        require(self.show(unit)['ControlGroup'] == expected_path, 'slice changed before stop')
++        require(self.host.stat(self.mount + expected_path).st_ino == inode, 'slice inode changed before stop')
++        self.host.command(['systemctl', 'stop', unit], 10)
++        row = self.show(unit, active=False)
++        require(row.get('ActiveState') == 'inactive' and not row.get('ControlGroup'), 'slice stop unconfirmed')
++        try:
++            self.host.stat(self.mount + expected_path)
++        except FileNotFoundError:
++            return
++        raise ValueError('manager-owned cgroup still present after stop')
+--- /dev/null
++++ b/test_hierarchy_mounts.py
+@@ -0,0 +1,141 @@
++"""Regression reproductions use fake systemd expansion and mount namespaces."""
++import hashlib
++from unittest import TestCase
++from unittest.mock import Mock, patch
++
++from test_linux_integration import Kernel
++from test_linux_lifecycle import slice_path
++from test_supervisor_v2 import FakeEvidence
++from linux_integration import Coordinator
++from supervisor_v2 import Supervisor, within
++
++
++class HierarchyMountTests(TestCase):
++    def setup_run(self):
++        h = Kernel(); c = Coordinator(h, FakeEvidence(), 'a' * 32)
++        inventory = {p: 'a' * 64 for p in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc')}
++        backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        return h, c, backend, record
++
++    def exporter(self):
++        exporter = Mock()
++        exporter.export.side_effect = lambda raw, manifest, **kw: {'manifest_sha256': hashlib.sha256(raw).hexdigest(), 'readback_verified': True}
++        return exporter
++
++    def test_documented_expansion_reproduces_old_nested_control(self):
++        token = 'a' * 32
++        work = slice_path('pv2-' + token + '.slice')
++        control = slice_path('pv2-' + token + '-control.slice')
++        self.assertEqual(work, '/pv2.slice/pv2-' + token + '.slice')
++        self.assertTrue(within(control, work))
++        self.assertEqual(slice_path('foo-bar-baz.slice'), '/foo.slice/foo-bar.slice/foo-bar-baz.slice')
++
++    def test_workload_kill_leaves_watchdog_alive_and_bounded(self):
++        h, c, b, r = self.setup_run()
++        h.processes[77] = {'pid': 77, 'start_ticks': 770, 'executable_sha256': 'c' * 64, 'cgroup': h.controller_path}
++        h.argv[77] = ['controller', c.l.token]
++        self.assertFalse(within(c.l.guard_path, c.l.work_path))
++        self.assertFalse(within(c.l.parent, c.l.work_path))
++        wd = r['watchdog']
++        result = c.l.terminate(c.l.cgroup_identity())
++        self.assertTrue(result['termination_confirmed'], result)
++        self.assertEqual(h.process(wd['pid'])['cgroup'], wd['cgroup'])
++        self.assertEqual(h.text('/sys/fs/cgroup' + wd['cgroup'] + '/pids.max'), '16')
++        self.assertFalse(any(within(p['cgroup'], c.l.work_path) for p in h.processes.values()))
++        self.assertFalse(any(x[0] == 'put' for x in h.calls))
++        self.assertTrue(c.l.require_termination(result))
++        self.assertEqual(h.process(77)['cgroup'], h.controller_path)
++
++    def test_reported_path_change_denies_signalling(self):
++        h, c, b, r = self.setup_run(); identity = c.l.cgroup_identity()
++        h.slices[c.l.manager.work_unit]['path'] = '/unexpected.slice'
++        before = len(h.calls)
++        result = c.l.terminate(identity)
++        self.assertFalse(result['termination_confirmed'])
++        self.assertFalse(any(x[0] == 'command' and x[1][:2] == ['systemctl', 'kill'] for x in h.calls[before:]))
++
++    def test_container_uses_systemd_parent_not_manual_fs_path(self):
++        h, c, b, r = self.setup_run()
++        argv = c.services.arguments['dockerd']
++        self.assertIn('--exec-opt=native.cgroupdriver=systemd', argv)
++        self.assertIn('--cgroup-parent=' + c.l.manager.work_unit, argv)
++        self.assertEqual(r['cgroup'], h.slices[c.l.manager.work_unit]['path'])
++        self.assertEqual(r['systemd_owner']['controller_path'], h.controller_path)
++
++    def test_fake_rejects_missing_nonempty_and_exposes_unmount(self):
++        h, c, b, r = self.setup_run()
++        path = c.l.root + '/data/downloads'
++        self.assertTrue(h.stat(path).st_ino)
++        with self.assertRaises(FileNotFoundError): h.remove_owned(c.l.root + '/missing', 1, directory=True)
++        with self.assertRaisesRegex(OSError, 'not empty'): h.remove_owned(c.l.root, h.stat(c.l.root).st_ino, directory=True)
++        self.assertEqual(Supervisor(b, FakeEvidence()).run(r)['state'], 'VERIFIED_FAKE')
++        with self.assertRaises(FileNotFoundError): h.stat(path)
++
++    def test_finalization_never_stats_hidden_mounted_children(self):
++        h, c, b, r = self.setup_run()
++        internals = [x['identity'] for x in c.l.resources if x['kind'] == 'directory' and x['identity']['disposition'] == 'filesystem-internal']
++        self.assertEqual({x['path'].rsplit('/', 1)[-1] for x in internals}, {'tmp', 'downloads'})
++        Supervisor(b, FakeEvidence()).run(r)
++        old_stat = h.stat
++        def guarded(path):
++            if path in {v['path'] for v in internals}:
++                raise AssertionError('old mounted identity resolved against uncovered host')
++            return old_stat(path)
++        with patch.object(h, 'stat', side_effect=guarded):
++            report = c.finalize(b, self.exporter(), {'files': {}}, FakeEvidence())
++        self.assertTrue(report['complete'], report)
++        self.assertEqual(len(report['teardown']['filesystem_internal_entries_retired']), 2)
++        self.assertFalse(any(v['path'] in h.removed for v in internals))
++        self.assertFalse(h.mounts or h.loops)
++
++    def test_interruption_before_evidence_unmount_preserves_backings(self):
++        h, c, b, r = self.setup_run(); Supervisor(b, FakeEvidence()).run(r)
++        original = h.command
++        def interrupted(argv, timeout):
++            if argv == ['umount', c.l.root + '/evidence']:
++                raise InterruptedError('invented interruption')
++            return original(argv, timeout)
++        with patch.object(h, 'command', side_effect=interrupted):
++            result = c.finalize(b, self.exporter(), {'files': {}}, FakeEvidence())
++        self.assertFalse(result['complete'])
++        self.assertTrue(any('interruption' in e for e in result['teardown']['errors']))
++        self.assertTrue(h.stat(c.l.root + '/data.ext4'))
++        self.assertTrue(h.stat(c.l.root + '/evidence.ext4'))
++        self.assertFalse(any(p.endswith('.ext4') for p in h.removed))
++
++    def test_interruption_after_unmount_does_not_resolve_internal_paths(self):
++        h, c, b, r = self.setup_run(); Supervisor(b, FakeEvidence()).run(r)
++        original = h.remove_owned
++        def interrupted(path, inode, directory=False):
++            if path.endswith('/data.ext4'): raise InterruptedError('before backing disposal')
++            return original(path, inode, directory)
++        with patch.object(h, 'remove_owned', side_effect=interrupted):
++            result = c.finalize(b, self.exporter(), {'files': {}}, FakeEvidence())
++        self.assertFalse(result['complete'])
++        self.assertFalse(h.mounts)
++        self.assertTrue(h.stat(c.l.root + '/data.ext4'))
++        with self.assertRaises(FileNotFoundError): h.stat(c.l.root + '/data/tmp')
++
++    def test_host_mountpoint_replacement_is_not_removed(self):
++        h, c, b, r = self.setup_run(); Supervisor(b, FakeEvidence()).run(r)
++        h.stats[c.l.root + '/data'].st_ino += 1000
++        result = c.finalize(b, self.exporter(), {'files': {}}, FakeEvidence())
++        self.assertFalse(result['complete'])
++        self.assertNotIn(c.l.root + '/data', h.removed)
++
++    def test_owned_slice_inode_replacement_blocks_kill(self):
++        h, c, b, r = self.setup_run()
++        identity = c.l.cgroup_identity()
++        h.stats[c.l.cg].st_ino += 1
++        before = len(h.calls)
++        result = c.l.terminate(identity)
++        self.assertFalse(result['termination_confirmed'])
++        self.assertFalse(any(x[0] == 'command' and x[1][:2] == ['systemctl', 'kill'] for x in h.calls[before:]))
++
++    def test_unknown_host_child_prevents_successful_root_removal(self):
++        h, c, b, r = self.setup_run(); Supervisor(b, FakeEvidence()).run(r)
++        h.mkdir(c.l.root + '/unrelated')
++        result = c.finalize(b, self.exporter(), {'files': {}}, FakeEvidence())
++        self.assertFalse(result['complete'])
++        self.assertTrue(h.stat(c.l.root + '/unrelated'))
++        self.assertNotIn(c.l.root, h.removed)
+--- a/test_linux_integration.py
++++ b/test_linux_integration.py
+@@ -12,7 +12,8 @@
+ 
+ from linux_integration import Coordinator
+ from test_supervisor_v2 import FakeEvidence
+-from test_linux_lifecycle import FakeHost, MOUNTS
++from test_linux_lifecycle import FakeHost, MOUNTS, slice_path
++from supervisor_v2 import within
+ 
+ 
+ class Node:
+@@ -28,26 +29,37 @@
+     def __init__(self):
+         super().__init__()
+         self.stats = {}; self.mounts = []; self.loops = {}; self.processes = {}; self.units = {}; self.argv = {}
++        self.slices = {}; self.covered = {}; self.bindings = {}; self.hidden = {}; self.removed = []
++        self.stats.update({p: SimpleNamespace(st_ino=i) for i, p in enumerate(('/', '/var', '/var/tmp', '/run', '/sys/fs/cgroup'), 1)})
+         self.next_pid = 100; self.next_inode = 500; self.next_loop = 10
+         self.unarmed = False; self.corrupt = False; self.escape = False; self.spill = False
+         self.blocks = [b'invented output', b'']; self.worker_seen_before_daemon = False
+-        self.files.update({'/sys/fs/cgroup/supervisor/memory.max': str(256 * 1024**2),
+-                           '/sys/fs/cgroup/supervisor/memory.swap.max': '0',
+-                           '/sys/fs/cgroup/supervisor/pids.max': '16',
+-                           '/sys/fs/cgroup/supervisor/cpu.max': '25000 100000'})
++        self.controller_path = '/system.slice/pv2-' + 'a' * 32 + '-controller.service'
++        self.files['/proc/self/cgroup'] = '0::' + self.controller_path + '\n'
++        control = '/sys/fs/cgroup' + self.controller_path
++        self.files.update({control + '/memory.max': str(256 * 1024**2), control + '/memory.swap.max': '0',
++                           control + '/pids.max': '16', control + '/cpu.max': '25000 100000'})
+ 
+     def mkdir(self, path):
+         if path in self.stats: raise FileExistsError(path)
++        self.stat(path.rsplit('/', 1)[0])
+         self.stats[path] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++        self.bind_entry(path)
+         self.calls.append(('mkdir', path))
+ 
+     def stat(self, path):
+-        return self.stats.get(path, SimpleNamespace(st_ino=111))
++        if path not in self.stats: raise FileNotFoundError(path)
++        return self.stats[path]
++
++    def bind_entry(self, path):
++        owners = [m for m in self.mounts if within(path, m['mount'])]
++        self.bindings[path] = max(owners, key=lambda m: len(m['mount']))['id'] if owners else 1
+ 
+     def allocate_exclusive(self, path, capacity):
+         if path in self.stats: raise FileExistsError(path)
+         self.stats[path] = SimpleNamespace(st_ino=self.next_inode, st_size=capacity, st_blocks=capacity // 512)
+         self.next_inode += 1
++        self.bind_entry(path)
+ 
+     def free_bytes(self, path): return 20 * 1024**3
+ 
+@@ -60,6 +72,7 @@
+         if path in self.files: raise FileExistsError(path)
+         self.files[path] = raw.decode()
+         self.stats[path] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++        self.bind_entry(path)
+ 
+     def assert_no_symlinks(self, path): pass
+ 
+@@ -82,11 +95,9 @@
+         return []
+ 
+     def put(self, path, value):
++        if path.startswith('/sys/fs/cgroup'):
++            raise AssertionError('manual writes into manager-owned cgroups forbidden')
+         super().put(path, value)
+-        if path.endswith('/cgroup.kill'):
+-            for pid in list(self.processes):
+-                if '-control.slice' not in self.processes[pid]['cgroup']:
+-                    del self.processes[pid]
+ 
+     def text(self, path):
+         if path == '/proc/self/mountinfo':
+@@ -96,9 +107,11 @@
+                 return self.runtime + '/docker.sock\n' + self.runtime + '/containerd.sock'
+             return ''
+         if path.endswith('/cgroup.events'):
+-            return 'populated ' + str(int(any('-control.slice' not in p['cgroup'] for p in self.processes.values())))
++            cg = path.removeprefix('/sys/fs/cgroup').removesuffix('/cgroup.events')
++            return 'populated ' + str(int(any(within(p['cgroup'], cg) for p in self.processes.values())))
+         if path.endswith('/cgroup.procs'):
+-            return '\n'.join(str(pid) for pid, p in self.processes.items() if '-control.slice' not in p['cgroup'])
++            cg = path.removeprefix('/sys/fs/cgroup').removesuffix('/cgroup.procs')
++            return '\n'.join(str(pid) for pid, p in self.processes.items() if within(p['cgroup'], cg))
+         if path.startswith('/proc/') and path.endswith('/cmdline'):
+             return '\0'.join(self.argv[int(path.split('/')[2])]) + '\0'
+         if 'watchdog-armed.json' in path and self.unarmed: raise FileNotFoundError(path)
+@@ -107,6 +120,19 @@
+ 
+     def command(self, argv, timeout):
+         self.calls.append(('command', list(argv), timeout))
++        if argv[0] == 'busctl':
++            unit = argv[7]
++            if unit in self.slices: raise FileExistsError(unit)
++            path = slice_path(unit)
++            self.slices[unit] = {'active': True, 'path': path}
++            self.stats['/sys/fs/cgroup' + path] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++            props = dict((argv[i], argv[i + 2]) for i in range(10, len(argv) - 1, 3))
++            root = '/sys/fs/cgroup' + path
++            self.files.update({root + '/memory.max': props['MemoryMax'], root + '/memory.swap.max': '0',
++                               root + '/pids.max': props['TasksMax'], root + '/cpu.max': str(int(props['CPUQuotaPerSecUSec']) // 10) + ' 100000'})
++            return b'o "/invented/job"'
++        if argv[:2] == ['systemctl', 'list-units']:
++            return json.dumps([{'unit': u} for u in self.units]).encode()
+         if argv[0] == 'losetup':
+             if '--find' in argv:
+                 loop = '/dev/loop' + str(self.next_loop); self.next_loop += 1
+@@ -122,19 +148,33 @@
+         if argv[0] == 'blkid': return b'invented-uuid'
+         if argv[0] == 'mount':
+             fs = argv[argv.index('-t') + 1]; source, target = argv[-2:]
++            self.covered[target] = self.stat(target)
+             self.mounts.append({'id': 100 + len(self.mounts), 'device': '7:10', 'root': '/', 'mount': target,
+                                 'filesystem': fs, 'source': source})
++            self.stats[target] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++            self.bind_entry(target)
+             if fs == 'tmpfs': self.runtime = target
+             return b''
+         if argv[0] == 'umount':
+-            self.mounts = [m for m in self.mounts if m['mount'] != argv[1]]; return b''
++            target = argv[1]
++            if target not in self.covered: raise FileNotFoundError(target)
++            mount_id = next(m['id'] for m in self.mounts if m['mount'] == target)
++            for p in list(self.stats):
++                if self.bindings.get(p) == mount_id:
++                    self.hidden[(mount_id, p)] = self.stats.pop(p)
++                    self.bindings.pop(p)
++            for p in list(self.files):
++                if within(p, target): del self.files[p]
++            self.mounts = [m for m in self.mounts if m['mount'] != target]
++            self.stats[target] = self.covered.pop(target); self.bind_entry(target)
++            return b''
+         if argv[0] == 'systemd-run':
+             unit = next(a.split('=', 1)[1] for a in argv if a.startswith('--unit='))
+             slice_name = next(a.split('=', 1)[1] for a in argv if a.startswith('--slice='))
+             role = unit.rsplit('-', 1)[-1].split('.')[0]
+             pid = self.next_pid; self.next_pid += 1
+             p = {'pid': pid, 'start_ticks': pid * 10, 'executable_sha256': 'a' * 64,
+-                 'cgroup': '/' + slice_name + '/' + unit}
++                 'cgroup': slice_path(slice_name) + '/' + unit}
+             self.processes[pid] = p; self.units[unit] = pid; self.argv[pid] = argv[argv.index('--') + 1:]
+             if role == 'watchdog':
+                 control = '/sys/fs/cgroup' + p['cgroup']
+@@ -148,9 +188,25 @@
+                 self.worker_seen_before_daemon = any('watchdog' in x for x in self.units)
+             return b''
+         if argv[:2] == ['systemctl', 'show']:
+-            unit = argv[2]; pid = self.units[unit]; p = self.process(pid)
++            unit = argv[2]
++            if unit.endswith('-controller.service'):
++                return f'Id={unit}\nActiveState=active\nControlGroup={self.controller_path}\n'.encode()
++            if unit.endswith('.slice'):
++                row = self.slices[unit]; active = 'active' if row['active'] else 'inactive'; path = row['path'] if row['active'] else ''
++                return f'Id={unit}\nActiveState={active}\nControlGroup={path}\n'.encode()
++            pid = self.units[unit]
++            if pid not in self.processes: return f'Id={unit}\nActiveState=inactive\nControlGroup=\n'.encode()
++            p = self.process(pid)
+             return f"Id={unit}\nActiveState=active\nMainPID={pid}\nControlGroup={p['cgroup']}\n".encode()
++        if argv[:2] == ['systemctl', 'kill']:
++            if '--signal=KILL' in argv: self.processes.pop(self.units[argv[-1]], None)
++            return b''
+         if argv[:2] == ['systemctl', 'stop']:
++            if argv[2].endswith('.slice'):
++                row = self.slices[argv[2]]
++                if any(within(p['cgroup'], row['path']) for p in self.processes.values()): raise OSError('slice busy')
++                row['active'] = False; self.stats.pop('/sys/fs/cgroup' + row['path'])
++                return b''
+             self.processes.pop(self.units[argv[2]], None); return b''
+         return b''
+ 
+@@ -161,8 +217,11 @@
+     def read(self, process, maximum, timeout): return self.blocks.pop(0)
+ 
+     def remove_owned(self, path, inode, directory=False):
++        if path.startswith('/sys/fs/cgroup'): raise AssertionError('manual cgroup removal forbidden')
+         if self.stat(path).st_ino != inode: raise ValueError('inode changed')
+-        self.stats.pop(path, None)
++        if directory and any(p != path and within(p, path) for p in set(self.stats) | set(self.files)):
++            raise OSError('directory not empty: ' + path)
++        self.stats.pop(path); self.bindings.pop(path, None); self.removed.append(path)
+ 
+ 
+ class IntegrationTests(unittest.TestCase):
+@@ -247,7 +306,7 @@
+         self.assertEqual(json.loads(h.files[path])['watchdog'], wd)
+ 
+     def test_unbounded_controller_refused_before_creation(self):
+-        h = Kernel(); h.files['/sys/fs/cgroup/supervisor/memory.max'] = 'max'
++        h = Kernel(); h.files['/sys/fs/cgroup' + h.controller_path + '/memory.max'] = 'max'
+         with self.assertRaises(ValueError): Coordinator(h, FakeEvidence(), 'a' * 32)
+         self.assertFalse(h.calls)
+ 
+--- a/test_linux_lifecycle.py
++++ b/test_linux_lifecycle.py
+@@ -2,12 +2,17 @@
+ from types import SimpleNamespace
+ import unittest
+ from unittest.mock import Mock, patch
++import json
+ 
+ from linux_host import LinuxHost, mount_records, resolve_cgroup
+ from linux_lifecycle import LinuxLifecycle, IndependentWatchdog
+ from test_supervisor_v2 import FakeEvidence
+ 
+-MOUNTS = '29 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup rw\n'
++MOUNTS = '1 0 8:1 / / rw - ext4 /dev/root rw\n29 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup rw\n'
++
++def slice_path(name):
++    parts = name.removesuffix('.slice').split('-')
++    return '/' + '/'.join('-'.join(parts[:i]) + '.slice' for i in range(1, len(parts) + 1))
+ 
+ 
+ class FakeHost:
+@@ -41,8 +46,19 @@
+         return 'a' * 64
+     def command(self, argv, timeout):
+         self.calls.append(('command', argv, timeout))
+-        if self.fail_term and argv[0] == 'systemctl':
++        if self.fail_term and '--signal=TERM' in argv:
+             raise TimeoutError('TERM deadline')
++        if argv[0] == 'busctl':
++            unit = argv[7]; props = dict((argv[i], argv[i + 2]) for i in range(10, len(argv) - 1, 3))
++            root = '/sys/fs/cgroup' + slice_path(unit)
++            self.files.update({root + '/memory.max': props['MemoryMax'], root + '/memory.swap.max': '0',
++                               root + '/pids.max': props['TasksMax'], root + '/cpu.max': str(int(props['CPUQuotaPerSecUSec']) // 10) + ' 100000'})
++        if argv[:2] == ['systemctl', 'list-units']:
++            return json.dumps([{'unit': 'fixture.service'}]).encode()
++        if argv[:2] == ['systemctl', 'show']:
++            unit = argv[2]
++            path = slice_path(unit) if unit.endswith('.slice') else '/pv2work' + 'a' * 32 + '.slice/fixture.service'
++            return f'Id={unit}\nActiveState=active\nControlGroup={path}\n'.encode()
+         return b''
+ 
+ 
+@@ -102,13 +118,13 @@
+         result = l.terminate(l.cgroup_identity())
+         self.assertTrue(result['termination_confirmed'])
+         self.assertTrue(result['errors'])
+-        self.assertIn(('put', l.cg + '/cgroup.kill', '1'), h.calls)
++        self.assertTrue(any(c[0] == 'command' and '--signal=KILL' in c[1] for c in h.calls))
+ 
+     def test_changed_identity_never_killed(self):
+         l, h, e = self.make(); identity = l.cgroup_identity(); h.inode += 1
+         result = l.terminate(identity)
+         self.assertFalse(result['termination_confirmed'])
+-        self.assertEqual(h.calls, [])
++        self.assertFalse(any(c[0] == 'command' and c[1][:2] == ['systemctl', 'kill'] for c in h.calls))
+ 
+     def test_nonempty_times_out(self):
+         l, h, e = self.make(); h.busy = True
+--- a/watchdog_worker.py
++++ b/watchdog_worker.py
+@@ -9,7 +9,9 @@
+     host = lifecycle.host
+     require(host.is_fake is True, 'live watchdog entry disabled')
+     me = host.process(os.getpid())
+-    require(not within(me['cgroup'], '/pv2-' + lifecycle.token + '.slice'), 'watchdog inside workload')
++    work = lifecycle.manager.show(lifecycle.manager.work_unit)['ControlGroup']
++    guard = lifecycle.manager.show(lifecycle.manager.guard_unit)['ControlGroup']
++    require(within(me['cgroup'], guard) and not within(me['cgroup'], work), 'watchdog branch binding')
+     # The service manager resource checks are required before worker admission;
+     # identity is observed from /proc, not the spawning client's PID estimate.
+     wd = {k: me[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}

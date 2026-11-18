@@ -1,0 +1,8 @@
+{
+  "checkpoint_sha256": "c30e237f4aaeb5eec00fa144dadc3ad3e88324e5341d7298b51fd38eefa21321",
+  "elapsed_seconds": 53.84150052070618,
+  "epoch": 21,
+  "run_id": "LEGACY-42",
+  "selected_epoch": 6,
+  "stop": true
+}

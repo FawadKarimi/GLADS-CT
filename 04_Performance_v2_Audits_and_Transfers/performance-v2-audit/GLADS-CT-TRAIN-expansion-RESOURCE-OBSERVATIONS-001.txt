@@ -1,0 +1,27 @@
+2026-10-18T19:53:09Z
+uid=1009(chaidir) gid=1009(chaidir) groups=1009(chaidir),27(sudo),998(docker)
+Filesystem                           1B-blocks         Used   Available Use% Mounted on
+/dev/mapper/ubuntu--vg-ubuntu--lv 470357942272 422177882112 26833666048  95% /
+Filesystem                          Inodes   IUsed    IFree IUse% Mounted on
+/dev/mapper/ubuntu--vg-ubuntu--lv 29237248 1428360 27808888    5% /
+/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime
+timeout: failed to run command ‘quota’: No such file or directory
+QUOTA_EXIT=127
+timestamp, index, uuid, name, memory.free [MiB], utilization.gpu [%]
+2026/10/19 02:53:09.843, 0, GPU-8ab74ac7-bbd1-9b79-8d88-3d17cffcb6fa, NVIDIA GeForce RTX 2080 Ti, 740 MiB, 0 %
+2026/10/19 02:53:09.845, 1, GPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, NVIDIA GeForce RTX 2080 Ti, 10452 MiB, 0 %
+2026/10/19 02:53:09.846, 2, GPU-113412ed-0d3a-cdc9-a77b-160c33465246, NVIDIA GeForce RTX 2080 Ti, 420 MiB, 0 %
+2026/10/19 02:53:09.847, 3, GPU-533bd695-7397-3357-dd1e-bad540edce65, NVIDIA GeForce RTX 2080 Ti, 9278 MiB, 0 %
+GPU_EXIT=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+GPU-8ab74ac7-bbd1-9b79-8d88-3d17cffcb6fa, 378668, python3, 10262 MiB
+GPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, 3340885, /experiment-storage/chaidir/env/env-310-infest2/bin/python3.10, 242 MiB
+GPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, 3477966, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 308 MiB
+GPU-113412ed-0d3a-cdc9-a77b-160c33465246, 4130692, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 9164 MiB
+GPU-113412ed-0d3a-cdc9-a77b-160c33465246, 4145599, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 1418 MiB
+GPU-533bd695-7397-3357-dd1e-bad540edce65, 10191, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 1724 MiB
+GPU_PROCESSES_EXIT=0
+USER         PID    PPID                  STARTED     ELAPSED STAT COMMAND
+chaidir  3340885 3340381 Mon Sep 28 18:02:28 2026 20-08:50:41 Ssl  /experiment-storage/chaidir/env/env-310-infest2/bin/python3.10 -m ipykernel_launcher -f /home/chaidir/.local/share/
+chaidir  3477966 3340381 Tue Sep 29 14:08:17 2026 19-12:44:52 Ssl  /experiment-storage/chaidir/infest-2026/.venv/bin/python -m ipykernel_launcher -f /home/chaidir/.local/share/jupyte
+HASH_PROCESS_SEARCH_EXIT=1

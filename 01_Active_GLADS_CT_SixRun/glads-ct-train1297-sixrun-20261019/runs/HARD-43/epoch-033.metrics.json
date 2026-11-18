@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.35101366043091,
+  "epoch": 33,
+  "learning_rates": {
+    "encoder_bias_normalization": 8.117761950353213e-05,
+    "encoder_weights": 8.117761950353213e-05,
+    "head_bias_normalization": 0.0008117761950353213,
+    "head_weights": 0.0008117761950353213
+  },
+  "objective": "HARD",
+  "patience": {
+    "best": 0.681452954880426,
+    "last_epoch": 33,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 11
+  },
+  "run_id": "HARD-43",
+  "seed": 43,
+  "selected_so_far": {
+    "diagnostic_ce": 0.7317032425978198,
+    "epoch": 22,
+    "macro_f1": 0.681452954880426
+  },
+  "train": {
+    "accuracy": 0.6653816499614496,
+    "confusion_matrix": [
+      [
+        362,
+        184,
+        36
+      ],
+      [
+        88,
+        292,
+        62
+      ],
+      [
+        19,
+        45,
+        209
+      ]
+    ],
+    "diagnostic_ce": 0.7001509042558621,
+    "epoch_objective_loss": 0.6857247984400682,
+    "exposed_views_sha256": "dbf42c4314692a98a216b8448343962bf7057c0185cc90e128c8b7358a220497",
+    "loss_totals": {
+      "hard": 0.6857247984400682,
+      "legacy": 0.0,
+      "reader": 0.0
+    },
+    "macro_f1": 0.6719985380306736,
+    "max_grad_norm": 4.371530055999756,
+    "mean_batch_objective_loss": 0.6873119477091766,
+    "mean_grad_norm": 2.320064450909452,
+    "per_class": {
+      "0": {
+        "f1": 0.6888677450047573,
+        "precision": 0.7718550106609808,
+        "recall": 0.6219931271477663,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.6064382139148495,
+        "precision": 0.5604606525911708,
+        "recall": 0.6606334841628959,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.7206896551724138,
+        "precision": 0.6807817589576547,
+        "recall": 0.7655677655677655,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.6888677450047573,
+        "precision": 0.7718550106609808,
+        "recall": 0.6219931271477663,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.6064382139148495,
+        "precision": 0.5604606525911708,
+        "recall": 0.6606334841628959,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.7206896551724138,
+        "precision": 0.6807817589576547,
+        "recall": 0.7655677655677655,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.6857248060713084
+  },
+  "validation": {
+    "accuracy": 0.6013986013986014,
+    "confusion_matrix": [
+      [
+        31,
+        33,
+        1
+      ],
+      [
+        6,
+        19,
+        13
+      ],
+      [
+        0,
+        4,
+        36
+      ]
+    ],
+    "diagnostic_ce": 0.7329131826799904,
+    "macro_f1": 0.6040328188012793,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.6013986013986014,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.607843137254902,
+        "precision": 0.8378378378378378,
+        "recall": 0.47692307692307695,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.4042553191489362,
+        "precision": 0.3392857142857143,
+        "recall": 0.5,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7999999999999999,
+        "precision": 0.72,
+        "recall": 0.9,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.607843137254902,
+        "precision": 0.8378378378378378,
+        "recall": 0.47692307692307695,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.4042553191489362,
+        "precision": 0.3392857142857143,
+        "recall": 0.5,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7999999999999999,
+        "precision": 0.72,
+        "recall": 0.9,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.6550917140401438
+  }
+}

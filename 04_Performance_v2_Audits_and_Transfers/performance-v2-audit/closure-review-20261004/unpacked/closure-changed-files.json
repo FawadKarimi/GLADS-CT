@@ -1,0 +1,26 @@
+{
+  "CLOSURE_METADATA_PLAN.md": {
+    "sha256": "15351ffe18499c3c5905ac0030e782e44d339a3c958780a2d2b3927a97487522",
+    "size_bytes": 6513
+  },
+  "CLOSURE_VALIDATION.json": {
+    "sha256": "f998947fd68b6d3cbdf30871513707947b5974b2912cd7b1d739526868249bfe",
+    "size_bytes": 570
+  },
+  "closure-focused.patch": {
+    "sha256": "b401679b58bfc2f6090fbd427febc2831d508318d33d51c934fdfe732da7e7a5",
+    "size_bytes": 20477
+  },
+  "closure-tests.log": {
+    "sha256": "f60f654112e4bc0bad48eb7f20dbf6c767442f144b941050640632be513fd3bb",
+    "size_bytes": 899
+  },
+  "closure_metadata.py": {
+    "sha256": "8f50e39584ad11e74bd04def0991b3b328d6768914f9fb7c4840389b686a821a",
+    "size_bytes": 8956
+  },
+  "test_closure_metadata.py": {
+    "sha256": "72b84e6d15aaacceb244f0c124de6cfc3adf45aba661645c3f2d18ceee2b21d6",
+    "size_bytes": 3897
+  }
+}

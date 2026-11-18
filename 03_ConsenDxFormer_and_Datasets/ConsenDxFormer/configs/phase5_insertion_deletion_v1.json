@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "protocol": "phase5_insertion_deletion_v1",
+  "scope": "insertion_deletion_only",
+  "proposal_sha256_lf": "4d3f7500071a5c352b2a918c0d26ffabc90b4e11af5982cdfdef7880e1054620",
+  "proposal_base_commit": "e3c1a24d87d5e21662984a9d1a4e77d6e5b0f03a",
+  "analysis_status": "exploratory_post_hoc",
+  "preregistered": false,
+  "models": [
+    "ConsenDxFormer",
+    "B1"
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "class_order": [
+    "benign",
+    "indeterminate",
+    "malignant"
+  ],
+  "test_nodules": 183,
+  "test_patients": 99,
+  "training_prior_nodules": 807,
+  "attention_reference_id": "phase4-evaluation-22cb656eabd040c2",
+  "input": {
+    "shape": [
+      183,
+      1,
+      64,
+      64
+    ],
+    "dtype": "float32",
+    "range": [
+      0,
+      1
+    ]
+  },
+  "native_grid": [
+    8,
+    8
+  ],
+  "tile_shape": [
+    8,
+    8
+  ],
+  "steps": 64,
+  "curve_positions": 65,
+  "baseline": "float32_all_zero_in_existing_normalized_input_coordinates_both_directions",
+  "orders": [
+    "dsa",
+    "prior",
+    "hash_order"
+  ],
+  "directions": [
+    "insertion",
+    "deletion"
+  ],
+  "ranking": "descending_saved_value_then_ascending_flat_index_exact_ties_include_zeros",
+  "hash_order": {
+    "algorithm": "sha256",
+    "prefix": "phase5-supplement-v1-order",
+    "fields": [
+      "patient_id",
+      "nodule_id",
+      "series_instance_uid",
+      "integer_flat_index"
+    ],
+    "json": "ensure_ascii=True,separators=(',',':'),UTF-8,no_newline",
+    "sort": "ascending_32_unsigned_digest_bytes_then_flat_index"
+  },
+  "target": "validated_saved_unperturbed_predicted_class_fixed_for_all_steps_orders_directions",
+  "replay": {
+    "atol": 1e-05,
+    "rtol": 0.0001,
+    "argmax_must_agree": true,
+    "global_barrier": "all_1098_pass_before_any_baseline_or_interior_forward"
+  },
+  "probability": {
+    "dtype": "float32",
+    "shape": "nonempty_N_by_3",
+    "range": [
+      0,
+      1
+    ],
+    "finite": true,
+    "sum_dtype": "float64_private_copy",
+    "atol": 1e-06,
+    "rtol": 0,
+    "normalize": false,
+    "clip": false,
+    "finite_logits": true
+  },
+  "auc": {
+    "rule": "trapezoid_on_k_over_64",
+    "dtype": "float64",
+    "normalization": "none",
+    "readback_atol": 1e-12,
+    "readback_rtol": 0
+  },
+  "summaries": {
+    "nodule_weighted": true,
+    "statistics": [
+      "mean",
+      "median",
+      "q25",
+      "q75"
+    ],
+    "quantile_method": "linear",
+    "per_seed_summaries": 36,
+    "within_model_paired_summaries": 24,
+    "contrasts": [
+      "dsa_minus_prior",
+      "dsa_minus_hash_order"
+    ],
+    "formal_tests": false
+  },
+  "execution": {
+    "batch_size": 1,
+    "eval": true,
+    "frozen_parameters": true,
+    "gradients": false,
+    "autocast": false,
+    "deterministic_algorithms": true,
+    "automatic_retries": 0,
+    "cache": "only_two_endpoints_within_each_unit_no_other_deduplication",
+    "unit_order": "model_then_seed_then_original_archive_row",
+    "interior_order": "unit_then_order_then_direction_then_step_1_through_63"
+  },
+  "successful_run_budget": {
+    "units": 1098,
+    "unperturbed": 1098,
+    "baseline": 1098,
+    "interior": 415044,
+    "total": 417240,
+    "new_nonoriginal": 416142,
+    "curves": 6588,
+    "curve_positions": 428220,
+    "per_seed": 139080
+  },
+  "synthetic_timing_evidence": null,
+  "full_supplemental_completion": false,
+  "stage_a_complete": false,
+  "formal_tests_computed": false,
+  "hypotheses": [
+    {
+      "hypothesis_id": "C_B1_42",
+      "seed": 42,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_B1_43",
+      "seed": 43,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_B1_44",
+      "seed": 44,
+      "comparator": "B1",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_42",
+      "seed": 42,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_43",
+      "seed": 43,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_attention_off_44",
+      "seed": 44,
+      "comparator": "attention_alignment_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_42",
+      "seed": 42,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_43",
+      "seed": 43,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_disagreement_off_44",
+      "seed": 44,
+      "comparator": "disagreement_weighting_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_42",
+      "seed": 42,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_43",
+      "seed": 43,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_ordinal_off_44",
+      "seed": 44,
+      "comparator": "ordinal_auxiliary_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_42",
+      "seed": 42,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_43",
+      "seed": 43,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    },
+    {
+      "hypothesis_id": "C_fusion_off_44",
+      "seed": 44,
+      "comparator": "hierarchical_fusion_off",
+      "endpoint": "secondary_patient_weighted_correctness",
+      "status": "unresolved_not_computed",
+      "reason": "method_calibration_unresolved"
+    }
+  ],
+  "excluded": [
+    "pointing",
+    "accuracy_intervals",
+    "boundary",
+    "uncertainty",
+    "formal_testing",
+    "multiplicity",
+    "patient_weighted_correctness",
+    "calibration_campaign",
+    "training"
+  ]
+}

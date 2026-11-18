@@ -1,0 +1,36 @@
+{
+  "all_parent_tests_unchanged": true,
+  "changed_source_documents": [
+    "DEADLINE_REVIEW.md",
+    "linux_integration.py",
+    "linux_lifecycle.py",
+    "package_deadline.py",
+    "systemd_ownership.py",
+    "test_aggregate_deadline.py"
+  ],
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-deadline-review-20260928",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "execution_approved": false,
+  "exit_code": 0,
+  "linux_acceptance_executed": false,
+  "new_focused_tests": 12,
+  "parent_entries_verified": 87,
+  "parent_sha256": "194e103548a0fe4167e377a85e4c7a9d2af045fe8038429054fb34fced8b1d99",
+  "platform": "Windows-11-10.0.22621-SP0",
+  "production_pins_unchanged": true,
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "scope": "invented clocks and mocked OS boundaries; no Linux execution",
+  "stage_b": "paused",
+  "test_summary": "Ran 127 tests in 1.188s",
+  "warning": "Unchanged acceptance_driver.py return-in-finally SyntaxWarning"
+}

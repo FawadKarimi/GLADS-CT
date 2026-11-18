@@ -1,0 +1,52 @@
+project:
+  name: consendxformer
+  phase: 3
+
+experiment:
+  baseline_variant: null
+  seed: 42
+  output_root: artifacts/phase3
+
+# The selected child config must reference one of the locked Phase 1 profiles.
+# Baseline architecture and optimization hyperparameters are not repeated here.
+baseline:
+  phase1_config: null
+
+data:
+  mode: real
+  metadata_path: null
+  frozen_split_dir: artifacts/phase0/manifests
+  source_readiness_report: artifacts/phase2/runtime/source_readiness.json
+  canonical_dir: data/processed/consendxformer_phase2
+  rendered_dir: null
+  cohort_view: paper_aligned_available_reader_mean
+  synthetic_marker: null
+
+device: auto
+
+determinism:
+  deterministic_algorithms: true
+  warn_only: true
+  cudnn_benchmark: false
+  dataloader_worker_seeding: true
+  seeded_dataloader_generator: true
+
+# The released trainer selects improvements using validation loss. Phase 3
+# preserves that criterion while adding auditable best/last checkpoints.
+checkpoint:
+  selection_criterion: validation_loss
+  selection_mode: min
+  save_best: true
+  save_last: true
+
+predictions:
+  format: csv
+  splits: [val, test]
+  class_order: [benign, indeterminate, malignant]
+  export_logits: true
+  export_probabilities: true
+
+inference:
+  tta: false
+  ema: false
+  pretrained_weights: false

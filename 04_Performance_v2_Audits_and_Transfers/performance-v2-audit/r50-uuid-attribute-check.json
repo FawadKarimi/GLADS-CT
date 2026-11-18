@@ -1,0 +1,6 @@
+{
+  "torch": "2.3.0+cu121",
+  "uuid_descriptor_exposed": false,
+  "cuda_initialized": false,
+  "gpu_execution": false
+}

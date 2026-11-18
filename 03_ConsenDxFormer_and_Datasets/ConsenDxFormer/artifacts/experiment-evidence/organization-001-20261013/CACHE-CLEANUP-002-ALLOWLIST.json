@@ -1,0 +1,50 @@
+{
+  "active_references": [
+    {
+      "command_contains_main": false,
+      "pid": 354927,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    },
+    {
+      "command_contains_main": false,
+      "pid": 1724657,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    },
+    {
+      "command_contains_main": false,
+      "pid": 3040837,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    }
+  ],
+  "deletion_allowlist": [],
+  "preservation_scope": "No sources, checkpoints, logs, budgets, artifacts, archives or private closures are removed.",
+  "rejected": [],
+  "unreadable_processes": [
+    {
+      "errno": 13,
+      "pid": 11495,
+      "stage": "process"
+    },
+    {
+      "errno": 13,
+      "pid": 2002301,
+      "stage": "process"
+    },
+    {
+      "errno": 13,
+      "pid": 4115762,
+      "stage": "process"
+    },
+    {
+      "errno": 13,
+      "pid": 4115763,
+      "stage": "process"
+    }
+  ]
+}

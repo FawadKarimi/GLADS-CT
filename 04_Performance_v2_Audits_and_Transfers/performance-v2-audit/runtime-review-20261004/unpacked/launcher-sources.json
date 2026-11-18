@@ -1,0 +1,58 @@
+{
+  "files": {
+    "/opt/pv2-native-acceptance/activation_bridge.py": {
+      "sha256": "b1396de2665ce25301df1d380bb059fddfbdb05e906d9025acb04282118b9a25",
+      "size_bytes": 19426
+    },
+    "/opt/pv2-native-acceptance/activation_trust.py": {
+      "sha256": "068343c91b92761a55bc4e8940d5585589ae9974c004021fb93dbf646b22c87a",
+      "size_bytes": 15683
+    },
+    "/opt/pv2-native-acceptance/evidence_export.py": {
+      "sha256": "6fc8c36101804a997f02d769dfd8338740a25fc284f49cb94a86b99abe0e3418",
+      "size_bytes": 4850
+    },
+    "/opt/pv2-native-acceptance/launcher_binding.py": {
+      "sha256": "613977d383738907a9f9517766f864c1c542e84991c58978b72d472eb883e433",
+      "size_bytes": 5737
+    },
+    "/opt/pv2-native-acceptance/linux_host.py": {
+      "sha256": "f0693fd541ec02761c115903bcfd7d2ec07d2a09bc6915cc5757af0d88da8277",
+      "size_bytes": 10476
+    },
+    "/opt/pv2-native-acceptance/linux_integration.py": {
+      "sha256": "14b93a98f2d802efe95edbdd31952b442581a8de2c3ba25123ef1380819a1844",
+      "size_bytes": 28944
+    },
+    "/opt/pv2-native-acceptance/linux_lifecycle.py": {
+      "sha256": "5441f3e6f0bf82b2d00ae6256e357d7b24e99b2e8b5bf1451d3b95cca1dcd05f",
+      "size_bytes": 21953
+    },
+    "/opt/pv2-native-acceptance/native_launcher.py": {
+      "sha256": "ca6b49a76877b19d4da5df5355c232b355539cea81a6eb682aea6ff70df435a0",
+      "size_bytes": 4796
+    },
+    "/opt/pv2-native-acceptance/supervisor_evidence.py": {
+      "sha256": "3bd7b1b8abb9ce821ce932f941a8b35371544d16ea3fef738e6d1bda486fd140",
+      "size_bytes": 5118
+    },
+    "/opt/pv2-native-acceptance/supervisor_v2.py": {
+      "sha256": "6b4c75f7fc17b9e740e39fbb24580eace44fe40db95e2f9a88a719b6578451d1",
+      "size_bytes": 16760
+    },
+    "/opt/pv2-native-acceptance/synthetic_helper.py": {
+      "sha256": "e87f160619a9457d65f025f606c24b1b2a71abdaf739577472275553d300a146",
+      "size_bytes": 521
+    },
+    "/opt/pv2-native-acceptance/systemd_ownership.py": {
+      "sha256": "c0e0aac9b2c8f685a30949cd911d273ea0c90063947b40d1fbf27e10d28d99c3",
+      "size_bytes": 5120
+    },
+    "/opt/pv2-native-acceptance/watchdog_worker.py": {
+      "sha256": "5028552af048a6ddba0a4ab83ced29387b396eea0b5250491145bc3abcba52cf",
+      "size_bytes": 1660
+    }
+  },
+  "root": "/opt/pv2-native-acceptance",
+  "schema": "pv2_launcher_sources_v1"
+}

@@ -1,0 +1,78 @@
+{
+  "base_entries_verified": 105,
+  "base_sha256": "8a0365021c70f5fe0110fee2ef5ef8e209e52c232e81cd5b06aa78b1e8b68988",
+  "changed_source_documents": [
+    "activation_bridge.py",
+    "ACTIVATION_REVIEW.md",
+    "activation_trust.py",
+    "launcher-sources.json",
+    "launcher_binding.py",
+    "linux_host.py",
+    "linux_integration.py",
+    "linux_lifecycle.py",
+    "native_launcher.py",
+    "package_activation.py",
+    "supervisor_evidence.py",
+    "supervisor_v2.py",
+    "test_activation_bridge.py",
+    "test_launcher_binding.py",
+    "watchdog_worker.py"
+  ],
+  "dependencies_approved": false,
+  "development_failures": [
+    "old rejection error-message assertions restored",
+    "invented Linux path fixtures corrected to PurePosixPath on Windows"
+  ],
+  "execution_approved": false,
+  "implementation": "connected role handlers, trust/admission, independent reconstruction, loss collection and teardown source",
+  "native_linux_acceptance_executed": false,
+  "original_15_regressions_unchanged": true,
+  "pilot_execution_authorized": false,
+  "platform": "Windows-11-10.0.22621-SP0",
+  "preserved_warning": "historical acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14",
+  "production_pins_unchanged": true,
+  "python_310_syntax": "passed for changed source; execution used recorded Windows runtime",
+  "real_separate_interpreter_tested": false,
+  "runtime": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "security_approved": false,
+  "stage_b": "paused",
+  "test_boundaries": "invented kernel/processes, filesystem, clocks and mocked subprocess boundaries; synthetic temporary files",
+  "tests": [
+    {
+      "command": [
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "test_activation_bridge",
+        "test_launcher_binding",
+        "-v"
+      ],
+      "exit_code": 0,
+      "suite": "targeted",
+      "summary": "Ran 34 tests in 0.483s"
+    },
+    {
+      "command": [
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-activation-review-20260928",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "suite": "full",
+      "summary": "Ran 161 tests in 1.746s"
+    }
+  ],
+  "unresolved": [
+    "native inventory/runtime closure/security evidence",
+    "owner execution authorization",
+    "native Linux acceptance"
+  ]
+}

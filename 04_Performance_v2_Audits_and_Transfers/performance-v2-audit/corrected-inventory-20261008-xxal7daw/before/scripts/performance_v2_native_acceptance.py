@@ -1,0 +1,350 @@
+"""Portable, offline, synthetic acceptance only. No runner or installation path."""
+import argparse
+import contextvars
+from contextlib import ExitStack
+import hashlib
+import importlib.metadata as metadata
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import site
+import sqlite3
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import unittest
+from unittest.mock import patch
+import warnings
+import _sqlite3
+
+ROOT = Path(__file__).resolve().parents[1]
+ENTRY = Path(__file__).resolve()
+LOCK = ROOT / 'configs/performance_v2/native_acceptance_source_lock.json'
+CORE = ['test_performance_v2_contracts', 'test_performance_v2_implementation',
+        'test_performance_v2_training_mode', 'test_performance_v2_lifecycle',
+        'test_performance_v2_checkpoint_inventory', 'test_performance_v2_durable_lifecycle',
+        'test_performance_v2_acceptance_entry', 'test_performance_v2_native_processes']
+LEGACY = ['test_performance_v2_diagnostics', 'test_performance_v2_transform_probe', 'test_performance_v2_input_audit']
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def write_json(path, obj):
+    with Path(path).open('x', encoding='utf-8') as stream:
+        json.dump(obj, stream, indent=2, sort_keys=True)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def verify_lock(expected):
+    if sha(LOCK) != expected:
+        raise ValueError('source lock digest mismatch')
+    lock = json.loads(LOCK.read_bytes())
+    if lock['pilot_execution_authorized'] is not False:
+        raise ValueError('inactive source lock required')
+    for name, expected_hash in lock['files'].items():
+        path = ROOT / name
+        if path.resolve() != path.absolute() or not path.is_file() or sha(path) != expected_hash:
+            raise ValueError('source/configuration drift: ' + name)
+    # Added test/module files must not escape the frozen suite inventory.
+    actual = {p.relative_to(ROOT).as_posix() for p in (ROOT/'tests').glob('test_performance_v2_*.py')}
+    actual |= {p.relative_to(ROOT).as_posix() for p in (ROOT/'src/consendxformer/performance_v2').glob('*.py')}
+    if actual - set(lock['files']):
+        raise ValueError('unfrozen module or synthetic test')
+    return lock
+
+
+def mount_record(path):
+    if not sys.platform.startswith('linux'):
+        return {'verified': False, 'reason': 'not Linux'}
+    matches = []
+    for line in Path('/proc/self/mountinfo').read_text().splitlines():
+        left, right = line.split(' - ', 1)
+        fields, extra = left.split(), right.split()
+        mount = fields[4].replace('\\040', ' ').replace('\\134', '\\')
+        try:
+            Path(path).resolve().relative_to(mount)
+        except ValueError:
+            continue
+        matches.append((len(mount), {'mount_point': mount, 'mount_options': fields[5],
+                                    'filesystem': extra[0], 'source': extra[1], 'super_options': extra[2]}))
+    return max(matches, key=lambda x: x[0])[1] if matches else {'verified': False}
+
+
+def inventory(scratch=None):
+    # Metadata inspection only. No import of Torch/cv2, device probe, package
+    # installation, subprocess or persistent SQLite database is needed.
+    distributions = {}
+    for dist in metadata.distributions(path=site.getsitepackages()):
+        name = dist.metadata.get('Name', '').lower().replace('_', '-')
+        if name in ('torch', 'torchvision', 'numpy', 'pytest', 'opencv-python', 'opencv-python-headless', 'packaging'):
+            distributions[name] = {'version': dist.version,
+                'metadata_sha256': hashlib.sha256((dist.read_text('METADATA') or '').encode()).hexdigest()}
+    git = shutil.which('git')
+    result = {'python': sys.version, 'executable': sys.executable, 'executable_sha256': sha(sys.executable),
+              'os': sys.platform, 'machine': platform.machine(), 'sqlite': sqlite3.sqlite_version,
+              'sqlite_extension_sha256': sha(_sqlite3.__file__), 'target_image_digest': None,
+              'distributions': distributions, 'git': {'path': git, 'sha256': sha(git)} if git else None,
+              'pilot_execution_authorized': False, 'read_only': True,
+              'weights_devices_and_research_data_inspected': False}
+    connection = sqlite3.connect(':memory:')
+    try:
+        result['sqlite_compile_options'] = [row[0] for row in connection.execute('PRAGMA compile_options')]
+    finally:
+        connection.close()
+    if sys.platform.startswith('linux'):
+        result.update(uid=os.getuid(), gid=os.getgid(), uname=list(os.uname()))
+        for name in ('/etc/os-release', '/proc/self/status', '/proc/self/cgroup'):
+            result[name] = Path(name).read_text()
+        result['libc'] = os.confstr('CS_GNU_LIBC_VERSION') if 'CS_GNU_LIBC_VERSION' in os.confstr_names else 'unresolved'
+    if scratch:
+        path = Path(scratch).absolute()
+        info = path.stat()
+        result['scratch'] = {'path': str(path), 'mode': oct(stat.S_IMODE(info.st_mode)),
+                             'uid': info.st_uid, 'device': info.st_dev, 'mount': mount_record(path)}
+    return result
+
+
+def inside(path, root):
+    try:
+        Path(path).absolute().resolve().relative_to(Path(root).resolve())
+        return True
+    except (ValueError, TypeError, OSError):
+        return False
+
+
+def guards(scratch, *, worker=False, legacy=False):
+    scratch = Path(scratch).resolve()
+    git = shutil.which('git')
+    authorized = contextvars.ContextVar('bounded_child_spawn', default=None)
+    original_popen = subprocess.Popen
+
+    def permitted(argv):
+        if worker or not isinstance(argv, (list, tuple)) or not all(type(x) is str for x in argv):
+            return False
+        prefix = [sys.executable, '-I', '-B', str(ENTRY), 'worker']
+        if list(argv[:5]) == prefix and len(argv) == 15:
+            options = dict(zip(argv[5::2], argv[6::2]))
+            return (set(options) == {'--root', '--mode', '--boundary', '--slot', '--expected-lock-sha256'}
+                and inside(options['--root'], scratch) and options['--mode'] in ('compete', 'reserved', 'terminal')
+                and options['--slot'] in ('a', 'b') and options['--expected-lock-sha256'] == os.environ['PV2_LOCK_SHA256'])
+        if legacy and git and argv and argv[0] in ('git', git):
+            a = list(argv[1:])
+            if len(a) == 2 and a[0] == 'init' and inside(a[1], scratch):
+                return True
+            if len(a) == 10 and a[:1] == ['-C'] and inside(a[1], scratch):
+                return a[2:] == ['-c', 'user.name=Synthetic Fixture', '-c', 'user.email=fixture@example.invalid',
+                                 'commit', '--allow-empty', '-m', 'invented fixture']
+            if len(a) > 5 and a[:4] == ['--no-optional-locks', '-c', 'core.fsmonitor=false', '-C'] and inside(a[4], scratch):
+                return a[5:] in (['branch', '--show-current'], ['rev-parse', 'HEAD'],
+                                  ['status', '--porcelain=v1', '--untracked-files=all'])
+        return False
+
+    class BoundedPopen(original_popen):
+        def __init__(self, args, **kwargs):
+            if not permitted(args) or kwargs.get('shell') or kwargs.get('executable') not in (None, args[0]):
+                raise RuntimeError('unapproved subprocess denied')
+            token = authorized.set(tuple(args))
+            try:
+                super().__init__(args, **kwargs)
+            finally:
+                authorized.reset(token)
+
+    def audit(event, args):
+        if event.startswith('socket.') or event == 'os.system':
+            raise RuntimeError('acceptance network/shell denied: ' + event)
+        if event in ('os.posix_spawn', 'os.posix_spawnp'):
+            bound = authorized.get()
+            if bound is None or tuple(args[1]) != bound or os.fsdecode(args[0]) != bound[0]:
+                raise RuntimeError('unapproved subprocess denied')
+        if event == 'subprocess.Popen':
+            executable, argv, cwd, env = args
+            bound = authorized.get()
+            # Windows exposes the flattened CRT command line at this audit
+            # event. Compare it to the *prevalidated list*, never parse a shell.
+            same = bound is not None and (argv == subprocess.list2cmdline(bound) if isinstance(argv, str) else tuple(argv) == bound)
+            if not same or executable is not None and os.fsdecode(executable) != bound[0]:
+                raise RuntimeError('unapproved subprocess denied')
+        if event == 'open' and isinstance(args[0], (str, bytes)):
+            name = os.fsdecode(args[0]).replace('\\', '/').lower()
+            sensitive = name.endswith(('.pt', '.pth', '.ckpt', '.safetensors', '.npy', '.npz', '.dcm'))
+            if (sensitive or '/data/processed/' in name or '/data/raw/' in name) and not inside(args[0], scratch):
+                raise RuntimeError('existing checkpoint/research file access denied')
+    sys.addaudithook(audit)
+    subprocess.Popen = BoundedPopen
+
+
+def torch_guards(stack):
+    import torch
+    import torchvision
+    import numpy
+    torch.set_num_threads(2)
+    def forbidden(*args, **kwargs):
+        raise RuntimeError('weights, compilation, GPU and optimizer updates forbidden')
+    for obj, name in ((torch, 'load'), (torch.jit, 'load'), (torch, 'compile'),
+                      (torch.hub, 'load_state_dict_from_url'), (torch.hub, 'download_url_to_file'),
+                      (torch.optim.AdamW, 'step'), (torch.optim.SGD, 'step'), (torch.cuda, 'init')):
+        stack.enter_context(patch.object(obj, name, forbidden))
+    return {'torch': torch.__version__, 'torchvision': torchvision.__version__, 'numpy': numpy.__version__,
+            'cuda_build': torch.version.cuda, 'GPU_exercised': False,
+            'module_hashes': {str(Path(m.__file__).resolve()): sha(m.__file__) for m in (torch, torchvision, numpy)}}
+
+
+def worker_main(args):
+    verify_lock(args.expected_lock_sha256)
+    scratch = os.environ['PV2_ACCEPTANCE_SCRATCH']
+    if not inside(args.root, scratch):
+        raise ValueError('worker outside synthetic scratch')
+    platform.uname(); platform.processor()
+    guards(scratch, worker=True)
+    sys.path[:0] = [str(ROOT/'src'), str(ROOT/'tests')]
+    with ExitStack() as stack:
+        torch_guards(stack)
+        from test_performance_v2_native_processes import worker
+        return worker(args)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    subs = parser.add_subparsers(dest='command', required=True)
+    inv = subs.add_parser('inventory')
+    inv.add_argument('--scratch-parent')
+    inv.add_argument('--expected-lock-sha256', required=True)
+    run = subs.add_parser('test')
+    run.add_argument('--expected-lock-sha256', required=True)
+    run.add_argument('--output', required=True)
+    run.add_argument('--scratch-parent', required=True)
+    run.add_argument('--suite', choices=('full', 'implementation'), default='full')
+    run.add_argument('--require-linux', action='store_true')
+    child = subs.add_parser('worker')
+    for key in ('root', 'mode', 'boundary', 'slot', 'expected-lock-sha256'):
+        child.add_argument('--' + key, required=True)
+    args = parser.parse_args()
+    os.environ.update(CUDA_VISIBLE_DEVICES='', PYTHONDONTWRITEBYTECODE='1', TORCHDYNAMO_DISABLE='1',
+                      PYTEST_DISABLE_PLUGIN_AUTOLOAD='1', PYTEST_ADDOPTS='')
+    os.environ.pop('PYTEST_PLUGINS', None)
+    if args.command == 'worker':
+        return worker_main(args)
+    lock = verify_lock(args.expected_lock_sha256)
+    observed = inventory(args.scratch_parent)
+    observed['source_lock_sha256'] = args.expected_lock_sha256
+    if args.command == 'inventory':
+        print(json.dumps(observed, indent=2, sort_keys=True))
+        return 0
+    output = Path(args.output).absolute()
+    if inside(output, ROOT) or inside(ROOT, output):
+        raise ValueError('review output must not overlap source')
+    output.mkdir(mode=0o700, exist_ok=False)
+    result = {'schema': 'performance_v2_native_acceptance_result_v1', 'inventory': observed,
+              'suite': args.suite, 'pilot_execution_authorized': False, 'native_acceptance': False,
+              'power_loss_tested': False, 'status': 'blocked', 'required_tests': CORE + LEGACY}
+    write_json(output/'inventory.json', observed)
+    try:
+        missing = [x for x in ('torch', 'torchvision', 'numpy') if x not in observed['distributions']]
+        if args.suite == 'full':
+            missing += [x for x in ('pytest',) if x not in observed['distributions']]
+            if not any(x in observed['distributions'] for x in ('opencv-python', 'opencv-python-headless')):
+                missing.append('opencv-python or opencv-python-headless')
+            if not observed['git']:
+                missing.append('git executable')
+        if missing:
+            raise RuntimeError('missing installed dependencies; no substitution: ' + ', '.join(missing))
+        parent = Path(args.scratch_parent).absolute()
+        if any(p.is_symlink() for p in (parent, *parent.parents)) or not parent.is_dir():
+            raise ValueError('existing private nonsymlink scratch parent required')
+        if args.require_linux:
+            if not sys.platform.startswith('linux'):
+                raise RuntimeError('native Linux required; this host is ' + sys.platform)
+            info = parent.stat()
+            if os.getuid() == 0 or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+                raise RuntimeError('non-root owner and mode 0700 required')
+            status = observed['/proc/self/status']
+            mask = next((line.split()[1] for line in status.splitlines() if line.startswith('Umask:')), None)
+            if mask is None or int(mask, 8) & 0o077 != 0o077:
+                raise RuntimeError('umask 077 required; inventory cannot establish it')
+            if observed['scratch']['mount'].get('filesystem') not in ('ext4', 'xfs'):
+                raise RuntimeError('filesystem not in proposed ext4/xfs acceptance scope')
+        os.environ['PV2_LOCK_SHA256'] = args.expected_lock_sha256
+        os.environ['PV2_NATIVE_ENTRY'] = str(ENTRY)
+        evidence = output/'synthetic-evidence'
+        evidence.mkdir()
+        os.environ['PV2_SYNTHETIC_EVIDENCE_DIRECTORY'] = str(evidence)
+        with tempfile.TemporaryDirectory(prefix='pv2-native-synthetic-', dir=parent) as tmp:
+            os.environ['PV2_ACCEPTANCE_SCRATCH'] = tmp
+            os.environ['TORCH_HOME'] = str(Path(tmp)/'disabled-weights')
+            tempfile.tempdir = tmp
+            templates = Path(tmp)/'empty-git-template'
+            templates.mkdir()
+            for key in list(os.environ):
+                if key.startswith('GIT_'):
+                    del os.environ[key]
+            os.environ.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_COUNT='2',
+                GIT_CONFIG_KEY_0='core.hooksPath', GIT_CONFIG_VALUE_0=str(templates),
+                GIT_CONFIG_KEY_1='init.templateDir', GIT_CONFIG_VALUE_1=str(templates))
+            # Populate Windows metadata cache before denying unrelated subprocesses.
+            platform.uname(); platform.processor()
+            guards(tmp, legacy=args.suite == 'full')
+            sys.path[:0] = [str(ROOT/'src'), str(ROOT/'tests')]
+            with warnings.catch_warnings(record=True) as caught, ExitStack() as stack:
+                result['runtime'] = torch_guards(stack)
+                suite = unittest.defaultTestLoader.loadTestsFromNames(CORE)
+                with (output/'unittest.log').open('x', encoding='utf-8') as log:
+                    outcome = unittest.TextTestRunner(stream=log, verbosity=2).run(suite)
+                result['unittest'] = {'tests': outcome.testsRun, 'failures': len(outcome.failures),
+                    'errors': len(outcome.errors), 'skipped': len(outcome.skipped), 'successful': outcome.wasSuccessful()}
+                legacy_ok = False
+                if args.suite == 'full':
+                    import pytest
+                    class Counts:
+                        def __init__(self):
+                            self.passed, self.failed, self.skipped = 0, 0, 0
+                        def pytest_runtest_logreport(self, report):
+                            if report.skipped or hasattr(report, 'wasxfail'):
+                                self.skipped += 1
+                            elif report.failed:
+                                self.failed += 1
+                            elif report.when == 'call' and report.passed:
+                                self.passed += 1
+                    counts = Counts()
+                    config = Path(tmp)/'pytest.ini'
+                    config.write_text('[pytest]\n', encoding='utf-8')
+                    code = pytest.main(['-q', '-c', str(config), '--noconftest', '-p', 'no:cacheprovider',
+                                        '--basetemp', str(Path(tmp)/'pytest'),
+                                        '--junitxml', str(output/'pytest.xml'),
+                                        *[str(ROOT/'tests'/(n+'.py')) for n in LEGACY]], plugins=[counts])
+                    result['pytest_exit_code'] = int(code)
+                    result['pytest'] = vars(counts)
+                    legacy_ok = code == 0 and counts.passed > 0 and not counts.skipped and not counts.failed
+                result['warnings'] = [str(w.message) for w in caught]
+            verify_lock(args.expected_lock_sha256)
+            kills = [json.loads(p.read_bytes()) for p in evidence.glob('test_*/kill-*.json')]
+            result['process_kill_evidence'] = kills
+            killed_all = len(kills) == 7 and all(k['child_pid'] != k['parent_pid'] for k in kills)
+            success = outcome.wasSuccessful() and not outcome.skipped and killed_all and (legacy_ok or args.suite == 'implementation')
+            result['status'] = 'passed' if success else 'failed'
+            result['complete_suite_passed'] = success and args.suite == 'full'
+            result['native_acceptance'] = False  # a report is evidence, never owner acceptance
+            result['native_acceptance_evidence_passed'] = success and args.suite == 'full' and args.require_linux
+            result['separate_process_kill_tests_executed'] = killed_all
+            result['kill_method'] = 'SIGKILL' if os.name == 'posix' else 'TerminateProcess'
+            result['process_suite_directory_fsync_mocked'] = os.name != 'posix'
+        return 0 if result['status'] == 'passed' else 1
+    except BaseException as error:
+        result['error'] = type(error).__name__ + ': ' + str(error)
+        return 2
+    finally:
+        result['evidence_hashes'] = {p.relative_to(output).as_posix(): sha(p) for p in output.rglob('*') if p.is_file()}
+        write_json(output/'result.json', result)
+        print(json.dumps({'status': result['status'], 'output': str(output), 'error': result.get('error'),
+                          'pilot_execution_authorized': False}, indent=2))
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

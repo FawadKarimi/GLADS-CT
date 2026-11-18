@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.39924621582031,
+  "epoch": 6,
+  "learning_rates": {
+    "encoder_bias_normalization": 0.0001,
+    "encoder_weights": 0.0001,
+    "head_bias_normalization": 0.001,
+    "head_weights": 0.001
+  },
+  "objective": "LEGACY",
+  "patience": {
+    "best": 0.6254054021320973,
+    "last_epoch": 6,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 1
+  },
+  "run_id": "LEGACY-44",
+  "seed": 44,
+  "selected_so_far": {
+    "diagnostic_ce": 0.7247598654544958,
+    "epoch": 5,
+    "macro_f1": 0.6254054021320973
+  },
+  "train": {
+    "accuracy": 0.574402467232074,
+    "confusion_matrix": [
+      [
+        290,
+        245,
+        47
+      ],
+      [
+        97,
+        266,
+        79
+      ],
+      [
+        24,
+        60,
+        189
+      ]
+    ],
+    "diagnostic_ce": 0.8299816600783062,
+    "epoch_objective_loss": 0.867862688462768,
+    "exposed_views_sha256": "d555d23b6e650ca396658c60d166ca4a511801bc8c36bb64a2c3e00e1be6d181",
+    "loss_totals": {
+      "hard": 0.8204314840017858,
+      "legacy": 0.867862688462768,
+      "reader": 0.0
+    },
+    "macro_f1": 0.5840395057983329,
+    "max_grad_norm": 4.151338577270508,
+    "mean_batch_objective_loss": 0.8776084373636943,
+    "mean_grad_norm": 2.1631479001626737,
+    "per_class": {
+      "0": {
+        "f1": 0.5840886203423967,
+        "precision": 0.7055961070559611,
+        "recall": 0.49828178694158076,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.525172754195459,
+        "precision": 0.4658493870402802,
+        "recall": 0.6018099547511312,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.6428571428571429,
+        "precision": 0.6,
+        "recall": 0.6923076923076923,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.5840886203423967,
+        "precision": 0.7055961070559611,
+        "recall": 0.49828178694158076,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.525172754195459,
+        "precision": 0.4658493870402802,
+        "recall": 0.6018099547511312,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.6428571428571429,
+        "precision": 0.6,
+        "recall": 0.6923076923076923,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8204314914395692
+  },
+  "validation": {
+    "accuracy": 0.5524475524475524,
+    "confusion_matrix": [
+      [
+        22,
+        37,
+        6
+      ],
+      [
+        4,
+        23,
+        11
+      ],
+      [
+        0,
+        6,
+        34
+      ]
+    ],
+    "diagnostic_ce": 0.792890586974946,
+    "macro_f1": 0.5576923076923076,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5524475524475524,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.48351648351648346,
+        "precision": 0.8461538461538461,
+        "recall": 0.3384615384615385,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.4423076923076923,
+        "precision": 0.3484848484848485,
+        "recall": 0.6052631578947368,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7472527472527473,
+        "precision": 0.6666666666666666,
+        "recall": 0.85,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.48351648351648346,
+        "precision": 0.8461538461538461,
+        "recall": 0.3384615384615385,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.4423076923076923,
+        "precision": 0.3484848484848485,
+        "recall": 0.6052631578947368,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7472527472527473,
+        "precision": 0.6666666666666666,
+        "recall": 0.85,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.7117165745872137
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "ancestors": [
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/home",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 1009,
+      "mode": "0o755",
+      "path": "/home/chaidir",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "gid": 1009,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-reports",
+      "uid": 1009
+    }
+  ],
+  "attempt001_evidence_unchanged": true,
+  "attempt001_evidence_zip_sha256": "3a82a56b3418eaa0f5966610b71a667dbab7be1e904e0bcd188cb5ef01c860b1",
+  "bindings": 1080,
+  "directories_mode": "0700",
+  "files_mode": "0600",
+  "filesystem": "/      ext4   rw,relatime\n",
+  "historical_all_bytes_unchanged": true,
+  "historical_directory": {
+    "acl": "user::rwx\ngroup::---\nother::---\n\n",
+    "gid": 1009,
+    "mode": "0o700",
+    "path": "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+    "uid": 1009
+  },
+  "historical_path": "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+  "historical_rename_completed": true,
+  "pilot_execution_authorized": false,
+  "production_execution_authorized": false,
+  "report_destination_absent": true,
+  "source_directory": {
+    "acl": "user::rwx\ngroup::---\nother::---\n\n",
+    "gid": 1009,
+    "mode": "0o700",
+    "path": "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate",
+    "uid": 1009
+  },
+  "source_lock_sha256": "e1796b4a17a59b6c052fd15e2fda79fd722db679fd2185fbc3c776956acc26b4",
+  "staged_files": 1096,
+  "staging_path": "/home/chaidir/.performance-v2-imagenet-review-20261008",
+  "status": "staged_verified",
+  "tests_executed": false,
+  "wrapper_cr_count": 0,
+  "wrapper_sha256": "b3516be104591faf480c2412a249949e8b9e4460f459d87c0f7f276502c76bd9",
+  "zip_sha256": "63ddfc76e40944c20f2dd0c8bd2ecf4a0f66a070710cfc18db3567680e8e0ec6"
+}

@@ -1,0 +1,1018 @@
+--- /dev/null
++++ b/metadata_resolution.py
+@@ -0,0 +1,218 @@
++"""Metadata-only candidate resolution. Never fetches wheel, OCI blob or layer bytes.
++
++HTTP is opt-in; unit tests inject a fake transport. Runtime approvals are not
++produced here. Publisher hashes are never labeled independently byte-verified.
++"""
++import argparse
++import datetime
++import hashlib
++from html.parser import HTMLParser
++import json
++from pathlib import Path
++import re
++import time
++import urllib.parse
++import urllib.request
++
++MAX_METADATA = 8 * 1024**2
++CANDIDATES = {'python': '3.10.21', 'torch': '2.13.0+cpu', 'torchvision': '0.28.0+cpu',
++              'pip': '26.2.1', 'wheel': '0.46.2', 'setuptools': '84.0.0'}
++
++def require(ok, message):
++    if not ok:
++        raise ValueError(message)
++
++def allowed(url):
++    p = urllib.parse.urlsplit(url)
++    if p.scheme != 'https' or p.username or p.password or p.port not in (None, 443) or p.fragment:
++        return False
++    if p.hostname == 'pypi.org':
++        return bool(re.fullmatch(r'/pypi/[A-Za-z0-9_.-]+/[A-Za-z0-9+_.-]+/json', p.path)) and not p.query
++    if p.hostname == 'download.pytorch.org':
++        return p.path in ('/whl/cpu/torch/', '/whl/cpu/torchvision/') and not p.query
++    if p.hostname == 'registry-1.docker.io':
++        return bool(re.fullmatch(r'/v2/library/python/manifests/[A-Za-z0-9_:.-]+', p.path)) and not p.query
++    if p.hostname == 'auth.docker.io':
++        return p.path == '/token' and urllib.parse.parse_qs(p.query) == {'service': ['registry.docker.io'], 'scope': ['repository:library/python:pull']}
++    if p.hostname == 'api.github.com':
++        if p.path == '/advisories':
++            q = urllib.parse.parse_qs(p.query)
++            return set(q) <= {'ecosystem', 'affects', 'per_page', 'page'} and q.get('ecosystem', [''])[0] in ('pip', 'actions', 'npm')
++        return bool(re.fullmatch(r'/repos/pytorch/vision/git/(ref/tags/v0\.28\.0|tags/[0-9a-f]{40})', p.path)) and not p.query
++    if p.hostname == 'raw.githubusercontent.com':
++        return bool(re.fullmatch(r'/actions/(checkout|upload-artifact)/[0-9a-f]{40}/(package-lock\.json|action\.yml)', p.path)) and not p.query
++    return False
++
++class NoRedirect(urllib.request.HTTPRedirectHandler):
++    def redirect_request(self, *args, **kwargs):
++        raise ValueError('metadata redirect requires explicit review')
++
++class HttpMetadata:
++    def get(self, url, headers=None):
++        require(allowed(url), 'non-metadata URL forbidden')
++        request = urllib.request.Request(url, headers={'User-Agent': 'pv2-metadata-review', **(headers or {})})
++        started = time.monotonic()
++        with urllib.request.build_opener(NoRedirect).open(request, timeout=15) as response:
++            raw = bytearray()
++            while True:
++                require(time.monotonic() - started < 30, 'metadata total deadline')
++                b = response.read(min(65536, MAX_METADATA + 1 - len(raw)))
++                if not b:
++                    break
++                raw.extend(b)
++                require(len(raw) <= MAX_METADATA, 'metadata byte limit')
++            return bytes(raw), dict(response.headers)
++
++class Resolver:
++    def __init__(self, transport):
++        self.transport = transport
++        self.receipts = []
++        self.documents = {}
++
++    def get(self, url, headers=None, private=False):
++        require(allowed(url), 'binary/unapproved endpoint refused')
++        data, response_headers = self.transport.get(url, headers)
++        require(len(data) <= MAX_METADATA, 'metadata byte limit')
++        data.decode('utf-8')
++        if not private:
++            digest = hashlib.sha256(data).hexdigest()
++            self.documents[digest + '.metadata'] = data
++            self.receipts.append({'url': url, 'metadata_sha256': digest,
++                                  'retrieved_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
++                                  'evidence_file': digest + '.metadata',
++                                  'metadata_bytes_independently_hashed': True, 'size_bytes': len(data),
++                                  'artifact_bytes_downloaded': False})
++        return data, response_headers
++
++    def pypi(self, name, version):
++        raw, _ = self.get(f'https://pypi.org/pypi/{name}/{version}/json')
++        data = json.loads(raw)
++        require(data['info']['version'] == version, 'publisher version mismatch')
++        normalize = lambda n: re.sub('[-_.]+', '-', n).lower()
++        require(normalize(data['info']['name']) == normalize(name), 'publisher project mismatch')
++        artifacts = []
++        for item in data['urls']:
++            if item['packagetype'] != 'bdist_wheel':
++                continue
++            require(item['filename'].endswith('.whl'), 'wheel filename invalid')
++            require(urllib.parse.urlsplit(item['url']).hostname == 'files.pythonhosted.org', 'wheel publisher host')
++            digest = item['digests']['sha256']
++            require(re.fullmatch('[0-9a-f]{64}', digest), 'invalid publisher SHA')
++            artifacts.append({'filename': item['filename'], 'url': item['url'], 'size': item['size'],
++                              'publisher_reported_sha256': digest, 'artifact_bytes_verified': False,
++                              'yanked': item.get('yanked'), 'requires_python': item.get('requires_python')})
++        require(artifacts, 'no wheel metadata')
++        return {'name': name, 'version': version, 'requires_dist': data['info'].get('requires_dist'),
++                'requires_python': data['info'].get('requires_python'), 'wheels': artifacts,
++                'dependency_closure_verified': False, 'installation_approved': False}
++
++    def cpu_index(self, name, version):
++        raw, _ = self.get('https://download.pytorch.org/whl/cpu/' + name + '/')
++        class Links(HTMLParser):
++            def __init__(self):
++                super().__init__(); self.urls = []
++            def handle_starttag(self, tag, attrs):
++                if tag == 'a':
++                    self.urls.extend(v for k, v in attrs if k == 'href')
++        parser = Links(); parser.feed(raw.decode())
++        matches = []
++        for url in parser.urls:
++            url = urllib.parse.urljoin('https://download.pytorch.org/whl/cpu/' + name + '/', url)
++            p = urllib.parse.urlsplit(url)
++            filename = urllib.parse.unquote(p.path.rsplit('/', 1)[-1])
++            if filename.startswith(name + '-' + version + '-cp310-cp310-') and filename.endswith('x86_64.whl') and 'manylinux' in filename:
++                require(p.scheme == 'https' and p.hostname in ('download.pytorch.org', 'download-r2.pytorch.org'), 'CPU publisher host')
++                digest = urllib.parse.parse_qs(p.fragment).get('sha256', [None])[0]
++                require(isinstance(digest, str) and re.fullmatch('[0-9a-f]{64}', digest), 'CPU index hash missing')
++                matches.append({'filename': filename, 'url': urllib.parse.urlunsplit(p._replace(fragment='')),
++                                'publisher_reported_sha256': digest, 'artifact_bytes_verified': False})
++        require(len(matches) == 1, 'CPU wheel missing or ambiguous for CPython310 Linux x64')
++        return matches[0]
++
++    def oci(self, tag='3.10.21-slim-bookworm'):
++        raw, _ = self.get('https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/python:pull', private=True)
++        token = json.loads(raw)['token']
++        headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json'}
++        raw, _ = self.get('https://registry-1.docker.io/v2/library/python/manifests/' + tag, headers)
++        index_digest = hashlib.sha256(raw).hexdigest()
++        manifests = json.loads(raw)['manifests']
++        match = [m for m in manifests if m.get('platform', {}).get('os') == 'linux' and m['platform'].get('architecture') == 'amd64' and m['platform'].get('variant') in (None, '')]
++        require(len(match) == 1, 'OCI amd64 identity missing/ambiguous')
++        digest = match[0]['digest']
++        require(re.fullmatch('sha256:[0-9a-f]{64}', digest), 'OCI digest invalid')
++        raw, _ = self.get('https://registry-1.docker.io/v2/library/python/manifests/' + digest, headers)
++        require('sha256:' + hashlib.sha256(raw).hexdigest() == digest, 'OCI manifest byte hash mismatch')
++        m = json.loads(raw)
++        return {'tag_at_resolution': tag, 'index_metadata_sha256': index_digest,
++                'platform_manifest_digest': digest, 'manifest_bytes_verified': True,
++                'config_publisher_descriptor': m['config'], 'layer_publisher_descriptors': m['layers'],
++                'config_or_layer_bytes_verified': False, 'native_inventory_verified': False}
++
++    def vision_commit(self):
++        raw, _ = self.get('https://api.github.com/repos/pytorch/vision/git/ref/tags/v0.28.0')
++        obj = json.loads(raw)['object']
++        if obj['type'] == 'tag':
++            raw, _ = self.get('https://api.github.com/repos/pytorch/vision/git/tags/' + obj['sha'])
++            obj = json.loads(raw)['object']
++        require(obj['type'] == 'commit' and re.fullmatch('[0-9a-f]{40}', obj['sha']), 'vision ref not immutable commit')
++        return {'commit': obj['sha'], 'source_bytes_verified': False, 'topology_verified': False}
++
++    def advisory(self, ecosystem, name, version):
++        entries = []
++        for page in range(1, 11):
++            query = urllib.parse.urlencode({'ecosystem': ecosystem, 'affects': name + '@' + version, 'per_page': 100, 'page': page})
++            raw, headers = self.get('https://api.github.com/advisories?' + query)
++            data = json.loads(raw); require(isinstance(data, list), 'advisory error payload')
++            entries.extend(data)
++            link = next((v for k, v in headers.items() if k.lower() == 'link'), '')
++            if 'rel="next"' not in link:
++                return {'entries': entries, 'pagination_complete': True, 'security_approved': False}
++        raise ValueError('advisory pagination bound; coverage incomplete')
++
++    def actions_inventory(self, action, commit):
++        require(action in ('checkout', 'upload-artifact') and re.fullmatch('[0-9a-f]{40}', commit), 'action identity')
++        raw, _ = self.get(f'https://raw.githubusercontent.com/actions/{action}/{commit}/package-lock.json')
++        lock = json.loads(raw)
++        require(isinstance(lock.get('packages'), dict), 'unsupported npm lock schema')
++        shipped_candidates = [{'path': p, 'name': p.rsplit('node_modules/', 1)[-1], 'version': v.get('version'), 'integrity_publisher_reported': v.get('integrity')}
++                              for p, v in lock['packages'].items() if p and not v.get('dev', False)]
++        return {'action': action, 'commit': commit, 'lockfile_candidates': shipped_candidates,
++                'bundled_dist_equivalence_verified': False, 'runner_node_verified': False, 'security_approved': False}
++
++def main():
++    p = argparse.ArgumentParser()
++    p.add_argument('--fetch-metadata', action='store_true')
++    p.add_argument('--output', type=Path, required=True)
++    a = p.parse_args()
++    require(a.fetch_metadata, 'metadata network access needs explicit flag')
++    a.output.mkdir(exist_ok=False)
++    r = Resolver(HttpMetadata())
++    result = {'candidate_versions': CANDIDATES, 'resolved': {}, 'errors': {}, 'execution_approved': False}
++    tasks = {'pip': lambda: r.pypi('pip', '26.2.1'), 'wheel': lambda: r.pypi('wheel', '0.46.2'),
++             'setuptools': lambda: r.pypi('setuptools', '84.0.0'), 'base': r.oci, 'vision_commit': r.vision_commit,
++             'torch_cpu': lambda: r.cpu_index('torch', '2.13.0+cpu'), 'vision_cpu': lambda: r.cpu_index('torchvision', '0.28.0+cpu'),
++             'checkout': lambda: r.actions_inventory('checkout', '11bd71901bbe5b1630ceea73d27597364c9af683'),
++             'upload-artifact': lambda: r.actions_inventory('upload-artifact', 'ea165f8d65b6e75b540449e92b4886f43607fa02')}
++    for name, version in CANDIDATES.items():
++        if name != 'python':
++            tasks['advisory-' + name] = lambda n=name, v=version: r.advisory('pip', n, v.split('+')[0])
++    for key, action in tasks.items():
++        try:
++            result['resolved'][key] = action()
++        except Exception as exc:
++            result['errors'][key] = repr(exc)
++    result['receipts'] = r.receipts
++    result['unresolved'] = ['wheel/image bytes not acquired or verified', 'native source mapping and backport coverage',
++                            'Python/base bootstrap provenance', 'CPU wheel dependency metadata and closure',
++                            'bundled Actions dist and Node runtime review', 'topology/seeded-head compatibility',
++                            'all execution approvals remain false']
++    result['status'] = 'partial' if result['errors'] else 'metadata_only_not_approved'
++    for name, data in r.documents.items():
++        with (a.output / name).open('xb') as f:
++            f.write(data)
++    with (a.output / 'metadata-resolution.json').open('x', encoding='utf-8') as f:
++        json.dump(result, f, indent=2, sort_keys=True)
++    return int(bool(result['errors']))
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+--- /dev/null
++++ b/package_preparation.py
+@@ -0,0 +1,76 @@
++"""Explicit local review artifact generation; verification is separate and read-only."""
++import argparse
++import difflib
++import hashlib
++import json
++from pathlib import Path
++import platform
++import subprocess
++import sys
++import zipfile
++
++BASE_SHA = 'c374d9c61c29f2ee08fbdb95ab8ca1277429112b67f8dfe78046a9eef4b95caf'
++PROPOSAL_SHA = 'd850279dbf6e13e5f774d174e6a3a6455e4073877cd3c6ed899fbef66b995d74'
++
++def digest(raw):
++    return hashlib.sha256(raw).hexdigest()
++
++def write(path, value):
++    path.write_text(json.dumps(value, sort_keys=True, indent=2) + '\n', encoding='utf-8')
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('root', 'base', 'proposal', 'archive'):
++        p.add_argument('--' + name, required=True, type=Path)
++    a = p.parse_args()
++    if digest(a.base.read_bytes()) != BASE_SHA or digest(a.proposal.read_bytes()) != PROPOSAL_SHA:
++        raise ValueError('base/proposal identity mismatch')
++    root = a.root.resolve()
++    base = zipfile.ZipFile(a.base)
++    # Every original member except the regenerated root ledger must remain exact.
++    for n in base.namelist():
++        if n != 'file-hashes.json' and (root / n).read_bytes() != base.read(n):
++            raise ValueError('original revised file changed: ' + n)
++    (root / 'history' / 'revised-base-file-hashes.json').write_bytes(base.read('file-hashes.json'))
++    (root / 'accepted-proposal.md').write_bytes(a.proposal.read_bytes())
++    tests = subprocess.run([sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v'], capture_output=True, text=True)
++    (root / 'preparation-tests.log').write_text(tests.stdout + tests.stderr, encoding='utf-8')
++    if tests.returncode:
++        raise RuntimeError('tests failed; see preparation-tests.log; no package generated')
++    for f in root.glob('*.py'):
++        compile(f.read_text(encoding='utf-8'), str(f), 'exec')
++    for f in root.iterdir():
++        if f.suffix in ('.py', '.md', '.json', '.yml') and any(line.rstrip() != line for line in f.read_text(encoding='utf-8').splitlines()):
++            raise ValueError('trailing whitespace: ' + f.name)
++    import re
++    summary = re.search(r'Ran \d+ tests in [^\n]+', tests.stderr)
++    write(root / 'PREPARATION_VALIDATION.json', {'status': 'mocked_tests_passed', 'test_summary': summary.group() if summary else 'see log',
++        'command': tests.args, 'python': sys.version, 'platform': platform.platform(), 'base_sha256': BASE_SHA,
++        'proposal_sha256': PROPOSAL_SHA, 'base_implementation_members_unchanged': True, 'docker_executed': False,
++        'metadata_network_executed': False, 'dependency_binaries_downloaded': False, 'approvals': False,
++        'limitations': 'fake backend only; no Linux acceptance or security clearance'})
++    # Review-focused delta excludes bulky unchanged historical advisory records.
++    diff = []
++    for f in sorted(root.iterdir()):
++        if f.suffix not in ('.py', '.md') or f.name == 'accepted-proposal.md':
++            continue
++        before = base.read(f.name).decode('utf-8').splitlines(True) if f.name in base.namelist() else []
++        after = f.read_text(encoding='utf-8').splitlines(True)
++        if before != after:
++            diff.extend(difflib.unified_diff(before, after, fromfile='a/' + f.name if before else '/dev/null', tofile='b/' + f.name))
++    (root / 'supervisor-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++    ledger = {}
++    for f in sorted(root.rglob('*')):
++        if f.is_symlink():
++            raise ValueError('candidate symlink')
++        if f.is_file() and f != root / 'file-hashes.json':
++            ledger[f.relative_to(root).as_posix()] = {'sha256': digest(f.read_bytes()), 'size_bytes': f.stat().st_size}
++    write(root / 'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.archive, 'x', zipfile.ZIP_DEFLATED) as z:
++        for name in [*sorted(ledger), 'file-hashes.json']:
++            z.write(root / name, name)
++    print(json.dumps({'archive': str(a.archive.resolve()), 'sha256': digest(a.archive.read_bytes()), 'members': len(ledger) + 1,
++                      'tests': summary.group() if summary else 'see log'}, indent=2))
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ b/PREPARATION_REVIEW.md
+@@ -0,0 +1,51 @@
++# Supervisor v2 preparation — 2026-09-28
++
++Status: preparation and mocked testing only. This is not a Linux execution implementation or an approval to deploy. Stage A unchanged; Stage B paused; all execution, security, production-loading and pilot approvals remain false.
++
++## Verified authority/base
++
++Owner-provided PROPOSAL.md SHA-256: d850279dbf6e13e5f774d174e6a3a6455e4073877cd3c6ed899fbef66b995d74.
++Revised base ZIP SHA-256: c374d9c61c29f2ee08fbdb95ab8ca1277429112b67f8dfe78046a9eef4b95caf.
++Both verified before work. The base's45 ledger entries and46 ZIP members were checked before copying into this external candidate. No research repository was edited. The revised15 regression tests and their implementation files are byte-preserved; old reports remain historical. Original base ledger is retained under history/revised-base-file-hashes.json; the root ledger covers the complete extended candidate.
++
++## New implementation boundary
++
++supervisor_v2.py implements validated ownership records and a deterministic state machine: NEW -> RECORDED -> ACTIVE -> CLEANUP -> VERIFIED_FAKE/FAILED. No subprocess, daemon, socket, mount or cgroup writer is implemented. A Backend protocol must provide bounded observations/operations. This candidate accepts only explicitly fake backends and contains no live backend, CLI bypass or workflow wiring to enable one. The legacy workflow is preserved as historical, unapproved code, not the supervisor's deployment entry point. Never publish it as the new implementation.
++
++Ownership records bind run/attempt/token, boot and cgroup inode, process PID/start time/executable hashes, private socket/PID/exec/data/containerd/download/scratch/log paths, private service/network settings, watchdog identity, external-supervisor membership, fixed filesystem capacities, allocation, inode capacity, UUID/device/mount IDs and exact loop/backing identities. Shared sockets/containerd, path escapes, PID reuse, resource drift, sparse backing and observed spill paths fail closed. Process census must include escaped owned processes, not merely list descendants; the backend contract explicitly requires complete independent read-back.
++
++Admission requires a durably persisted record, matched current snapshot and independently armed watchdog. The state machine admits one opaque bounded fake operation at a time; it does not implement acquisition/build orchestration. The future backend is responsible for actual bounded provisioning and Linux observation, cgroup resolution and independently scheduled watchdog enforcement. Parent6GiB/zero-swap/1.5CPU/256tasks,8GiB work storage,512MiB retained evidence and64MiB runtime tmpfs remain proposed limits; inner inspector4GiB/zero-extra-swap/1CPU/16tasks and existing seccomp guards are unchanged.
++
++Streaming responses merge stdout/stderr through the backend with <=64KiB reads and a1MiB aggregate retained cap. Timeout/overflow fails into subtree cleanup; no post-hoc unlimited capture is used by the new supervisor. Real backend reads MUST be interruptible/bounded; checking elapsed time after return cannot stop an uncooperative real implementation. Oversized backend chunks are rejected, but the fake interface is not a proof of a live transport's allocation bounds.
++
++Cleanup independently attempts close-admission, TERM, subtree KILL and fresh empty/process/listener read-back. Each destructive attempt requires current ownership identity. An identity mismatch prevents mutation of potentially unrelated resources; earlier control failures do not skip later safe observations. Work-volume unmount and loop detach require termination and exact current identities; busy/mismatched resources are retained with failure, not lazily unmounted. Evidence volume deliberately remains attached for later export; no claim of total host cleanup is made. A future export/acknowledged evidence-volume teardown phase is still required. Independent cleanup ignores prior success claims. Report/ledger/stdout failures remain separate from primary errors.
++
++supervisor_evidence.py writes only a caller-selected NEW local report directory. Exclusive writes, flush/fsync, final report hashes, atomic ledger replacement and bounded stdout fallback support report preservation. No report can be guaranteed after disk/stdout failure or host loss. A nonempty/unreadable subtree, uncertain daemon I/O, or missing evidence is not a pass.
++
++## Metadata-only tooling
++
++metadata_resolution.py has an explicit --fetch-metadata opt-in and a separate injected transport used by tests. This task did NOT invoke its HTTP mode. It can query exact-version PyPI JSON, the official PyTorch CPU indexes, OCI manifest/index JSON, the read-only official Docker registry token endpoint, torchvision tag metadata, GitHub advisory pagination and hash-pinned Actions package-lock JSON. It refuses wheel/archive/OCI blob/layer endpoints, non-HTTPS or credential-bearing URLs, unapproved redirects and oversized responses. No installer, model import, package resolver execution or binary acquisition exists.
++
++Candidate targets remain Python3.10.21, torch2.13.0+cpu, torchvision0.28.0+cpu, pip26.2.1, wheel0.46.2 and setuptools84.0.0. These are proposal inputs, not a new lock. The tool records each public metadata response's bytes/hash/UTC/URL; registry tokens are neither persisted nor reported. Publisher wheel/config/layer digests carry artifact_bytes_verified=false. Only downloaded metadata itself, including child manifest bytes matched against index descriptors, can be independently hash-verified. Actions lockfile inventories are candidates for dist review, not proof of shipped dependency equivalence. No empty advisory response grants clearance. OCI platform ambiguity, missingCPU wheel/index hash, malformed identities, paging limits and API failures remain explicit errors.
++
++Read-only live metadata resolution, if subsequently requested, can use:
++
++```text
++python -B metadata_resolution.py --fetch-metadata --output NEW_EXTERNAL_METADATA_DIRECTORY
++```
++
++This is NOT an execution command for Linux acceptance. No live metadata results are claimed in this review; all new resolver results in tests are invented fixtures.
++
++## Validation and preserved regressions
++
++Run the existing15 revised tests and all added tests with bytecode disabled/CUDA hidden in the existing local Python runtime. New cases cover all listed proposal section4 lifecycle classes: shared endpoints, escaped processes, PID reuse, failure before record, live daemon after client timeout, failedTERM/KILL, independent cleanup/stale claims, nonempty after kill, mount/loop mismatches, byte/inode exhaustion, busy mount, streaming overflow, report/ledger failure and primary-error retention. Tests use fake clocks, invented observations and temporary report directories. Metadata tests cover corrupt/ambiguous references, binary URL refusal, pagination, no security approval from empty results and publisher-vs-byte hash distinctions. See PREPARATION_VALIDATION.json and preparation-tests.log for actual results.
++
++## Exact unresolved items / next implementation step
++
++1. A separately reviewed **real Linux backend and provisioning phase** is not supplied: implement systemd/cgroup hierarchy and independent watchdog creation, streaming OS transport, proc/mountinfo census, fixed-volume allocation and private daemon/containerd config. Do not replace fake observations with echoes of requested settings. Needs later privileged-host authorization and Linux acceptance; no settings changed here.
++2. Verify aggregate path confinement, fixed storage behavior, ENOSPC and real cgroup/seccomp enforcement on a disposable host. Uninterruptible I/O/host-loss uncertainty remains; no provider-level destroy guarantee exists. Evidence filesystem cleanup follows confirmed export, not workload cleanup.
++3. Obtain live metadata identities, then separately authorize official binary-byte acquisition for independent wheel/base hash and native inventory checks. No new package pins are resolved/applied by this task. Python3.10 support expiry and installer bootstrap remain review gates.
++4. Complete native binary-to-source/backport coverage, wheel member/RECORD/entrypoint validation, Actions dist/npm/Node review and dated advisory applicability. Old affected pins retain negative clearance. No compatibility claims for proposed torch/vision until source/topology/seed/state synthetic checks are reviewed.
++5. Later bind the reviewed new backend and pin refresh into a new, separately approved workflow/build receipt. Keep current approval flags false. Fresh zero-paid-usage/minutes/storage checks are required only before eventual authorized dispatch.
++
++This package is ready for source/mocked-test review, not publication or execution. No Docker, cgroup mutation, mounts, package/image binaries, installations, real weights, research data, training or university-server work occurred.
+--- /dev/null
++++ b/supervisor_evidence.py
+@@ -0,0 +1,49 @@
++"""Local report-only sink. No host/backend implementation and no network."""
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++
++class FileEvidence:
++    def __init__(self, output):
++        self.root = Path(output)
++        self.root.mkdir(exist_ok=False)
++        self.serial = 0
++
++    def append(self, name, value):
++        if re.fullmatch('[a-z-]+', name) is None:
++            raise ValueError('invalid evidence name')
++        raw = json.dumps(value, sort_keys=True, indent=2).encode('utf-8') + b'\n'
++        if len(raw) > 128 * 1024:
++            raise ValueError('report size limit')
++        self.serial += 1
++        target = self.root / f'{self.serial:04d}-{name}.json'
++        with target.open('xb') as f:
++            f.write(raw)
++            f.flush()
++            os.fsync(f.fileno())
++
++    def seal(self):
++        entries = {}
++        for p in sorted(self.root.iterdir()):
++            if p.is_symlink():
++                raise ValueError('evidence symlink')
++            if p.name in ('report-hashes.json', '.ledger.tmp'):
++                continue
++            if not p.is_file():
++                raise ValueError('unexpected report directory')
++            data = p.read_bytes()
++            entries[p.name] = {'sha256': hashlib.sha256(data).hexdigest(), 'size_bytes': len(data)}
++        tmp = self.root / '.ledger.tmp'
++        with tmp.open('xb') as f:
++            f.write(json.dumps(entries, indent=2, sort_keys=True).encode() + b'\n')
++            f.flush()
++            os.fsync(f.fileno())
++        os.replace(tmp, self.root / 'report-hashes.json')
++
++    def fallback(self, report):
++        raw = json.dumps(report, sort_keys=True)
++        if len(raw.encode()) > 128 * 1024:
++            raw = json.dumps({'state': 'FAILED', 'fallback_truncated': True, 'primary_error': str(report.get('primary_error'))[:4096]})
++        print(raw, flush=True)
+--- /dev/null
++++ b/supervisor_v2.py
+@@ -0,0 +1,261 @@
++"""Preparation-only supervisor state machine. No executable Linux backend exists.
++
++Backend methods MUST honor their deadlines and bounded-read contracts. The fake
++implementation is in tests only. This module contains no subprocess, socket,
++mount, cgroup-write or daemon-start implementation.
++"""
++from copy import deepcopy
++import hashlib
++import json
++from pathlib import PurePosixPath
++import re
++from typing import Protocol
++
++GIB = 1024**3
++CONTROL_LIMIT = 1024**2
++CHUNK = 65536
++POLICY = {'memory_max': 6 * GIB, 'swap_max': 0, 'cpu_max': [150000, 100000],
++          'pids_max': 256, 'workload_seconds': 1200, 'operation_seconds': 60}
++
++class Refusal(ValueError):
++    pass
++
++def require(value, message):
++    if not value:
++        raise Refusal(message)
++
++def within(path, parent):
++    if not isinstance(path, str) or not path.startswith('/') or '\\' in path or '\x00' in path:
++        return False
++    if any(p in ('.', '..') for p in path.split('/')):
++        return False
++    p, root = PurePosixPath(path), PurePosixPath(parent)
++    return p == root or root in p.parents
++
++class Backend(Protocol):
++    is_fake: bool
++    def now(self) -> float: ...
++    def request(self, action: str, record: dict, timeout: float) -> dict: ...
++    def read(self, handle: str, maximum: int, timeout: float):
++        """Return <=maximum bytes, None for no data yet, or b'' for EOF.
++        Merge stdout/stderr upstream; no unbounded buffers. Deadline MUST be
++        enforced by a future backend, not merely checked after a blocking call.
++        """
++        ...
++
++class Evidence(Protocol):
++    def append(self, name: str, value: dict): ...
++    def seal(self): ...
++    def fallback(self, value: dict): ...
++
++def validate_record(r):
++    require(len(json.dumps(r).encode('utf-8')) <= 65536, 'ownership record bound')
++    require(r.get('schema') == 'pv2_ownership_v2', 'ownership schema')
++    token = r.get('token', '')
++    require(re.fullmatch('[0-9a-f]{32}', token) is not None, 'ownership token')
++    require(r.get('run_id', '').isdigit() and r.get('attempt', '').isdigit(), 'run/attempt')
++    base, runtime = '/var/tmp/pv2-' + token, '/run/pv2-' + token
++    require(r.get('root') == base and r.get('runtime_root') == runtime, 'private roots')
++    require(r.get('cgroup') == '/pv2-' + token + '.slice', 'private cgroup')
++    require(r.get('cgroup_inode', 0) > 0 and r.get('boot_id'), 'cgroup identity/boot')
++    require(r.get('policy') == POLICY, 'policy mismatch')
++    required_paths = {'docker_socket': runtime + '/docker.sock', 'containerd_socket': runtime + '/containerd.sock',
++                      'pidfile': runtime + '/dockerd.pid', 'exec_root': runtime + '/exec',
++                      'data_root': base + '/data/docker', 'containerd_root': base + '/data/containerd',
++                      'containerd_state': runtime + '/containerd', 'download_root': base + '/data/downloads',
++                      'scratch_root': base + '/data/tmp', 'daemon_log': base + '/evidence/daemon.log'}
++    require(r.get('paths') == required_paths, 'shared or escaping daemon paths')
++    require(r.get('runtime_tmpfs_bytes') == 64 * 1024**2, 'runtime tmpfs bound')
++    require(r.get('service') == 'pv2-' + token + '.service', 'private service')
++    require(r.get('network') == {'bridge': False, 'iptables': False, 'ip_forward': False}, 'daemon network effects')
++    require(r.get('container_cgroup_parent') == r['cgroup'], 'container parent')
++    for role, capacity in (('data', 8 * GIB), ('evidence', 512 * 1024**2)):
++        v = r.get('volumes', {}).get(role, {})
++        require(v.get('mount') == base + '/' + role and v.get('backing') == base + '/' + role + '.ext4', 'volume path')
++        require(re.fullmatch(r'/dev/loop[0-9]+', v.get('loop', '')) is not None, 'loop name')
++        require(v.get('capacity_bytes') == capacity and v.get('allocated_bytes') >= capacity, 'sparse or expandable backing')
++        require(v.get('filesystem') == 'ext4' and v.get('uuid') and v.get('device') and v.get('mount_id', 0) > 0, 'filesystem identity')
++        require(v.get('inode_capacity', 0) > 0 and v.get('auto_expand') is False, 'inode/expansion policy')
++    require(r['volumes']['data']['loop'] != r['volumes']['evidence']['loop'], 'shared loop')
++    require(r.get('supervisor_cgroup') and not within(r['supervisor_cgroup'], r['cgroup']), 'supervisor inside workload')
++    require(r.get('watchdog', {}).get('outside_workload') is True and r['watchdog'].get('lifetime_seconds') == 1200, 'independent watchdog contract')
++    watchdog = r['watchdog']
++    require(type(watchdog.get('pid')) is int and watchdog['pid'] > 1 and watchdog.get('start_ticks', 0) > 0,
++            'watchdog process identity')
++    require(watchdog.get('cgroup') and not within(watchdog['cgroup'], r['cgroup']), 'watchdog inside workload')
++    require(re.fullmatch('[0-9a-f]{64}', watchdog.get('executable_sha256', '')) is not None, 'watchdog executable identity')
++    identities = r.get('processes', [])
++    require({p.get('role') for p in identities} >= {'dockerd', 'containerd'}, 'daemon identities missing')
++    require(len({p.get('pid') for p in identities}) == len(identities), 'duplicate PID')
++    for p in identities:
++        require(type(p.get('pid')) is int and p['pid'] > 1 and type(p.get('start_ticks')) is int and p['start_ticks'] > 0, 'PID identity')
++        require(re.fullmatch('[0-9a-f]{64}', p.get('executable_sha256', '')) is not None, 'executable identity')
++        require(within(p.get('cgroup'), r['cgroup']), 'recorded daemon subtree escape')
++    return deepcopy(r)
++
++def verify_snapshot(r, s, active):
++    # A future backend must derive this from proc/mountinfo/cgroup/filesystem
++    # read-back, NOT echo requested configuration. Exact source provenance required.
++    require(s.get('identity') == {'boot_id': r['boot_id'], 'cgroup_inode': r['cgroup_inode'], 'token': r['token']}, 'ownership changed')
++    require(s.get('paths') == r['paths'] and s.get('volumes') == r['volumes'], 'socket/mount/loop mismatch')
++    require(s.get('policy') == r['policy'] and s.get('all_storage_confined') is True, 'resource or spill-path mismatch')
++    require(s.get('external_owned_processes') == [], 'daemon subtree escape')
++    processes = s.get('processes')
++    require(isinstance(processes, list), 'process census missing')
++    saved = {p['pid']: p for p in r['processes']}
++    for p in processes:
++        require(within(p.get('cgroup'), r['cgroup']), 'process escaped')
++        require(p.get('pid', 0) > 1 and p.get('start_ticks', 0) > 0, 'bad process census')
++        if p['pid'] in saved:
++            require(p == saved[p['pid']], 'PID reuse or executable change')
++    if active:
++        require(all(p in processes for p in r['processes']), 'daemon vanished before admission')
++        require(s.get('watchdog_armed') is True, 'watchdog not armed')
++        require(s.get('watchdog_identity') == r['watchdog'], 'watchdog identity changed')
++        require(s.get('free_bytes', 0) > 0 and s.get('free_inodes', 0) > 0, 'ENOSPC/inode exhaustion')
++    return s
++
++def bounded_output(backend, handle, timeout):
++    """One aggregate stdout/stderr allocation bound, including empty polls."""
++    deadline = backend.now() + timeout
++    result = bytearray()
++    observed = 0
++    while True:
++        remaining = deadline - backend.now()
++        require(remaining > 0, 'control stream timeout')
++        block = backend.read(handle, CHUNK, min(remaining, 1.0))
++        if block is None:
++            continue
++        require(isinstance(block, bytes) and len(block) <= CHUNK, 'backend violated bounded read')
++        observed += len(block)
++        if len(result) + len(block) > CONTROL_LIMIT:
++            raise Refusal('control stream overflow at ' + str(observed) + ' observed bytes; cap=' + str(CONTROL_LIMIT))
++        if not block:
++            return bytes(result)
++        result.extend(block)
++
++class Supervisor:
++    def __init__(self, backend, evidence):
++        # There is intentionally no live backend or override flag in this candidate.
++        require(getattr(backend, 'is_fake', False) is True, 'preparation-only: live backend unavailable')
++        self.backend, self.evidence = backend, evidence
++        self.report = {'schema': 'pv2_supervisor_report_v2', 'state': 'NEW', 'events': [],
++                       'primary_error': None, 'cleanup_errors': [], 'persistence_errors': [],
++                       'daemon_io_termination_verified': False, 'work_storage_detached': False,
++                       'evidence_volume_retained': True, 'execution_approved': False,
++                       'pilot_execution_authorized': False, 'stage_b': 'paused', 'backend': 'fake'}
++        self.record = None
++        self.persisted = False
++
++    def event(self, state):
++        self.report['state'] = state
++        self.report['events'].append(state)
++
++    def call(self, action, timeout=10):
++        require(self.record is not None and self.persisted, 'no durable ownership')
++        start = self.backend.now()
++        value = self.backend.request(action, deepcopy(self.record), timeout)
++        require(self.backend.now() - start <= timeout, 'backend deadline violation: ' + action)
++        return value
++
++    def persist(self):
++        # Persistence failures are independent; primary diagnostics never replaced.
++        for name, fn in (('final-report', lambda: self.evidence.append('supervisor-report', deepcopy(self.report))),
++                         ('final-ledger', self.evidence.seal)):
++            try:
++                fn()
++            except BaseException as exc:
++                self.report['persistence_errors'].append(name + ': ' + repr(exc))
++        try:
++            self.evidence.fallback(deepcopy(self.report))
++        except BaseException as exc:
++            self.report['persistence_errors'].append('fallback: ' + repr(exc))
++
++    def cleanup(self):
++        self.event('CLEANUP')
++        if not self.persisted:
++            self.report['cleanup_errors'].append('no durable ownership record; no host mutation attempted')
++            return
++        # Every destructive attempt requires a fresh identity snapshot. Failure of
++        # TERM does not skip KILL/read-back, but identity mismatch denies mutation.
++        for action in ('close_admission', 'term_service', 'kill_subtree'):
++            try:
++                verify_snapshot(self.record, self.call('snapshot'), active=False)
++                self.call(action)
++            except BaseException as exc:
++                self.report['cleanup_errors'].append(action + ': ' + repr(exc))
++        try:
++            s = verify_snapshot(self.record, self.call('wait_empty', 10), active=False)
++            require(s.get('populated') is False and s['processes'] == [] and s.get('listeners') == [], 'workload/daemon still present')
++            self.report['daemon_io_termination_verified'] = True
++        except BaseException as exc:
++            self.report['cleanup_errors'].append('termination_readback: ' + repr(exc))
++        if self.report['daemon_io_termination_verified']:
++            try:
++                verify_snapshot(self.record, self.call('snapshot'), active=False)
++                self.call('unmount_data', 10)
++            except BaseException as exc:
++                self.report['cleanup_errors'].append('unmount: ' + repr(exc))
++            absent = False
++            try:
++                s = self.call('read_mount')
++                require(s.get('record_identity') == self.record['volumes']['data'], 'mount identity read-back missing')
++                require(s.get('mounted') is False, 'mount still busy/present')
++                absent = True
++            except BaseException as exc:
++                self.report['cleanup_errors'].append('mount_readback: ' + repr(exc))
++            if absent:
++                try:
++                    s = self.call('read_loop')
++                    require(s.get('record_identity') == self.record['volumes']['data'], 'loop identity changed')
++                    self.call('detach_data_loop', 10)
++                except BaseException as exc:
++                    self.report['cleanup_errors'].append('detach: ' + repr(exc))
++                try:
++                    s = self.call('read_loop')
++                    require(s.get('record_identity') == self.record['volumes']['data'] and s.get('attached') is False, 'loop absence not verified')
++                    self.report['work_storage_detached'] = True
++                except BaseException as exc:
++                    self.report['cleanup_errors'].append('loop_readback: ' + repr(exc))
++
++    def run(self, record):
++        try:
++            self.record = validate_record(record)
++            self.evidence.append('ownership', self.record)
++            self.persisted = True
++            self.event('RECORDED')
++            verify_snapshot(self.record, self.call('snapshot'), active=True)
++            self.event('ACTIVE')
++            operation = self.call('begin_operation', 10)
++            require(operation.get('handle') and operation.get('deadline_seconds') == 60, 'operation identity/deadline')
++            output = bounded_output(self.backend, operation['handle'], 60)
++            require(self.call('operation_status').get('exit_code') == 0, 'operation failed')
++            self.report['control_output_sha256'] = hashlib.sha256(output).hexdigest()
++            self.report['control_output_bytes'] = len(output)
++        except BaseException as exc:
++            self.report['primary_error'] = repr(exc)
++        finally:
++            self.cleanup()
++            good = (not self.report['primary_error'] and not self.report['cleanup_errors']
++                    and self.report['daemon_io_termination_verified'] and self.report['work_storage_detached'])
++            self.event('VERIFIED_FAKE' if good else 'FAILED')
++            self.persist()
++        if self.report['persistence_errors']:
++            self.report['state'] = 'FAILED'
++        return deepcopy(self.report)
++
++    def independent_cleanup(self, record):
++        """Fresh backend observations; does not consume previous success booleans."""
++        try:
++            self.record = validate_record(record)
++            self.evidence.append('cleanup-ownership', self.record)
++            self.persisted = True
++            self.cleanup()
++        except BaseException as exc:
++            self.report['primary_error'] = repr(exc)
++        finally:
++            self.event('FAILED' if self.report['cleanup_errors'] or self.report['primary_error'] else 'CLEANUP_VERIFIED_FAKE')
++            self.persist()
++        if self.report['persistence_errors']:
++            self.report['state'] = 'FAILED'
++        return deepcopy(self.report)
+--- /dev/null
++++ b/test_metadata_resolution.py
+@@ -0,0 +1,94 @@
++"""Invented metadata only; no HTTP requests or dependency downloads."""
++import hashlib
++import json
++import unittest
++from metadata_resolution import Resolver, allowed, MAX_METADATA
++
++class FakeTransport:
++    def __init__(self, responses):
++        self.responses = list(responses); self.requests = []
++    def get(self, url, headers=None):
++        self.requests.append(url)
++        value = self.responses.pop(0)
++        return value if isinstance(value, tuple) else (json.dumps(value).encode(), {})
++
++def pypi():
++    return {'info': {'name': 'pip', 'version': '26.2.1', 'requires_python': '>=3.10', 'requires_dist': []},
++            'urls': [{'packagetype': 'bdist_wheel', 'filename': 'pip-26.2.1-py3-none-any.whl', 'size': 100,
++                      'url': 'https://files.pythonhosted.org/invented.whl', 'digests': {'sha256': 'a' * 64}, 'yanked': False}]}
++
++class MetadataTests(unittest.TestCase):
++    def test_binary_and_secret_urls_rejected(self):
++        for url in ('https://files.pythonhosted.org/a.whl', 'https://registry-1.docker.io/v2/library/python/blobs/sha256:abc',
++                    'http://pypi.org/pypi/pip/26.2.1/json', 'https://user:password@pypi.org/pypi/pip/26.2.1/json',
++                    'https://download.pytorch.org/whl/cpu/torch/a.whl'):
++            self.assertFalse(allowed(url))
++            t = FakeTransport([])
++            with self.assertRaises(ValueError):
++                Resolver(t).get(url)
++            self.assertFalse(t.requests)
++
++    def test_publisher_hash_not_byte_verification(self):
++        r = Resolver(FakeTransport([pypi()])); out = r.pypi('pip', '26.2.1')
++        self.assertFalse(out['wheels'][0]['artifact_bytes_verified'])
++        self.assertEqual(out['wheels'][0]['publisher_reported_sha256'], 'a' * 64)
++        self.assertTrue(r.receipts[0]['metadata_bytes_independently_hashed'])
++        self.assertEqual(len(r.documents), 1)
++
++    def test_version_project_and_hash_mismatch(self):
++        for mutation in ('version', 'name', 'sha'):
++            data = pypi()
++            if mutation == 'sha':
++                data['urls'][0]['digests']['sha256'] = 'not-a-hash'
++            else:
++                data['info'][mutation] = 'wrong'
++            with self.assertRaises(ValueError):
++                Resolver(FakeTransport([data])).pypi('pip', '26.2.1')
++
++    def test_cpu_index_exact_cp310_linux_selection(self):
++        url = 'https://download.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl#sha256=' + 'b' * 64
++        html = ('<a href="' + url + '">fixture</a>').encode()
++        out = Resolver(FakeTransport([(html, {})])).cpu_index('torch', '2.13.0+cpu')
++        self.assertFalse(out['artifact_bytes_verified'])
++        with self.assertRaisesRegex(ValueError, 'ambiguous'):
++            Resolver(FakeTransport([(html + html, {})])).cpu_index('torch', '2.13.0+cpu')
++
++    def test_oci_hashes_metadata_not_layers_and_hides_token(self):
++        body = json.dumps({'config': {'digest': 'sha256:' + 'c' * 64}, 'layers': [{'digest': 'sha256:' + 'd' * 64}]}).encode()
++        digest = 'sha256:' + hashlib.sha256(body).hexdigest()
++        index = {'manifests': [{'platform': {'os': 'linux', 'architecture': 'amd64'}, 'digest': digest}]}
++        r = Resolver(FakeTransport([{'token': 'secret-fixture'}, index, (body, {})])); out = r.oci()
++        self.assertTrue(out['manifest_bytes_verified']); self.assertFalse(out['config_or_layer_bytes_verified'])
++        self.assertNotIn('secret-fixture', str(r.documents) + str(r.receipts))
++        self.assertTrue(all('/blobs/' not in url for url in r.transport.requests))
++
++    def test_oci_corrupt_manifest_rejected(self):
++        index = {'manifests': [{'platform': {'os': 'linux', 'architecture': 'amd64'}, 'digest': 'sha256:' + 'a' * 64}]}
++        with self.assertRaisesRegex(ValueError, 'hash mismatch'):
++            Resolver(FakeTransport([{'token': 'fake'}, index, ({'wrong': 1})])).oci()
++
++    def test_advisory_pages_and_empty_not_clearance(self):
++        t = FakeTransport([(b'[]', {'Link': '<next>; rel="next"'}), (b'[]', {})])
++        out = Resolver(t).advisory('pip', 'pip', '26.2.1')
++        self.assertTrue(out['pagination_complete']); self.assertFalse(out['security_approved']); self.assertEqual(len(t.requests), 2)
++
++    def test_pagination_bound_rejected(self):
++        with self.assertRaisesRegex(ValueError, 'pagination'):
++            Resolver(FakeTransport([(b'[]', {'Link': 'rel="next"'})] * 10)).advisory('pip', 'pip', '26.2.1')
++
++    def test_actions_lock_not_bundled_dist_proof(self):
++        lock = {'packages': {'': {}, 'node_modules/example': {'version': '1.0.0', 'integrity': 'sha512-invented'}}}
++        out = Resolver(FakeTransport([lock])).actions_inventory('checkout', 'a' * 40)
++        self.assertEqual(out['lockfile_candidates'][0]['name'], 'example')
++        self.assertFalse(out['bundled_dist_equivalence_verified'])
++
++    def test_metadata_size_limit(self):
++        with self.assertRaisesRegex(ValueError, 'byte limit'):
++            Resolver(FakeTransport([(b'x' * (MAX_METADATA + 1), {})])).get('https://pypi.org/pypi/pip/26.2.1/json')
++
++    def test_annotated_tag_resolves_commit(self):
++        r = Resolver(FakeTransport([{'object': {'type': 'tag', 'sha': 'a' * 40}}, {'object': {'type': 'commit', 'sha': 'b' * 40}}]))
++        self.assertEqual(r.vision_commit()['commit'], 'b' * 40)
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ b/test_supervisor_v2.py
+@@ -0,0 +1,248 @@
++"""Invented ownership observations and FAKE clock/backend only."""
++from copy import deepcopy
++import hashlib
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import patch
++import supervisor_v2 as s
++from supervisor_evidence import FileEvidence
++
++def record():
++    token = 'a' * 32
++    base, runtime, cg = '/var/tmp/pv2-' + token, '/run/pv2-' + token, '/pv2-' + token + '.slice'
++    r = {'schema': 'pv2_ownership_v2', 'token': token, 'run_id': '123', 'attempt': '1',
++         'root': base, 'runtime_root': runtime, 'cgroup': cg, 'cgroup_inode': 1234, 'boot_id': 'invented-boot',
++         'policy': deepcopy(s.POLICY), 'service': 'pv2-' + token + '.service', 'runtime_tmpfs_bytes': 64 * 1024**2,
++         'network': {'bridge': False, 'iptables': False, 'ip_forward': False}, 'container_cgroup_parent': cg,
++         'supervisor_cgroup': '/supervisor', 'watchdog': {'outside_workload': True, 'lifetime_seconds': 1200,
++             'pid': 999, 'start_ticks': 888, 'executable_sha256': 'c' * 64, 'cgroup': '/watchdog'},
++         'paths': {'docker_socket': runtime + '/docker.sock', 'containerd_socket': runtime + '/containerd.sock',
++                   'pidfile': runtime + '/dockerd.pid', 'exec_root': runtime + '/exec', 'data_root': base + '/data/docker',
++                   'containerd_root': base + '/data/containerd', 'containerd_state': runtime + '/containerd',
++                   'download_root': base + '/data/downloads', 'scratch_root': base + '/data/tmp', 'daemon_log': base + '/evidence/daemon.log'},
++         'volumes': {}, 'processes': []}
++    for number, (role, capacity) in enumerate((('data', 8 * s.GIB), ('evidence', 512 * 1024**2))):
++        r['volumes'][role] = {'mount': base + '/' + role, 'backing': base + '/' + role + '.ext4',
++                              'loop': '/dev/loop' + str(number + 10), 'capacity_bytes': capacity, 'allocated_bytes': capacity,
++                              'filesystem': 'ext4', 'uuid': 'invented-' + role, 'device': '7:' + str(number + 10),
++                              'mount_id': number + 1, 'inode_capacity': 65536, 'auto_expand': False}
++    for number, role in enumerate(('dockerd', 'containerd')):
++        r['processes'].append({'role': role, 'pid': 100 + number, 'start_ticks': 1000 + number,
++                               'executable_sha256': 'b' * 64, 'cgroup': cg + '/daemons'})
++    return r
++
++class FakeEvidence:
++    def __init__(self, fail=None):
++        self.fail = fail; self.rows = []; self.ledger = None; self.stdout = None
++    def append(self, name, value):
++        if name == self.fail:
++            raise OSError('invented evidence disk full')
++        self.rows.append((name, deepcopy(value)))
++    def seal(self):
++        if self.fail == 'seal':
++            raise OSError('invented ledger failure')
++        self.ledger = deepcopy(self.rows)
++    def fallback(self, value):
++        self.stdout = deepcopy(value)
++
++class FakeBackend:
++    is_fake = True
++    def __init__(self, r=None):
++        self.r = deepcopy(r or record()); self.time = 0; self.calls = []; self.fail = set()
++        self.alive = True; self.mounted = True; self.attached = True; self.busy = False; self.unKillable = False
++        self.edits = {}; self.blocks = [b'invented output', b'']; self.streaming_timeout = False
++    def now(self):
++        return self.time
++    def snapshot(self):
++        x = {'identity': {'boot_id': self.r['boot_id'], 'cgroup_inode': self.r['cgroup_inode'], 'token': self.r['token']},
++             'paths': deepcopy(self.r['paths']), 'volumes': deepcopy(self.r['volumes']), 'policy': deepcopy(self.r['policy']),
++             'all_storage_confined': True, 'external_owned_processes': [], 'processes': deepcopy(self.r['processes']) if self.alive else [],
++             'watchdog_armed': True, 'watchdog_identity': deepcopy(self.r['watchdog']), 'free_bytes': 1024, 'free_inodes': 10, 'populated': self.alive,
++             'listeners': [self.r['paths']['docker_socket']] if self.alive else []}
++        x.update(deepcopy(self.edits)); return x
++    def request(self, action, r, timeout):
++        self.calls.append((action, timeout)); self.time += .01
++        if action in self.fail:
++            raise TimeoutError('invented ' + action + ' timeout')
++        if action in ('snapshot', 'wait_empty'):
++            return self.snapshot()
++        if action == 'kill_subtree' and not self.unKillable:
++            self.alive = False
++        if action == 'unmount_data' and not self.busy:
++            self.mounted = False
++        if action == 'detach_data_loop':
++            self.attached = False
++        if action == 'read_mount':
++            return {'record_identity': deepcopy(r['volumes']['data']), 'mounted': self.mounted}
++        if action == 'read_loop':
++            return {'record_identity': deepcopy(r['volumes']['data']), 'attached': self.attached}
++        if action == 'begin_operation':
++            return {'handle': 'invented-stream', 'deadline_seconds': 60}
++        return {'exit_code': 0}
++    def read(self, handle, maximum, timeout):
++        self.time += timeout if self.streaming_timeout else .01
++        if self.streaming_timeout:
++            return None
++        return self.blocks.pop(0)
++
++class SupervisorTests(unittest.TestCase):
++    def run_case(self, backend=None, evidence=None, r=None):
++        b, e = backend or FakeBackend(), evidence or FakeEvidence()
++        report = s.Supervisor(b, e).run(r or b.r)
++        return report, b, e
++
++    def test_success_seals_cleanup_and_false_approval(self):
++        result, b, e = self.run_case()
++        self.assertEqual(result['state'], 'VERIFIED_FAKE')
++        self.assertTrue(result['daemon_io_termination_verified'])
++        self.assertTrue(result['work_storage_detached'])
++        self.assertFalse(result['execution_approved'])
++        self.assertEqual(e.ledger[-1][0], 'supervisor-report')
++        self.assertTrue(all(t <= 10 for _, t in b.calls))
++
++    def test_no_live_backend(self):
++        b = FakeBackend(); b.is_fake = False
++        with self.assertRaisesRegex(s.Refusal, 'live backend'):
++            s.Supervisor(b, FakeEvidence())
++
++    def test_watchdog_not_armed_or_wrong_identity(self):
++        for key, value in (('watchdog_armed', False), ('watchdog_identity', {})):
++            b = FakeBackend(); b.edits[key] = value
++            self.assertIn('watchdog', self.run_case(b)[0]['primary_error'])
++
++    def test_shared_socket_and_containerd_refused(self):
++        for key in ('docker_socket', 'containerd_socket', 'containerd_root'):
++            r = record(); r['paths'][key] = '/var/run/docker.sock'
++            report, b, _ = self.run_case(r=r)
++            self.assertEqual(report['state'], 'FAILED'); self.assertFalse(b.calls)
++
++    def test_cancellation_before_record_no_host_mutation(self):
++        report, b, e = self.run_case(evidence=FakeEvidence('ownership'))
++        self.assertFalse(b.calls)
++        self.assertIn('disk full', report['primary_error'])
++        self.assertFalse(report['daemon_io_termination_verified'])
++
++    def test_pid_reuse(self):
++        b = FakeBackend(); ps = deepcopy(b.r['processes']); ps[0]['start_ticks'] += 1; b.edits['processes'] = ps
++        report, b, _ = self.run_case(b)
++        self.assertIn('PID reuse', report['primary_error'])
++        self.assertNotIn('kill_subtree', [a for a, _ in b.calls])
++
++    def test_subtree_escape_census(self):
++        b = FakeBackend(); b.edits['external_owned_processes'] = [{'pid': 999, 'cgroup': '/system.slice'}]
++        report, _, _ = self.run_case(b)
++        self.assertIn('subtree escape', report['primary_error'])
++
++    def test_record_subtree_escape(self):
++        r = record(); r['processes'][0]['cgroup'] = '/unowned'
++        report, b, _ = self.run_case(r=r)
++        self.assertEqual(report['state'], 'FAILED'); self.assertFalse(b.calls)
++
++    def test_cli_timeout_live_daemon_killed(self):
++        b = FakeBackend(); b.streaming_timeout = True
++        report, b, _ = self.run_case(b)
++        self.assertIn('timeout', report['primary_error']); self.assertFalse(b.alive)
++        self.assertTrue(report['daemon_io_termination_verified'])
++
++    def test_failed_term_does_not_skip_kill_readback(self):
++        b = FakeBackend(); b.fail.add('term_service')
++        report, b, _ = self.run_case(b)
++        self.assertTrue(report['daemon_io_termination_verified']); self.assertEqual(report['state'], 'FAILED')
++        self.assertIn('kill_subtree', [a for a, _ in b.calls])
++
++    def test_failed_kill_still_reads_state(self):
++        b = FakeBackend(); b.fail.add('kill_subtree')
++        report, b, _ = self.run_case(b)
++        self.assertIn('wait_empty', [a for a, _ in b.calls]); self.assertTrue(b.mounted)
++        self.assertFalse(report['daemon_io_termination_verified'])
++
++    def test_nonempty_after_successful_kill_not_pass(self):
++        b = FakeBackend(); b.unKillable = True
++        report, _, _ = self.run_case(b)
++        self.assertFalse(report['daemon_io_termination_verified']); self.assertFalse(report['work_storage_detached'])
++
++    def test_independent_cleanup_after_initial_failure(self):
++        b = FakeBackend(); b.fail.add('kill_subtree'); self.run_case(b)
++        b.fail.clear()
++        report = s.Supervisor(b, FakeEvidence()).independent_cleanup(b.r)
++        self.assertTrue(report['work_storage_detached'])
++
++    def test_stale_cleanup_claim_ignored(self):
++        b = FakeBackend(); b.unKillable = True
++        report = s.Supervisor(b, FakeEvidence()).independent_cleanup(b.r)
++        self.assertFalse(report['daemon_io_termination_verified'])
++
++    def test_volume_mount_and_loop_mismatch(self):
++        for key in ('loop', 'mount_id', 'uuid'):
++            b = FakeBackend(); v = deepcopy(b.r['volumes']); v['data'][key] = 'different'; b.edits['volumes'] = v
++            report, b, _ = self.run_case(b)
++            self.assertIn('mismatch', report['primary_error']); self.assertTrue(b.attached)
++
++    def test_sparse_and_spill_rejected(self):
++        r = record(); r['volumes']['data']['allocated_bytes'] = 10
++        self.assertIn('sparse', self.run_case(r=r)[0]['primary_error'])
++        b = FakeBackend(); b.edits['all_storage_confined'] = False
++        self.assertIn('spill', self.run_case(b)[0]['primary_error'])
++
++    def test_bytes_and_inode_exhaustion(self):
++        for key in ('free_bytes', 'free_inodes'):
++            b = FakeBackend(); b.edits[key] = 0
++            report, _, _ = self.run_case(b)
++            self.assertIn('ENOSPC', report['primary_error'])
++
++    def test_busy_mount_not_detached(self):
++        b = FakeBackend(); b.busy = True
++        report, b, _ = self.run_case(b)
++        self.assertTrue(report['daemon_io_termination_verified']); self.assertTrue(b.attached)
++        self.assertFalse(report['work_storage_detached'])
++
++    def test_stream_aggregate_overflow(self):
++        b = FakeBackend(); b.blocks = [b'x' * s.CHUNK] * 17
++        report, b, _ = self.run_case(b)
++        self.assertIn('overflow', report['primary_error']); self.assertFalse(b.alive)
++
++    def test_stream_oversize_chunk_rejected(self):
++        b = FakeBackend(); b.blocks = [b'x' * (s.CHUNK + 1)]
++        self.assertIn('bounded read', self.run_case(b)[0]['primary_error'])
++
++    def test_primary_error_preserved_when_disk_full(self):
++        b = FakeBackend(); b.streaming_timeout = True
++        report, _, e = self.run_case(b, FakeEvidence('supervisor-report'))
++        self.assertIn('timeout', report['primary_error']); self.assertTrue(report['persistence_errors'])
++        self.assertIn('timeout', e.stdout['primary_error'])
++
++    def test_ledger_failure_is_failure(self):
++        report, _, _ = self.run_case(evidence=FakeEvidence('seal'))
++        self.assertEqual(report['state'], 'FAILED')
++
++    def test_late_cancellation_keeps_diagnostics(self):
++        b = FakeBackend()
++        with patch.object(b, 'read', side_effect=InterruptedError('invented cancellation')):
++            report, _, _ = self.run_case(b)
++        self.assertIn('cancellation', report['primary_error']); self.assertTrue(report['daemon_io_termination_verified'])
++
++    def test_backend_deadline_violation(self):
++        b = FakeBackend(); original = b.request
++        def delayed(action, r, timeout):
++            value = original(action, r, timeout)
++            if action == 'begin_operation':
++                b.time += 11
++            return value
++        b.request = delayed
++        self.assertIn('deadline', self.run_case(b)[0]['primary_error'])
++
++    def test_file_evidence_no_overwrite_and_final_binding(self):
++        with tempfile.TemporaryDirectory() as temp:
++            root = Path(temp) / 'evidence'; sink = FileEvidence(root)
++            with patch('builtins.print'):
++                self.run_case(evidence=sink)
++            ledger = json.loads((root / 'report-hashes.json').read_text())
++            for name, entry in ledger.items():
++                self.assertEqual(hashlib.sha256((root / name).read_bytes()).hexdigest(), entry['sha256'])
++            with self.assertRaises(FileExistsError):
++                FileEvidence(root)
++
++if __name__ == '__main__':
++    unittest.main()

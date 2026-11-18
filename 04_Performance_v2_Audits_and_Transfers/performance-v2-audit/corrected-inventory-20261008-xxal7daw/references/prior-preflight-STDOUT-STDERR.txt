@@ -1,0 +1,158 @@
+uid=1009(chaidir) gid=1009(chaidir) groups=1009(chaidir),27(sudo),998(docker)
+0002
+lrwxrwxrwx 1 chaidir dsai   10 Sep  1 17:14 /experiment-storage/chaidir/env/env-310-fawad/bin/python -> python3.10
+drwxrwsr-x 7 chaidir dsai 4096 Oct  4 18:58 /experiment-storage/chaidir/fawad-dsai/performance-v2-audit
+/usr/bin/python3.10
+/ | directory | mode=755 uid=0 gid=0 owner=root group=root device=64768
+# file: /
+# owner: root
+# group: root
+user::rwx
+group::r-x
+other::r-x
+
+/experiment-storage | directory | mode=2775 uid=0 gid=1000 owner=root group=dsai device=2097
+# file: /experiment-storage
+# owner: root
+# group: dsai
+# flags: -s-
+user::rwx
+group::rwx
+other::r-x
+
+
+/experiment-storage/chaidir | directory | mode=2755 uid=1009 gid=1000 owner=chaidir group=dsai device=2097
+# file: /experiment-storage/chaidir
+# owner: chaidir
+# group: dsai
+# flags: -s-
+user::rwx
+group::r-x
+other::r-x
+
+/experiment-storage/chaidir/fawad-dsai | directory | mode=2775 uid=1009 gid=1000 owner=chaidir group=dsai device=2097
+# file: /experiment-storage/chaidir/fawad-dsai
+# owner: chaidir
+# group: dsai
+# flags: -s-
+user::rwx
+group::rwx
+other::r-x
+
+/experiment-storage/chaidir/fawad-dsai/performance-v2-audit | directory | mode=2775 uid=1009 gid=1000 owner=chaidir group=dsai device=2097
+# file: /experiment-storage/chaidir/fawad-dsai/performance-v2-audit
+# owner: chaidir
+# group: dsai
+# flags: -s-
+user::rwx
+group::rwx
+other::r-x
+
+stat: cannot stat '/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/scratch': No such file or directory
+getfacl: /experiment-storage/chaidir/fawad-dsai/performance-v2-audit/scratch: No such file or directory
+stat: cannot stat '/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/reports': No such file or directory
+getfacl: /experiment-storage/chaidir/fawad-dsai/performance-v2-audit/reports: No such file or directory
+TARGET              SOURCE    FSTYPE OPTIONS
+/experiment-storage /dev/sdd1 ext4   rw,relatime
+Filesystem     1024-blocks       Used   Available Capacity Mounted on
+/dev/sdd1      19453054212 5617692424 12858754200      31% /experiment-storage
+Filesystem        Inodes    IUsed     IFree IUse% Mounted on
+/dev/sdd1      305184768 14209787 290974981    5% /experiment-storage
+{
+  "python": "3.10.17 (main, Apr  9 2025, 08:54:15) [GCC 9.4.0]",
+  "executable": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+  "resolved_executable": "/usr/bin/python3.10",
+  "executable_sha256": "f0b2ab0592687aa9a0674f7d5f04ec6e46777eceec63b04dec80ae4e7237f539",
+  "prefix_under_no_site": "/usr",
+  "base_prefix": "/usr",
+  "metadata_paths": [
+    "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+    "/usr/lib/python3.10/site-packages",
+    "/usr/local/lib/python3.10/dist-packages",
+    "/usr/lib/python3/dist-packages",
+    "/usr/lib/python3.10/dist-packages"
+  ],
+  "explicit_environment_site_packages": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+  "distributions": [
+    {
+      "name": "opencv-python",
+      "version": "5.0.0.93",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "20749df4e7500c53075dee344cd02f63d4df0dce93526e49e7e1c90fbc094e3e"
+    },
+    {
+      "name": "pytest",
+      "version": "8.4.2",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "93d6c5ef0a9714d53716243035037b77fa7d5f970596c48433887cf57f7f675a"
+    },
+    {
+      "name": "numpy",
+      "version": "2.2.6",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "22d648f53848429464ca643b40d73b49a920d47876fc77c395d4dca4e834904a"
+    },
+    {
+      "name": "torchvision",
+      "version": "0.18.0+cu121",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "a78c1dc21c6a0727a3ef77663e564f05bc3126dda903e44a5ad0b7ab3a7b13c0"
+    },
+    {
+      "name": "torch",
+      "version": "2.3.0+cu121",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "0f98fa0775a884512e695c31bfab1c3f2ec16af17ff1b1ed521c1858bc25c41f"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763"
+    },
+    {
+      "name": "packaging",
+      "version": "20.3",
+      "search_path": "/usr/lib/python3/dist-packages",
+      "metadata_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "audit_child_directories": [
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/audit-20260927T100333767013Z-539541171cb6",
+      "mode": "0o2775",
+      "uid": 1009,
+      "gid": 1000,
+      "symlink": false
+    },
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004",
+      "mode": "0o2775",
+      "uid": 1009,
+      "gid": 1000,
+      "symlink": false
+    },
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/input-audit-20260927T121832477449883Z",
+      "mode": "0o2775",
+      "uid": 1009,
+      "gid": 1000,
+      "symlink": false
+    },
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004",
+      "mode": "0o2775",
+      "uid": 1009,
+      "gid": 1000,
+      "symlink": false
+    },
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/transform-probe-20260927T114707326608915Z",
+      "mode": "0o2775",
+      "uid": 1009,
+      "gid": 1000,
+      "symlink": false
+    }
+  ],
+  "pilot_execution_authorized": false
+}

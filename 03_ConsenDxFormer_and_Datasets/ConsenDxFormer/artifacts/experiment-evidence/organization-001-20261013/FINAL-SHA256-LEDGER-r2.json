@@ -1,0 +1,60 @@
+{
+  "files": [
+    {
+      "file": "CACHE-CLEANUP-002-ALLOWLIST.json",
+      "bytes": 1044,
+      "sha256": "1a96d3c65c31096720c09a0576a8eaa554113e62a1c0ba8ee7e79d789dac97f9"
+    },
+    {
+      "file": "CAPACITY.json",
+      "bytes": 464,
+      "sha256": "bfce5fa09a966c35617f1941b0d93627c6810aa404600776514305f7aa76384b"
+    },
+    {
+      "file": "CLEANUP-CLOSURE-002.json",
+      "bytes": 1522,
+      "sha256": "5bb69655713a1e2301c99475458139e11bd0ff1473abe800d5eb7b4e8c9158ae"
+    },
+    {
+      "file": "CLEANUP-LOG.json",
+      "bytes": 217,
+      "sha256": "27dd2e9046e0e72c9b9e26f5b2f5cc1e040f4731320c1b890ed116c653f4965a"
+    },
+    {
+      "file": "FINAL-REVIEW.json",
+      "bytes": 65542,
+      "sha256": "418552dfa1c504a88a58fbaf7b009c46f0c53d60fd02c3964b604b4f2a5a8a36"
+    },
+    {
+      "file": "FINAL-SHA256-LEDGER.json",
+      "bytes": 1227,
+      "sha256": "fed8cd93cc819e15b67ce66649ad285ee10280db84b91844ebbc0fa6a9858ca1"
+    },
+    {
+      "file": "INDEX.json",
+      "bytes": 20790,
+      "sha256": "e0d555ccef694dada2aace80e46122401ce696337adb8b6b76b075631f8b0061"
+    },
+    {
+      "file": "INVENTORY.json",
+      "bytes": 7596136,
+      "sha256": "b6687b0f9cfee840c44b0f008dfe2a04d462861f041b92af40059e451da9c9e6"
+    },
+    {
+      "file": "README.md",
+      "bytes": 13587,
+      "sha256": "d0357b2aa15f4ea41534134db4cd8cba3caef4ab64dd341a778d7d839223d941"
+    },
+    {
+      "file": "REFERENCE-REVIEW-002.json",
+      "bytes": 116145,
+      "sha256": "f9488857663791c3523796a4aa45bd4f0f61f6b43f149fd7ac2e75a4c441ca40"
+    },
+    {
+      "file": "SHA256-LEDGER.json",
+      "bytes": 615,
+      "sha256": "f096026fe7e32bc7fe6e30e51408b59209080d94ee2f2cc3febef1878a99ab94"
+    }
+  ],
+  "original_files_rewritten": false
+}

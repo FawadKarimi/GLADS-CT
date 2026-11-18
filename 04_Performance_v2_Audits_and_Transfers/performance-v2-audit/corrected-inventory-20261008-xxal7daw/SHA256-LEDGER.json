@@ -1,0 +1,14 @@
+{
+  "changed_files": {
+    "configs/performance_v2/native_acceptance_source_lock.json": "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e",
+    "docs/performance_v2_native_acceptance_checklist.md": "20297f90c7bf1a4314776d320716450593dab5285df1ce1e57eb059dbb969e79",
+    "scripts/performance_v2_native_acceptance.py": "57448da2b905e40716564349db03b3390b2034cd682bff7c53c4c6fe777a4ebd",
+    "tests/test_performance_v2_acceptance_entry.py": "bae7f5e7283333fc606151b98ed840d1070f71248ddc1d8341a0d7ec410027d6"
+  },
+  "diffs": {
+    "COMPLETE-WORKTREE.diff": "e4c3f69e53af5c0f6952883157f9255f67b99435aa0cf740eab58aefed0dd105",
+    "FOCUSED.diff": "7c1911b91d9edf4d5b6b4689ab519ab93970f47a3d4cd6bd951341f6b5673361"
+  },
+  "pilot_execution_authorized": false,
+  "source_lock_sha256": "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e"
+}

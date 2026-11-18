@@ -1,0 +1,17 @@
+{
+  "preflight_executed": true,
+  "pilot_execution_authorized": false,
+  "acceptance_tests_run": false,
+  "files": [
+    {
+      "bytes": 3722,
+      "sha256": "3c52662bd9b28da07ef884ce94ac3a2edec608de1f406f7e1002d79695a9b99e",
+      "path": "REVIEW.md"
+    },
+    {
+      "bytes": 5862,
+      "sha256": "da78c28f13bc8dbfdf0372941e9303d91aa9cd5e8918e654b5d8ca3a31dc16b0",
+      "path": "STDOUT-STDERR.txt"
+    }
+  ]
+}

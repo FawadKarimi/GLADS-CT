@@ -1,0 +1,10 @@
+[
+  "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+  "-I",
+  "-B",
+  "-S",
+  "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/scripts/performance_v2_native_acceptance.py",
+  "inventory",
+  "--expected-lock-sha256",
+  "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e"
+]

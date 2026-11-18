@@ -1,0 +1,338 @@
+{
+  "/etc/os-release": "NAME=\"Ubuntu\"\nVERSION=\"20.04.6 LTS (Focal Fossa)\"\nID=ubuntu\nID_LIKE=debian\nPRETTY_NAME=\"Ubuntu 20.04.6 LTS\"\nVERSION_ID=\"20.04\"\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nVERSION_CODENAME=focal\nUBUNTU_CODENAME=focal\n",
+  "/proc/self/cgroup": "12:freezer:/\n11:cpuset:/\n10:pids:/user.slice/user-1009.slice/session-10.scope\n9:devices:/user.slice\n8:rdma:/\n7:net_cls,net_prio:/\n6:perf_event:/\n5:hugetlb:/\n4:cpu,cpuacct:/user.slice\n3:memory:/user.slice/user-1009.slice/session-10.scope\n2:blkio:/user.slice\n1:name=systemd:/user.slice/user-1009.slice/session-10.scope\n0::/user.slice/user-1009.slice/session-10.scope\n",
+  "/proc/self/status": "Name:\tpython\nUmask:\t0077\nState:\tR (running)\nTgid:\t468988\nNgid:\t0\nPid:\t468988\nPPid:\t468968\nTracerPid:\t0\nUid:\t1009\t1009\t1009\t1009\nGid:\t1009\t1009\t1009\t1009\nFDSize:\t64\nGroups:\t27 998 1009 \nNStgid:\t468988\nNSpid:\t468988\nNSpgid:\t468968\nNSsid:\t468929\nVmPeak:\t   39036 kB\nVmSize:\t   35880 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t   30272 kB\nVmRSS:\t   27152 kB\nRssAnon:\t   17732 kB\nRssFile:\t    9420 kB\nRssShmem:\t       0 kB\nVmData:\t   18164 kB\nVmStk:\t     132 kB\nVmExe:\t    3096 kB\nVmLib:\t    5544 kB\nVmPTE:\t     104 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nThreads:\t1\nSigQ:\t2/513480\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000001001000\nSigCgt:\t0000000180000002\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t0000003fffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t0\nSpeculation_Store_Bypass:\tthread vulnerable\nCpus_allowed:\tffffffff,ffffffff\nCpus_allowed_list:\t0-63\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000003\nMems_allowed_list:\t0-1\nvoluntary_ctxt_switches:\t123\nnonvoluntary_ctxt_switches:\t1\n",
+  "dependency_metadata": {
+    "active_distributions": {
+      "numpy": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info",
+        "metadata_bytes": 62026,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info/METADATA",
+        "metadata_sha256": "22d648f53848429464ca643b40d73b49a920d47876fc77c395d4dca4e834904a",
+        "name": "numpy",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "2.2.6"
+      },
+      "opencv-python": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info",
+        "metadata_bytes": 19749,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info/METADATA",
+        "metadata_sha256": "20749df4e7500c53075dee344cd02f63d4df0dce93526e49e7e1c90fbc094e3e",
+        "name": "opencv-python",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "5.0.0.93"
+      },
+      "packaging": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info",
+        "metadata_bytes": 3544,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info/METADATA",
+        "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763",
+        "name": "packaging",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "26.3"
+      },
+      "pytest": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info",
+        "metadata_bytes": 7656,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info/METADATA",
+        "metadata_sha256": "93d6c5ef0a9714d53716243035037b77fa7d5f970596c48433887cf57f7f675a",
+        "name": "pytest",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "8.4.2"
+      },
+      "torch": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info",
+        "metadata_bytes": 26146,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info/METADATA",
+        "metadata_sha256": "0f98fa0775a884512e695c31bfab1c3f2ec16af17ff1b1ed521c1858bc25c41f",
+        "name": "torch",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "2.3.0+cu121"
+      },
+      "torchvision": {
+        "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info",
+        "metadata_bytes": 6619,
+        "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info/METADATA",
+        "metadata_sha256": "a78c1dc21c6a0727a3ef77663e564f05bc3126dda903e44a5ad0b7ab3a7b13c0",
+        "name": "torchvision",
+        "scope": "virtual_environment",
+        "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+        "version": "0.18.0+cu121"
+      }
+    },
+    "active_scopes": [
+      "virtual_environment"
+    ],
+    "base_exec_prefix": "/usr",
+    "base_prefix": "/usr",
+    "duplicates": {
+      "packaging": [
+        {
+          "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info",
+          "metadata_bytes": 3544,
+          "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info/METADATA",
+          "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763",
+          "name": "packaging",
+          "scope": "virtual_environment",
+          "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+          "version": "26.3"
+        },
+        {
+          "descriptor": "/usr/lib/python3/dist-packages/packaging-20.3.egg-info",
+          "metadata_bytes": 13484,
+          "metadata_path": "/usr/lib/python3/dist-packages/packaging-20.3.egg-info/PKG-INFO",
+          "metadata_sha256": "b7847208c776c1d50ea3c911a855d5e8f2de8c49e412638aabb95c482389166d",
+          "name": "packaging",
+          "scope": "base_interpreter",
+          "search_path": "/usr/lib/python3/dist-packages",
+          "version": "20.3"
+        }
+      ]
+    },
+    "errors": [],
+    "import_resolution_verified": false,
+    "invocation": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+    "prefix_under_no_site": "/usr",
+    "pyvenv_config": {
+      "home": "/usr/bin",
+      "include_system_site_packages": "false",
+      "path": "/experiment-storage/chaidir/env/env-310-fawad/pyvenv.cfg",
+      "sha256": "d426063f4c8da34794ccf6ae29f93a4b4902a7a5c9ba6092daa2eebc304ee4b0"
+    },
+    "resolved_executable": "/usr/bin/python3.10",
+    "schema": "performance_v2_dependency_metadata_v2",
+    "scopes": {
+      "base_interpreter": {
+        "distributions": [
+          {
+            "descriptor": "/usr/lib/python3/dist-packages/packaging-20.3.egg-info",
+            "metadata_bytes": 13484,
+            "metadata_path": "/usr/lib/python3/dist-packages/packaging-20.3.egg-info/PKG-INFO",
+            "metadata_sha256": "b7847208c776c1d50ea3c911a855d5e8f2de8c49e412638aabb95c482389166d",
+            "name": "packaging",
+            "search_path": "/usr/lib/python3/dist-packages",
+            "version": "20.3"
+          }
+        ],
+        "missing_selected_names": [
+          "numpy",
+          "opencv-python",
+          "opencv-python-headless",
+          "pytest",
+          "torch",
+          "torchvision"
+        ],
+        "prefix": "/usr",
+        "search_paths": [
+          "/usr/lib/python3.10/site-packages",
+          "/usr/local/lib/python3.10/dist-packages",
+          "/usr/lib/python3/dist-packages",
+          "/usr/lib/python3.10/dist-packages"
+        ]
+      },
+      "virtual_environment": {
+        "distributions": [
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info",
+            "metadata_bytes": 62026,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info/METADATA",
+            "metadata_sha256": "22d648f53848429464ca643b40d73b49a920d47876fc77c395d4dca4e834904a",
+            "name": "numpy",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "2.2.6"
+          },
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info",
+            "metadata_bytes": 19749,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info/METADATA",
+            "metadata_sha256": "20749df4e7500c53075dee344cd02f63d4df0dce93526e49e7e1c90fbc094e3e",
+            "name": "opencv-python",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "5.0.0.93"
+          },
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info",
+            "metadata_bytes": 3544,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info/METADATA",
+            "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763",
+            "name": "packaging",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "26.3"
+          },
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info",
+            "metadata_bytes": 7656,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info/METADATA",
+            "metadata_sha256": "93d6c5ef0a9714d53716243035037b77fa7d5f970596c48433887cf57f7f675a",
+            "name": "pytest",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "8.4.2"
+          },
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info",
+            "metadata_bytes": 26146,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info/METADATA",
+            "metadata_sha256": "0f98fa0775a884512e695c31bfab1c3f2ec16af17ff1b1ed521c1858bc25c41f",
+            "name": "torch",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "2.3.0+cu121"
+          },
+          {
+            "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info",
+            "metadata_bytes": 6619,
+            "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info/METADATA",
+            "metadata_sha256": "a78c1dc21c6a0727a3ef77663e564f05bc3126dda903e44a5ad0b7ab3a7b13c0",
+            "name": "torchvision",
+            "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+            "version": "0.18.0+cu121"
+          }
+        ],
+        "missing_selected_names": [
+          "opencv-python-headless"
+        ],
+        "prefix": "/experiment-storage/chaidir/env/env-310-fawad",
+        "search_paths": [
+          "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+          "/experiment-storage/chaidir/env/env-310-fawad/local/lib/python3.10/dist-packages",
+          "/experiment-storage/chaidir/env/env-310-fawad/lib/python3/dist-packages",
+          "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/dist-packages"
+        ]
+      }
+    },
+    "site_initialization_executed": false,
+    "valid": true
+  },
+  "distributions": {
+    "numpy": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info",
+      "metadata_bytes": 62026,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/numpy-2.2.6.dist-info/METADATA",
+      "metadata_sha256": "22d648f53848429464ca643b40d73b49a920d47876fc77c395d4dca4e834904a",
+      "name": "numpy",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "2.2.6"
+    },
+    "opencv-python": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info",
+      "metadata_bytes": 19749,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/opencv_python-5.0.0.93.dist-info/METADATA",
+      "metadata_sha256": "20749df4e7500c53075dee344cd02f63d4df0dce93526e49e7e1c90fbc094e3e",
+      "name": "opencv-python",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "5.0.0.93"
+    },
+    "packaging": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info",
+      "metadata_bytes": 3544,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/packaging-26.3.dist-info/METADATA",
+      "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763",
+      "name": "packaging",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "26.3"
+    },
+    "pytest": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info",
+      "metadata_bytes": 7656,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/pytest-8.4.2.dist-info/METADATA",
+      "metadata_sha256": "93d6c5ef0a9714d53716243035037b77fa7d5f970596c48433887cf57f7f675a",
+      "name": "pytest",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "8.4.2"
+    },
+    "torch": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info",
+      "metadata_bytes": 26146,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torch-2.3.0+cu121.dist-info/METADATA",
+      "metadata_sha256": "0f98fa0775a884512e695c31bfab1c3f2ec16af17ff1b1ed521c1858bc25c41f",
+      "name": "torch",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "2.3.0+cu121"
+    },
+    "torchvision": {
+      "descriptor": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info",
+      "metadata_bytes": 6619,
+      "metadata_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages/torchvision-0.18.0+cu121.dist-info/METADATA",
+      "metadata_sha256": "a78c1dc21c6a0727a3ef77663e564f05bc3126dda903e44a5ad0b7ab3a7b13c0",
+      "name": "torchvision",
+      "scope": "virtual_environment",
+      "search_path": "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages",
+      "version": "0.18.0+cu121"
+    }
+  },
+  "executable": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+  "executable_sha256": "f0b2ab0592687aa9a0674f7d5f04ec6e46777eceec63b04dec80ae4e7237f539",
+  "gid": 1009,
+  "git": {
+    "path": "/usr/bin/git",
+    "sha256": "c3edb15c9715b79fcfb1fa978256cdfc14a9ad72a4a8d5680a9fc5ebc6a57e0e"
+  },
+  "libc": "glibc 2.31",
+  "machine": "x86_64",
+  "os": "linux",
+  "pilot_execution_authorized": false,
+  "python": "3.10.17 (main, Apr  9 2025, 08:54:15) [GCC 9.4.0]",
+  "read_only": true,
+  "source_lock_sha256": "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e",
+  "sqlite": "3.49.1",
+  "sqlite_compile_options": [
+    "ATOMIC_INTRINSICS=1",
+    "COMPILER=gcc-9.4.0",
+    "DEFAULT_AUTOVACUUM",
+    "DEFAULT_CACHE_SIZE=-2000",
+    "DEFAULT_FILE_FORMAT=4",
+    "DEFAULT_JOURNAL_SIZE_LIMIT=-1",
+    "DEFAULT_MMAP_SIZE=0",
+    "DEFAULT_PAGE_SIZE=4096",
+    "DEFAULT_PCACHE_INITSZ=20",
+    "DEFAULT_RECURSIVE_TRIGGERS",
+    "DEFAULT_SECTOR_SIZE=4096",
+    "DEFAULT_SYNCHRONOUS=2",
+    "DEFAULT_WAL_AUTOCHECKPOINT=1000",
+    "DEFAULT_WAL_SYNCHRONOUS=2",
+    "DEFAULT_WORKER_THREADS=0",
+    "DIRECT_OVERFLOW_READ",
+    "ENABLE_MATH_FUNCTIONS",
+    "MALLOC_SOFT_LIMIT=1024",
+    "MAX_ATTACHED=10",
+    "MAX_COLUMN=2000",
+    "MAX_COMPOUND_SELECT=500",
+    "MAX_DEFAULT_PAGE_SIZE=8192",
+    "MAX_EXPR_DEPTH=1000",
+    "MAX_FUNCTION_ARG=1000",
+    "MAX_LENGTH=1000000000",
+    "MAX_LIKE_PATTERN_LENGTH=50000",
+    "MAX_MMAP_SIZE=0x7fff0000",
+    "MAX_PAGE_COUNT=0xfffffffe",
+    "MAX_PAGE_SIZE=65536",
+    "MAX_SQL_LENGTH=1000000000",
+    "MAX_TRIGGER_DEPTH=1000",
+    "MAX_VARIABLE_NUMBER=32766",
+    "MAX_VDBE_OP=250000000",
+    "MAX_WORKER_THREADS=8",
+    "MUTEX_PTHREADS",
+    "SYSTEM_MALLOC",
+    "TEMP_STORE=1",
+    "THREADSAFE=1"
+  ],
+  "sqlite_extension_sha256": "f98a419713f30cfd3eb1e9e68af906e42536a66fb53c8994c2bff7130ecc250d",
+  "target_image_digest": null,
+  "uid": 1009,
+  "uname": [
+    "Linux",
+    "dsai-server",
+    "5.4.0-216-generic",
+    "#236-Ubuntu SMP Fri Apr 11 19:53:21 UTC 2025",
+    "x86_64"
+  ],
+  "weights_devices_and_research_data_inspected": false
+}

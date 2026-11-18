@@ -1,0 +1,481 @@
+{
+  "index_is_not_execution_storage": true,
+  "private_bound_artifacts_relocated": false,
+  "scope": "ConsenDxFormer and performance-v2 only",
+  "stages_and_attempts": [
+    {
+      "attempt": "ConsenDxFormer",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": "performance-v2-audit",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": "performance-v2-imagenet-source-delivery-001-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-source-delivery-001-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": "performance-v2-imagenet-transfer-private-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-transfer-private-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": "performance-v2-radimagenet-transfer-private-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-final-evaluation-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-final-evaluation-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-imagenet-receiver-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-imagenet-receiver-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-imagenet-review-20261008",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-imagenet-review-20261008",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-materialization-20261008",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-materialization-20261008",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-entry-checks-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-entry-checks-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-execution-next-20261011",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-execution-next-20261011",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-full-activation-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-full-activation-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-full-preparation-20261011",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-full-preparation-20261011",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-imagenet-integration-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-matched-plan-20261011",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-matched-plan-20261011",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-matched-training-20261012",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-matched-training-20261012",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-preparation-20261011",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-preparation-20261011",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-r50-radimagenet42-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-r50-radimagenet42-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-radimagenet-receiver-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-radimagenet-receiver-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-reader-correction-20261008",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-reader-correction-20261008",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-real-mapping-candidate-20261008",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-real-mapping-candidate-20261008",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": "imagenet-model-import-attempt-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-model-import-attempt-001-20261012",
+      "stage": "imagenet"
+    },
+    {
+      "attempt": "imagenet-receiver-attempt-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-receiver-attempt-001-20261012",
+      "stage": "imagenet"
+    },
+    {
+      "attempt": "imagenet-synthetic-review-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001",
+      "stage": "imagenet"
+    },
+    {
+      "attempt": "imagenet-synthetic-review-001-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001-launch",
+      "stage": "imagenet"
+    },
+    {
+      "attempt": "imagenet-synthetic-review-002-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-002-launch",
+      "stage": "imagenet"
+    },
+    {
+      "attempt": "materialization-synthetic-001-envelope",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/materialization-synthetic-001-envelope",
+      "stage": "materialization"
+    },
+    {
+      "attempt": "materialization-synthetic-001-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/materialization-synthetic-001-launch",
+      "stage": "materialization"
+    },
+    {
+      "attempt": "native-acceptance-001-envelope",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/native-acceptance-001-envelope",
+      "stage": "native"
+    },
+    {
+      "attempt": "orchestration-dryrun-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/orchestration-dryrun-001",
+      "stage": "orchestration"
+    },
+    {
+      "attempt": "orchestration-dryrun-001-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/orchestration-dryrun-001-launch",
+      "stage": "orchestration"
+    },
+    {
+      "attempt": "r50-checkpoint-cpu-outer-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-outer-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-checkpoint-cpu-synthetic-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-cpu-integration-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-cpu-integration-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-cuda-synthetic-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-cuda-synthetic-002",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-002",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-cuda-synthetic-003",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-003",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-entry-six-cpu-synthetic-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-entry-six-cpu-synthetic-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-full-delta-synthetic-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-full-delta-synthetic-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-hard-seed42-test-evaluation-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-test-evaluation-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-hard-seed42-test-evaluation-outer-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-test-evaluation-outer-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-hard-seed42-test-launch-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-test-launch-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-hard-seed42-test-preflight-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-test-preflight-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-imagenet-42-activation-outer-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-activation-outer-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-imagenet-42-completion-review-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-completion-review-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-imagenet-42-full-activation-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-imagenet-42-full-outer-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-outer-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-imagenet-42-hard-full-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-hard-full-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-matched-zero-budget-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-matched-zero-budget-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-radimagenet-42-full-activation-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-radimagenet-42-full-activation-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-radimagenet-42-full-outer-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-radimagenet-42-full-outer-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-radimagenet-42-hard-full-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-radimagenet-42-hard-full-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-radimagenet42-storage-focus-zero-budget-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-radimagenet42-storage-focus-zero-budget-001-20261013",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-activation-outer-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-activation-outer-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-completion-review-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-completion-review-002-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-002-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-full-activation-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-full-activation-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-full-outer-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-full-outer-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-random-42-hard-full-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-hard-full-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-source-stage-001-20261012",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-source-stage-001-20261012",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-timing-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-timing-001",
+      "stage": "r50"
+    },
+    {
+      "attempt": "r50-timing-001-outer",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/r50-timing-001-outer",
+      "stage": "r50"
+    },
+    {
+      "attempt": "rad42-completion-review-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/rad42-completion-review-001-20261013",
+      "stage": "rad42"
+    },
+    {
+      "attempt": "radimagenet-receiver-import-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/radimagenet-receiver-import-001-20261013",
+      "stage": "radimagenet"
+    },
+    {
+      "attempt": "reader-integration-001-envelope",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/reader-integration-001-envelope",
+      "stage": "reader"
+    },
+    {
+      "attempt": "reader-integration-001-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/reader-integration-001-launch",
+      "stage": "reader"
+    },
+    {
+      "attempt": "supervision-native-synthetic-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/supervision-native-synthetic-001-20261013",
+      "stage": "supervision"
+    },
+    {
+      "attempt": "supervision-permission-native-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/supervision-permission-native-001-20261013",
+      "stage": "supervision"
+    },
+    {
+      "attempt": "supervision-retention-native-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/supervision-retention-native-001-20261013",
+      "stage": "supervision"
+    },
+    {
+      "attempt": "supervision-retention-storage-native-001-20261013",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/supervision-retention-storage-native-001-20261013",
+      "stage": "supervision"
+    },
+    {
+      "attempt": "train-val-mapping-001",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/train-val-mapping-001",
+      "stage": "train"
+    },
+    {
+      "attempt": "train-val-mapping-001-launch",
+      "disposition": "path-bound or unresolved; preserved in place",
+      "path": "/home/chaidir/.performance-v2-reports/train-val-mapping-001-launch",
+      "stage": "train"
+    },
+    {
+      "attempt": ".performance-v2-scratch",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-scratch",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-source-20261008",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-source-20261008",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-supervision-readiness-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-supervision-readiness-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-supervision-readiness-r2-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-supervision-readiness-r2-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-supervision-retention-v1-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-supervision-retention-v1-20261013",
+      "stage": "source-or-incoming"
+    },
+    {
+      "attempt": ".performance-v2-supervision-retention-v1-r2-20261013",
+      "disposition": "source, artifact or historical binding preserved in place",
+      "path": "/home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013",
+      "stage": "source-or-incoming"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "bundle_sha256": "0c983f0ebbc6dd70623b570c8a657aa14ccc550ac590b577648b3163bc8a01e3",
+  "patient_split.csv": "2942c0a3faa509988f6f2d09828bd76a2732e25df1794d81a158dcfbe8fa601a",
+  "series_split.csv": "aa7bce2911561a7edff572b906ecc8f7964ce57a597effc2f467fef2137ce9ff",
+  "split_summary.json": "3ce59b0659e872f99b461d8deff16bf0fae9d3caa8b4aab50b5d95a85ba785a9",
+  "test_patient_ids.txt": "91c9c78676dc2715b19c9a8a429023220e3356f9dfad27f7fddf963a8d1bde5a",
+  "train_patient_ids.txt": "196e373c7cff42b17b9ea3c4f966f2784c6e154a27868e3ccb053ec65437f325",
+  "val_patient_ids.txt": "03acc4a9268a20c670a8447793f271e401b956382c62b671fc8a9ad209cb1038"
+}

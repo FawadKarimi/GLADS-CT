@@ -1,0 +1,39 @@
+{
+  "ancestors": [
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/home",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 1009,
+      "mode": "0o755",
+      "path": "/home/chaidir",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "gid": 1009,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-reports",
+      "uid": 1009
+    }
+  ],
+  "error": "AssertionError: ",
+  "historical_path": "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+  "pilot_execution_authorized": false,
+  "production_execution_authorized": false,
+  "staging_path": "/home/chaidir/.performance-v2-imagenet-review-20261008",
+  "status": "STOP",
+  "tests_executed": false
+}

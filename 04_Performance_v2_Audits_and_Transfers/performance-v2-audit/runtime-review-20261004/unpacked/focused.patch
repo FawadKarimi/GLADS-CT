@@ -1,0 +1,284 @@
+--- a/launcher-sources.json
++++ b/launcher-sources.json
+@@ -29,8 +29,8 @@
+       "size_bytes": 21953
+     },
+     "/opt/pv2-native-acceptance/native_launcher.py": {
+-      "sha256": "124c942da14669f91b32246b4bfba1e0ad9c79a8b091b112f5ae7fa2591c546d",
+-      "size_bytes": 4491
++      "sha256": "ca6b49a76877b19d4da5df5355c232b355539cea81a6eb682aea6ff70df435a0",
++      "size_bytes": 4796
+     },
+     "/opt/pv2-native-acceptance/supervisor_evidence.py": {
+       "sha256": "3bd7b1b8abb9ce821ce932f941a8b35371544d16ea3fef738e6d1bda486fd140",
+--- /dev/null
++++ b/metadata-refresh-20261004/metadata-resolution.json
+@@ -0,0 +1,39 @@
++{
++  "candidate_versions": {
++    "pip": "26.2.1",
++    "python": "3.12.15",
++    "setuptools": "84.0.0",
++    "torch": "2.13.0+cpu",
++    "torchvision": "0.28.0+cpu",
++    "wheel": "0.46.2"
++  },
++  "errors": {
++    "advisory-pip": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "advisory-setuptools": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "advisory-torch": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "advisory-torchvision": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "advisory-wheel": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "base": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "checkout": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "pip": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "setuptools": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "torch_cpu": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "upload-artifact": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "vision_commit": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "vision_cpu": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
++    "wheel": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))"
++  },
++  "execution_approved": false,
++  "receipts": [],
++  "resolved": {},
++  "status": "partial",
++  "unresolved": [
++    "wheel/image bytes not acquired or verified",
++    "native source mapping and backport coverage",
++    "Python/base bootstrap provenance",
++    "CPU wheel dependency metadata and closure",
++    "bundled Actions dist and Node runtime review",
++    "topology/seeded-head compatibility",
++    "all execution approvals remain false"
++  ]
++}
+--- a/metadata_resolution.py
++++ b/metadata_resolution.py
+@@ -15,7 +15,7 @@
+ import urllib.request
+ 
+ MAX_METADATA = 8 * 1024**2
+-CANDIDATES = {'python': '3.10.21', 'torch': '2.13.0+cpu', 'torchvision': '0.28.0+cpu',
++CANDIDATES = {'python': '3.12.15', 'torch': '2.13.0+cpu', 'torchvision': '0.28.0+cpu',
+               'pip': '26.2.1', 'wheel': '0.46.2', 'setuptools': '84.0.0'}
+ 
+ def require(ok, message):
+@@ -120,16 +120,16 @@
+             url = urllib.parse.urljoin('https://download.pytorch.org/whl/cpu/' + name + '/', url)
+             p = urllib.parse.urlsplit(url)
+             filename = urllib.parse.unquote(p.path.rsplit('/', 1)[-1])
+-            if filename.startswith(name + '-' + version + '-cp310-cp310-') and filename.endswith('x86_64.whl') and 'manylinux' in filename:
++            if filename.startswith(name + '-' + version + '-cp312-cp312-') and filename.endswith('x86_64.whl') and 'manylinux' in filename:
+                 require(p.scheme == 'https' and p.hostname in ('download.pytorch.org', 'download-r2.pytorch.org'), 'CPU publisher host')
+                 digest = urllib.parse.parse_qs(p.fragment).get('sha256', [None])[0]
+                 require(isinstance(digest, str) and re.fullmatch('[0-9a-f]{64}', digest), 'CPU index hash missing')
+                 matches.append({'filename': filename, 'url': urllib.parse.urlunsplit(p._replace(fragment='')),
+                                 'publisher_reported_sha256': digest, 'artifact_bytes_verified': False})
+-        require(len(matches) == 1, 'CPU wheel missing or ambiguous for CPython310 Linux x64')
++        require(len(matches) == 1, 'CPU wheel missing or ambiguous for CPython312 Linux x64')
+         return matches[0]
+ 
+-    def oci(self, tag='3.10.21-slim-bookworm'):
++    def oci(self, tag='3.12.15-slim-bookworm'):
+         raw, _ = self.get('https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/python:pull', private=True)
+         token = json.loads(raw)['token']
+         headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json'}
+--- a/native_launcher.py
++++ b/native_launcher.py
+@@ -70,6 +70,9 @@
+ 
+ def main():
+     try:
++        # This review candidate intentionally cannot activate any native role,
++        # even if an older authorization document is present on a host.
++        raise RuntimeError('native supervisor disabled: supported-runtime candidate lacks artifact, native inventory, security and lifecycle acceptance')
+         trusted_bootstrap()
+         from launcher_binding import parser
+         from activation_trust import TrustedIO, validate_trust
+--- /dev/null
++++ b/runtime-candidate.json
+@@ -0,0 +1,34 @@
++{
++  "schema": "pv2_supported_runtime_candidate_v1",
++  "status": "proposed_not_an_executable_lock",
++  "date": "2026-10-04",
++  "supersedes_for_future_inspection": "reviewed/environment-lock.json",
++  "historical_lock_retained": true,
++  "python": "3.12.15",
++  "python_support_end": "2028-10",
++  "platform": "linux/amd64",
++  "base_tag_candidate": "python:3.12.15-slim-bookworm",
++  "base_manifest_digest_approved": null,
++  "base_config_and_layers_byte_verified": false,
++  "native_inventory": null,
++  "native_inventory_status": "missing_for_new_base; historical_105_rows_not_reused_as_current",
++  "packages": {
++    "torch": "2.13.0+cpu",
++    "torchvision": "0.28.0+cpu",
++    "pip": "26.2.1",
++    "wheel": "0.46.2",
++    "setuptools": "84.0.0"
++  },
++  "wheel_interpreter_abi": "cp312-cp312",
++  "official_pairing_documented": true,
++  "artifact_bytes_verified": false,
++  "dependency_closure_verified": false,
++  "compatibility_verified": false,
++  "security_review_complete": false,
++  "native_supervisor_enabled": false,
++  "execution_approved": false,
++  "security_approved": false,
++  "dependencies_approved": false,
++  "pilot_execution_authorized": false,
++  "stage_b": "paused"
++}
+--- /dev/null
++++ b/RUNTIME_VALIDATION.json
+@@ -0,0 +1,37 @@
++{
++  "baseline_ledger_entries_verified": 125,
++  "execution_approved": false,
++  "linux_acceptance": false,
++  "metadata_resolution": "partial; socket permission denied; no resolved artifacts",
++  "package_bytes_downloaded": false,
++  "platform": "Windows; synthetic/mocked only",
++  "runtime": "Python 3.14.6",
++  "tests": [
++    {
++      "command": [
++        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
++        "-B",
++        "-m",
++        "unittest",
++        "test_metadata_resolution",
++        "test_runtime_candidate"
++      ],
++      "exit_code": 0,
++      "label": "targeted"
++    },
++    {
++      "command": [
++        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
++        "-B",
++        "-m",
++        "unittest",
++        "discover",
++        "-p",
++        "test_*.py"
++      ],
++      "exit_code": 0,
++      "label": "full"
++    }
++  ],
++  "warning": "Historical acceptance_driver.py SyntaxWarning: return in finally; not changed or cleared by these tests."
++}
+--- /dev/null
++++ b/SUPPORTED_RUNTIME_REVIEW.md
+@@ -0,0 +1,44 @@
++# Supported-runtime candidate review — 2026-10-04
++
++Review only. This document supersedes historical runtime-selection recommendations, not Stage A scientific files. Stage B remains paused. All approvals remain false. The public native launcher now rejects before trust bootstrap or host operations, even with a historical authorization file. Mocked role-handler tests are not execution authorization.
++
++## Proposed replacement, not a validated lock
++
++`runtime-candidate.json` replaces the future Python 3.10 selection with Python 3.12.15 / CPython cp312, proposed Linux amd64 `python:3.12.15-slim-bookworm`. Python 3.12 receives security support through October 2028. Python 3.10 is no longer an acceptable new base. Exact OCI digest resolution failed; this tag is a proposal, not an acquired or approved image.
++
++Propose torch 2.13.0+cpu with torchvision 0.28.0+cpu, pip 26.2.1, wheel 0.46.2 and setuptools 84.0.0. The official PyTorch previous-versions page documents the 2.13.0/0.28.0 CPU pairing. The resolver now selects cp312 Linux wheels and rejects cp310 and non-CPU substitutes. No package or image binaries were downloaded, installed or loaded.
++
++The old `reviewed/environment-lock.json`, `reviewed/base-inventory.json` and embedded inspector archive remain byte-identical historical evidence. Their cp310 hashes, native inventory and old runtime must NOT be used as the new candidate's lock. No production executable dependency lock has been approved. A complete cp312 transitive closure, exact artifact URLs/sizes/hashes and bootstrap method are still required. Publisher hash assertions must remain distinct from independently hashed artifact bytes.
++
++## Official evidence and bounded security assessment
++
++Sources consulted on 2026-10-04 (metadata only):
++
++- https://www.python.org/downloads/release/python-31215/ — supported security-release line and October 2028 horizon.
++- https://pytorch.org/get-started/previous-versions/ — official torch 2.13.0 / torchvision 0.28.0 CPU pairing.
++- https://pypi.org/project/pip/26.2.1/ and https://pypi.org/project/wheel/0.46.2/ — proposed package releases, not byte verification.
++- https://github.com/advisories/GHSA-rrmf-rvhw-rf47 — CVE-2025-3000 JIT issue: affected through 2.12.1, fixed 2.13.0. This fixes that documented version range only, not all native security risks. The JIT guard remains defense in depth, not proof of non-reachability.
++- https://github.com/advisories/GHSA-qwm4-qh6w-59xr — pip CVE-2026-13346 fixed at 26.2.0; 26.2.1 meets that floor.
++- https://github.com/advisories/GHSA-8rrh-rw8j-w5fx — wheel CVE-2026-24049 fixed at 0.46.2; the proposed version meets that floor.
++- https://security-tracker.debian.org/tracker/CVE-2025-9230 — bookworm OpenSSL fixed floor 3.0.17-1~deb12u3; historical 3.0.16-1~deb12u1 is below it.
++- https://security-tracker.debian.org/tracker/CVE-2025-4802 — bookworm glibc fixed floor 2.36-9+deb12u11; historical 2.36-9+deb12u10 is below it.
++
++The exact-version metadata resolver was attempted once and returned partial/exit 1: all HTTP requests were refused by local socket permissions. Its original failure receipt is retained in `metadata-refresh-20261004/metadata-resolution.json`. No resolved artifact identities or negative advisory findings can be inferred from this failure. The web checks above are selected advisory checks, NOT exhaustive current clearance. Recheck serializer CVE-2025-32434 / CVE-2026-24747, JIT and native dependencies against the eventual complete lock, alongside pip/wheel/setuptools, torchvision, every transitive wheel and pinned Actions' bundled JavaScript/runtime. Do not bootstrap with the historical vulnerable pip merely to install a newer pip.
++
++## Debian inventory: explicitly incomplete refresh
++
++`native-inventory-review.json` carries the 105 historical binary rows as historical-only comparison records, each marked pending replacement-image verification. It is NOT an inventory of the proposed image. Available Debian fixed versions do not establish installed versions. The new exact OCI manifest/config/layer identities, package database or hash-bound SBOM, binary-to-source mappings, Debian backport dispositions, architecture, repository origin and support coverage remain unavailable. They cannot be supplied by relabeling the old inventory. Package/image downloads are prohibited in this task; no new installed inventory is claimed. Current selected advisory findings above refresh the known risks while full inventory/advisory closure remains a blocker.
++
++## Compatibility review still required
++
++Resolve the candidate OCI amd64 digest and immutable torchvision 0.28.0 commit; verify each artifact and complete dependency closure. Check Python ABI and wheel platform/glibc requirements. Compare new ResNet50 topology, keys/shapes/dtypes/storage layout and forward-independent loaded-state equality against the frozen reference; verify seeded head replacement and exhaustive four optimizer groups using authorized synthetic tests first. Preserve restricted CPU loading, tensor/security checks, no forwards and no fallback. Official pairing does not validate the inspector or acquired weight compatibility. No weights were accessed. RadImageNet remains blocked.
++
++## Daemon-I/O and aggregate storage: retained blockers
++
++CLI timeout/kill is not proof that Docker daemon pull/copy/commit I/O stopped. The reviewed private-daemon ownership, separate controller/watchdog hierarchy, one aggregate deadline, independent cleanup, fresh termination read-back and export-before-disposal remain unchanged. Linux acceptance must prove daemon/containerd/helper containment and cancellation, including controller loss. Uninterruptible kernel I/O may prevent timely termination: report unconfirmed termination, retain resources/evidence, and require externally verified host disposal rather than claiming success or detaching live storage.
++
++The proposed bounded allocations remain 8 GiB data, 512 MiB evidence, 64 MiB runtime tmpfs and a separately bounded state filesystem. Initial /var/tmp admission is 12 GiB; child admission uses ownership-verified allocations and the reviewed remaining-space rule, not a repeated initial threshold. Those are source/mocked guarantees only. Native tests must prove all Docker/containerd data, downloads, temporary files, logs and evidence stay on the intended bounded filesystems; verify backing allocation and no spill, ENOSPC, inode exhaustion, cancellation and teardown. Account separately for host journal and other external writes; neither a loop-volume capacity nor free-space check alone proves an aggregate host-write quota. No such native proof exists here. Do not activate the historical build method or workflow as a workaround.
++
++## Exact next step and gates
++
++Review this supported-version/ABI change and disabled entry point. Next preparation may resolve metadata through an authorized channel, then propose a complete immutable lock and native inventory acquisition procedure for separate approval. Binary acquisition, dependency installation and native acceptance are NOT authorized by this package. Host/runtime inventory, security decision, aggregate storage/I/O acceptance and hash-bound execution authorization remain prerequisites. Passing the Windows mocks does not clear any of them.
+--- a/test_metadata_resolution.py
++++ b/test_metadata_resolution.py
+@@ -45,8 +45,8 @@
+             with self.assertRaises(ValueError):
+                 Resolver(FakeTransport([data])).pypi('pip', '26.2.1')
+ 
+-    def test_cpu_index_exact_cp310_linux_selection(self):
+-        url = 'https://download.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl#sha256=' + 'b' * 64
++    def test_cpu_index_exact_cp312_linux_selection(self):
++        url = 'https://download.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=' + 'b' * 64
+         html = ('<a href="' + url + '">fixture</a>').encode()
+         out = Resolver(FakeTransport([(html, {})])).cpu_index('torch', '2.13.0+cpu')
+         self.assertFalse(out['artifact_bytes_verified'])
+--- /dev/null
++++ b/test_runtime_candidate.py
+@@ -0,0 +1,46 @@
++"""Synthetic/static runtime-refresh tests; no network or native host operations."""
++import contextlib
++import io
++import json
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++import metadata_resolution as m
++import native_launcher
++from test_metadata_resolution import FakeTransport
++
++ROOT = Path(__file__).resolve().parent
++
++
++class RuntimeCandidateTests(unittest.TestCase):
++    def test_new_minor_and_unapproved_state(self):
++        data = json.loads((ROOT / 'runtime-candidate.json').read_text())
++        self.assertEqual(m.CANDIDATES['python'], '3.12.15')
++        self.assertEqual(data['python'], m.CANDIDATES['python'])
++        self.assertEqual(data['wheel_interpreter_abi'], 'cp312-cp312')
++        self.assertIsNone(data['native_inventory'])
++        for key in ('artifact_bytes_verified', 'dependency_closure_verified', 'compatibility_verified',
++                    'security_review_complete', 'native_supervisor_enabled', 'execution_approved',
++                    'security_approved', 'dependencies_approved', 'pilot_execution_authorized'):
++            self.assertIs(data[key], False)
++    def test_cp310_wheel_cannot_be_reused(self):
++        html = ('<a href="https://download.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl#sha256=' + 'a' * 64 + '">old</a>').encode()
++        with self.assertRaisesRegex(ValueError, 'missing'):
++            m.Resolver(FakeTransport([(html, {})])).cpu_index('torch', '2.13.0+cpu')
++    def test_correct_abi_not_gpu(self):
++        html = ('<a href="https://download.pytorch.org/whl/cpu/torch-2.13.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=' + 'a' * 64 + '">gpu</a>').encode()
++        with self.assertRaisesRegex(ValueError, 'missing'):
++            m.Resolver(FakeTransport([(html, {})])).cpu_index('torch', '2.13.0+cpu')
++    def test_native_main_stops_before_bootstrap(self):
++        with patch.object(native_launcher, 'trusted_bootstrap', side_effect=AssertionError('must not inspect host')) as bootstrap, contextlib.redirect_stdout(io.StringIO()) as out:
++            self.assertEqual(native_launcher.main(), 2)
++        bootstrap.assert_not_called()
++        record = json.loads(out.getvalue())
++        self.assertFalse(record['complete']); self.assertFalse(record['pilot_execution_authorized'])
++        self.assertIn('disabled', record['error'])
++    def test_no_package_download_endpoint_added(self):
++        for url in ('https://files.pythonhosted.org/a.whl', 'https://registry-1.docker.io/v2/library/python/blobs/sha256:' + 'a' * 64):
++            self.assertFalse(m.allowed(url))
++
++
++if __name__ == '__main__': unittest.main()

@@ -1,0 +1,20 @@
+{
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\Python314\\python.exe",
+  "executable_sha256": "03168c01b7b7491423350e82c26fee71f35b43694d1319d3c668bda6903a0c38",
+  "platform": "win32",
+  "tests": 13,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "passed": true,
+  "scope": "MetadataBindingTests only; invented records and temporary directories",
+  "network_and_subprocess_denied": true,
+  "acceptance_suite_executed": false,
+  "native_linux_validation": false,
+  "pilot_execution_authorized": false,
+  "source_hashes": {
+    "scripts/performance_v2_native_acceptance.py": "57448da2b905e40716564349db03b3390b2034cd682bff7c53c4c6fe777a4ebd",
+    "tests/test_performance_v2_acceptance_entry.py": "bae7f5e7283333fc606151b98ed840d1070f71248ddc1d8341a0d7ec410027d6"
+  }
+}

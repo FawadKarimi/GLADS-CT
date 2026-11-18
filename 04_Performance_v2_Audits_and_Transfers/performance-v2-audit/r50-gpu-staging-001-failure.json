@@ -1,0 +1,20 @@
+{
+  "stage": "staging_command_parse",
+  "numeric_exit_status": 1,
+  "category": "SyntaxError",
+  "detail": "Unterminated string literal in ZIP-member backslash check; Python parsing failed before any script statements executed.",
+  "staging_created": false,
+  "gpu_attempt_launched": false,
+  "gpu_binding": null,
+  "peak_gpu_memory": null,
+  "automatic_retry": false,
+  "corrected_addon_zip_sha256": "b309ab1092f5bedfce1594f13194d1eba6bb690531f000668b69358661cf44af",
+  "addon_source_lock_sha256": "1fa5aca9144e2f5c826fffec0be1ab2e321f9f37c5795840c868d88d3446cef3",
+  "focused_regression": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "production_execution_authorized": false
+}

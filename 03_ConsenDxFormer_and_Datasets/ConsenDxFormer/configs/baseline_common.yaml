@@ -1,0 +1,93 @@
+extends: base.yaml
+
+project:
+  phase: 1
+
+baseline:
+  name: LungDxFormer
+  source_lock_file: locks/baseline_sources.yaml
+  repository_dir: external/LungDxFormer
+  project_subdir: LungDxFormer
+  released_config: LungDxFormer/configs/config.yaml
+  training_entrypoint: LungDxFormer/src/train.py
+
+frozen_manifest:
+  directory: artifacts/phase0/manifests
+  bundle_sha256: 0c983f0ebbc6dd70623b570c8a657aa14ccc550ac590b577648b3163bc8a01e3
+  unique_patients: 1010
+  unique_ct_series: 1018
+  split_counts:
+    train: 707
+    val: 152
+    test: 151
+
+metadata:
+  columns:
+    patient_id: patient_id
+    image_path: image_path
+    label: label
+  unknown_patient_policy: error
+
+# These values mirror LungDxFormer's pinned released config. B1 overrides only
+# settings that the paper states and that the released config/API can express.
+seed: 42
+device: auto
+
+dataset:
+  image_size: 96
+  num_classes: 3
+  class_names:
+    - benign
+    - indeterminate
+    - malignant
+  split_mode: csv_or_random
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  batch_size: 16
+  num_workers: 0
+  in_channels: 1
+
+augmentation:
+  train:
+    hflip: true
+    vflip: false
+    rotation_deg: 15
+    translation_frac: 0.08
+    intensity_jitter: 0.08
+    gaussian_noise_std: 0.01
+  eval:
+    enabled: false
+
+model:
+  cnn_channels: [32, 64, 128]
+  embed_dim: 128
+  transformer_heads: 4
+  transformer_layers: 2
+  transformer_mlp_ratio: 4.0
+  dropout: 0.2
+  attention_dropout: 0.1
+  classifier_hidden_dim: 128
+  use_transformer: true
+  use_positional_encoding: true
+  use_spatial_attention: true
+  fusion_type: concat
+  use_raw_transformer_in_fusion: false
+
+training:
+  epochs: 6
+  lr: 0.0001
+  weight_decay: 0.00001
+  label_smoothing: 0.0
+  class_weights: auto
+  early_stopping_patience: 8
+  scheduler: reduce_on_plateau
+  scheduler_patience: 3
+  scheduler_factor: 0.5
+  amp: false
+  grad_clip_norm: 1.0
+
+evaluation:
+  save_confusion_matrix: true
+  save_roc_curves: true
+  save_predictions_csv: true

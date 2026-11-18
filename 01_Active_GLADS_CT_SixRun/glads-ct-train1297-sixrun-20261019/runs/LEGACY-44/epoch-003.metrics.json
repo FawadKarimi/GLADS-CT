@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.3801634311676,
+  "epoch": 3,
+  "learning_rates": {
+    "encoder_bias_normalization": 5.500000000000001e-05,
+    "encoder_weights": 5.500000000000001e-05,
+    "head_bias_normalization": 0.00055,
+    "head_weights": 0.00055
+  },
+  "objective": "LEGACY",
+  "patience": {
+    "best": 0.61216457960644,
+    "last_epoch": 3,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 1
+  },
+  "run_id": "LEGACY-44",
+  "seed": 44,
+  "selected_so_far": {
+    "diagnostic_ce": 0.808384634736743,
+    "epoch": 2,
+    "macro_f1": 0.61216457960644
+  },
+  "train": {
+    "accuracy": 0.551272166538165,
+    "confusion_matrix": [
+      [
+        312,
+        187,
+        83
+      ],
+      [
+        122,
+        206,
+        114
+      ],
+      [
+        30,
+        46,
+        197
+      ]
+    ],
+    "diagnostic_ce": 0.8956173909059744,
+    "epoch_objective_loss": 0.9144234240865097,
+    "exposed_views_sha256": "596f77d6bb9d7fe3a01f2021f31592a28ca5fd30863f365fc731d8ff669a9150",
+    "loss_totals": {
+      "hard": 0.8792567278576268,
+      "legacy": 0.9144234240865097,
+      "reader": 0.0
+    },
+    "macro_f1": 0.551637787450534,
+    "max_grad_norm": 4.544042110443115,
+    "mean_batch_objective_loss": 0.916450757805894,
+    "mean_grad_norm": 3.0581641807788755,
+    "per_class": {
+      "0": {
+        "f1": 0.5965583173996175,
+        "precision": 0.6724137931034483,
+        "recall": 0.5360824742268041,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.4676503972758229,
+        "precision": 0.46924829157175396,
+        "recall": 0.4660633484162896,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.5907046476761618,
+        "precision": 0.5,
+        "recall": 0.7216117216117216,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.5965583173996175,
+        "precision": 0.6724137931034483,
+        "recall": 0.5360824742268041,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.4676503972758229,
+        "precision": 0.46924829157175396,
+        "recall": 0.4660633484162896,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.5907046476761618,
+        "precision": 0.5,
+        "recall": 0.7216117216117216,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8792567355802031
+  },
+  "validation": {
+    "accuracy": 0.5874125874125874,
+    "confusion_matrix": [
+      [
+        26,
+        38,
+        1
+      ],
+      [
+        5,
+        29,
+        4
+      ],
+      [
+        1,
+        10,
+        29
+      ]
+    ],
+    "diagnostic_ce": 0.7756566857801868,
+    "macro_f1": 0.6080713613658482,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5874125874125874,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.5360824742268042,
+        "precision": 0.8125,
+        "recall": 0.4,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.5043478260869565,
+        "precision": 0.37662337662337664,
+        "recall": 0.7631578947368421,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7837837837837837,
+        "precision": 0.8529411764705882,
+        "recall": 0.725,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.5360824742268042,
+        "precision": 0.8125,
+        "recall": 0.4,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.5043478260869565,
+        "precision": 0.37662337662337664,
+        "recall": 0.7631578947368421,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7837837837837837,
+        "precision": 0.8529411764705882,
+        "recall": 0.725,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.7624899081514189
+  }
+}

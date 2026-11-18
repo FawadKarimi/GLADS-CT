@@ -1,0 +1,20 @@
+{
+  "best_checkpoint_sha256": "d24ea626a12a59a5bccab898958af1a99747604b4f6b0164fd297328cb154dba",
+  "objective": "HARD",
+  "retained_checkpoints": {
+    "epoch-003.state.json": {
+      "sha256": "d24ea626a12a59a5bccab898958af1a99747604b4f6b0164fd297328cb154dba",
+      "size_bytes": 400869053
+    },
+    "epoch-020.state.json": {
+      "sha256": "97a5217da86c1d641fe4cbc16484950f590654856483215c9a1b06097ce35f4f",
+      "size_bytes": 400871774
+    }
+  },
+  "run_id": "HARD-44",
+  "seed": 44,
+  "selected_epoch": 3,
+  "status": "complete",
+  "stopped_epoch": 20,
+  "summary_sha256": "1012a92f3793262a9772ec8c51525ccb905735a6b1b82e5fb4a70dd3288fbaf1"
+}

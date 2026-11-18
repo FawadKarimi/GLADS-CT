@@ -1,0 +1,23 @@
+{
+  "result": {
+    "RANDOM_control_matches_retained": true,
+    "initialized_bookkeeping": 0,
+    "model_forwards": 0,
+    "non_backbone_unchanged": true,
+    "rng_unchanged": true,
+    "seed": 42,
+    "supplied_entries": 318,
+    "training_authorized": false,
+    "verified_entries": 318
+  },
+  "combined_state_sha256": "1ef89268cb14b1fb8a135abb45b034f26de8d49f8c390bc0dc69121feb119777",
+  "worker_exit": 0,
+  "supervisor_exit": 0,
+  "launcher_exit": 0,
+  "remaining": [],
+  "zip_bytes": 72690,
+  "zip_sha256": "ef287f993255d083353d8296dc3fcd9855dbceef1187a872f697e9bdf07e9792",
+  "ledger_sha256": "10c67e711f61545f6ee182340f03e1b0b864c0b1706fd543c41dfb6e4c9df5de",
+  "archive_mode": "0600",
+  "archive": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET-NATIVE-IMPORT-001-EVIDENCE.zip"
+}

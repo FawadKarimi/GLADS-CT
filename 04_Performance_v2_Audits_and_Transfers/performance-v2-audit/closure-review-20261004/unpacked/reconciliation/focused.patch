@@ -1,0 +1,260 @@
+--- /dev/null
++++ b/reconciliation/RECONCILIATION.md
+@@ -0,0 +1,56 @@
++# Metadata reconciliation and next bounded plan — 2026-10-04
++
++Review only. All approvals remain false; native supervisor remains disabled; Stage B paused. No Stage A files changed. No packages/images downloaded or installed, no Docker, weights, research or workflow execution. The historical local socket-failure report remains unchanged: this later owner-supplied archive resolves selected metadata gaps, not artifact-byte or execution gates.
++
++## Evidence and verification
++
++Supported-runtime ZIP SHA-256: `808c6df3c515802f3c4b237010cd9f67abf1b21ad54a97539dac7659a3b0aadc`; all 135 ledger entries verified. Supplied metadata ZIP SHA-256: `b9c3397f798464b85560d0f8faf2763c2b428144e3d677304985b115720a8edb` (computed locally, not compared with a separately supplied expected digest).
++
++All 15 receipts bind to 11 unique metadata byte streams with matching SHA-256 and size. Retrieval times in the supplied receipts span 2026-10-04 10:10:30–10:10:37 UTC; these are attributed to the supplied run, not locally witnessed network responses. Replayed parsing offline against the preserved resolver reproduces PyPI wheel selections, CPU-index selections, torchvision commit and both Actions lockfile candidate lists. The OCI index selects exactly one Linux amd64 manifest, whose actual archived metadata bytes match its descriptor digest and size. No authentication signature, live origin or original execution host is independently attested by this archive. A metadata checksum is not a package checksum verification.
++
++OCI tag at retrieval: `python:3.12.15-slim-bookworm`.
++
++- Index metadata SHA-256: `54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3`.
++- Resolved amd64 manifest: `sha256:9901e0a8d75037d8242ed43155cbcb2d1f61be1356383d8054afb59fd50e39c4` (1,752 archived bytes verified).
++- Config descriptor: `sha256:3abf66fa95bf9285d35eac802319797d29d01fbcfef9c0cd560f73d97f4289e8`, 5,684 bytes; bytes NOT acquired.
++- torchvision v0.28.0 commit: `8fb87713a24951e639c494b0f2a8a81b5f8e33a6`; tag-reference metadata only, not source-tree/topology verification.
++
++The complete URL/descriptor/size plan is `reconciled.json`, including each layer and its expected compressed size. Nothing in that file is an acquisition or installation authorization.
++
++| Proposed wheel | Publisher-reported SHA-256 | Expected bytes from supplied metadata |
++|---|---|---:|
++| torch-2.13.0+cpu-cp312-cp312-manylinux_2_28_x86_64.whl | `4ca4a9394b0c771238a4f73590fdbbc4debad85ed0fa63d026ae1b085da7d6e2` | Unknown — stop before acquisition |
++| torchvision-0.28.0+cpu-cp312-cp312-manylinux_2_28_x86_64.whl | `b545d46f4d2f9d30381281cf22874bfe1d32a8a7b0ee8396fccde89f30c6a9d9` | Unknown — stop before acquisition |
++| pip-26.2.1-py3-none-any.whl | `71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e` | 1,816,632 |
++| wheel-0.46.2-py3-none-any.whl | `33ae60725d69eaa249bc1982e739943c23b34b58d51f1cb6253453773aca6e65` | 29,971 |
++| setuptools-84.0.0-py3-none-any.whl | `51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670` | 818,216 |
++
++All five wheel-byte verification flags remain false. No CPU wheel METADATA or dependency closure is present.
++
++## Actions and advisory limits
++
++Checkout commit `11bd71901bbe5b1630ceea73d27597364c9af683`: lockfile metadata hash `8db9b3d9236032153dbec34a878b7d6697bab2f09ce4428485252b9a3055d028`, 264,924 bytes; 32 non-dev lockfile candidate records reproduced.
++
++Upload-artifact commit `ea165f8d65b6e75b540449e92b4886f43607fa02`: hash `fddf66cd1d48dde834ddf318b0b0d6107174bc82298aef3e1f8e6e34b1adfe31`, 531,417 bytes; 166 non-dev candidate records reproduced. These are dependency-path counts, not distinct audited packages. Original lists, versions and publisher integrity strings remain in metadata-resolution.json. No npm artifacts, bundled dist equivalence, action.yml runtime, runner Node version or npm advisory closure have been verified. SHA-1 integrity entries in the historical lock are not upgraded to SHA-256 claims.
++
++Five GitHub pip-ecosystem `affects` queries (torch@2.13.0, torchvision@0.28.0, pip@26.2.1, wheel@0.46.2, setuptools@84.0.0) returned archived `[]` bodies. Each body is two bytes, SHA-256 `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`. Exact URLs/time/hash receipts are retained. Original resolver reports pagination_complete=true; response headers were not exported, so that assertion cannot be independently reconstructed. Empty exact-version results are not exhaustive security clearance: local +cpu variants, vendored/native libraries, transitives, OS packages, unpublished issues and later advisories remain outside this observation.
++
++## Compatibility choices still open
++
++Keep Python 3.12.15 as the candidate, not an approved deployment choice. Python 3.12 is supported through October 2028; 3.13/3.14 offer longer horizons (2029/2030). A newer supported interpreter may be preferable for a long-lived environment, but entails different exact OCI identity, cp313/cp314 wheel selection, native ABI and full dependency checks. The current evidence selects only cp312; it does not validate alternatives or free-threaded ABI variants. Revisit the choice before acquisition approval; do not silently switch. This disposable inspection environment is separate from the university Python and controller interpreter. Source: [Python lifecycle](https://devguide.python.org/versions/), checked 2026-10-04.
++
++Setuptools 84 inherits removal of pkg_resources introduced in 82.0.0, not a removal first occurring in 84. Static review of the exact inspector, frozen-reference import paths and every selected wheel must search ordinary/dynamic imports, namespace declarations and resource/entry-point usage. Absence of text matches is not a runtime proof. Later authorized isolated CPU import/loading tests must exercise these paths without model forwards. If a dependency needs pkg_resources, STOP and propose an explicit reviewed migration or alternative pin with a new security assessment; no monkeypatch, hidden fallback or automatic downgrade. Source: [setuptools history](https://setuptools.pypa.io/en/latest/history.html#v82-0-0), checked 2026-10-04.
++
++Full dependency closure is unresolved. wheel requires packaging>=24.0; the five selected wheels are not a complete lock. From verified wheel METADATA (or hash-bound publisher core metadata first), evaluate Requires-Python, Requires-Dist and markers for CPython 3.12 Linux x86_64 with no optional test/doc/core extras unless explicitly needed. Recursively choose exact wheels and verify constraints, CPU variant, manylinux/glibc compatibility, hashes, sizes and yanked status. Do not reuse cp310 closure or generic PyPI torch GPU requirements as evidence for the CPU wheel. Record all transitive decisions and vendored native components. No sdists, setup.py, build hooks, pip resolver execution, install or import in the byte-only phase.
++
++## Proposed next phases — NOT EXECUTED or authorized here
++
++1. Metadata completion first: obtain body-free, bounded HEAD metadata for the two exact CPU URLs (record redirect chain, final approved host, Content-Length and encoding) or an authoritative size-bearing index. Resolve missing transitive metadata and exact versions. Reject missing/conflicting size, unexpected redirect, architecture or version. HEAD establishes a publisher size assertion, not byte verification. Freeze a reviewed URL/hash/size allowlist before any GET. No automatic tag refresh or alternate version selection.
++2. Separately authorize byte-only acquisition to a fresh external no-overwrite directory. Use a small reviewed streaming downloader, not pip/Docker. Proposed limits: one file at a time, 15-second connection/read timeout, 30-minute aggregate deadline, no retries/resume, exact expected size cap plus one-byte overflow detection, TLS verification, no automatic redirects beyond reviewed exact destinations. Record request/final URL, redirects, headers, UTC, received length and independent SHA-256. Compare with frozen expected size/hash before atomic finalization. On mismatch preserve bounded failure receipt/partial bytes in quarantine, never label verified or continue to installation. Never log bearer tokens.
++3. OCI byte verification is a separately permitted subset of step 2: fetch only the manifest-pinned config and four blobs in reconciled.json, not Docker pull or a mutable tag. Check compressed byte sizes/digests before any later bounded offline archive inspection. No extraction or decompression in the download step. Later reviewed inventory extraction must honor OCI layer ordering/whiteouts, reject path escapes and special files, enforce expanded-byte/member limits, and recover dpkg/source mappings and interpreter/bootstrap identities without executing image code.
++4. Disk admission for compressed byte-only staging: known config+four-layer subtotal is 45,903,889 bytes; adding pip/wheel/setuptools gives 48,568,708 bytes. Total B = 48,568,708 + exact torch size + exact torchvision size + all new transitive-wheel sizes (deduplicated). B is UNKNOWN today. Require free disk >= 2*B + 1 GiB and an enforced staging quota at that same bound, allowing one retained acquisition plus a review copy and bounded receipts. Refuse acquisition until B and the quota implementation are reviewed; do not guess from the old image or claim 12 GiB is enough. Decompression/installation/native acceptance needs a separate expanded-size budget; this compressed-byte budget does not resolve aggregate daemon storage.
++5. Retain immutable acquisition receipt, prior metadata bytes, expected/observed hash ledger, original manifest/index and configuration, HTTP metadata excluding credentials, failure/partial records and a complete closure manifest. Later source inspection may read only bounded METADATA/WHEEL/RECORD and source text as data, never import or execute it. Artifact integrity is distinct from trust, compatibility and execution permission.
++
++## Remaining blockers and next concrete action
++
++Review the metadata conclusions and authorize, separately, metadata-only completion of missing CPU sizes and closure. Then review an exact byte-acquisition manifest before permitting downloads. New Debian inventory/backport review remains absent; config and layer descriptors alone cannot resolve it. Bootstrap installer security, pkg_resources compatibility, topology/loaded-state/storage contracts and synthetic Linux acceptance remain open. Pinned Actions' bundled code and Node/native dependencies need review. Daemon-I/O termination and aggregate no-spill storage remain blocked exactly as described in SUPPORTED_RUNTIME_REVIEW.md. No metadata result clears them. All execution/security/pilot approvals remain false.
+--- /dev/null
++++ b/reconciliation/reconcile_runtime_metadata.py
+@@ -0,0 +1,113 @@
++"""Offline archive reconciliation. No network, subprocess, imports from wheels or installation."""
++import hashlib
++import importlib.util
++import json
++from pathlib import Path, PurePosixPath
++import zipfile
++
++BASE_SHA = '808c6df3c515802f3c4b237010cd9f67abf1b21ad54a97539dac7659a3b0aadc'
++META_SHA = 'b9c3397f798464b85560d0f8faf2763c2b428144e3d677304985b115720a8edb'
++
++def ident(b):
++    return {'sha256': hashlib.sha256(b).hexdigest(), 'size_bytes': len(b)}
++
++def archive(path, expected):
++    raw = Path(path).read_bytes()
++    if ident(raw)['sha256'] != expected:
++        raise ValueError('archive hash mismatch')
++    with zipfile.ZipFile(path) as z:
++        names = [i.filename for i in z.infolist() if not i.is_dir()]
++        if len(names) != len(set(names)):
++            raise ValueError('duplicate archive members')
++        out = {}
++        for n in names:
++            p = PurePosixPath(n)
++            if p.is_absolute() or '..' in p.parts or '\\' in n or ':' in n:
++                raise ValueError('unsafe archive path')
++            out[n] = z.read(n)
++        return out
++
++def verify_receipts(files, result):
++    urls = {}
++    for r in result['receipts']:
++        name = r['evidence_file']
++        raw = files[name]
++        if ident(raw) != {'sha256': r['metadata_sha256'], 'size_bytes': r['size_bytes']}:
++            raise ValueError('receipt hash/size mismatch')
++        if name != r['metadata_sha256'] + '.metadata' or r['url'] in urls:
++            raise ValueError('receipt identity mismatch')
++        if r['artifact_bytes_downloaded'] is not False:
++            raise ValueError('unexpected artifact acquisition')
++        urls[r['url']] = raw
++    return urls
++
++def reconcile(files, module):
++    result = json.loads(files['metadata-resolution.json'])
++    if result['candidate_versions'] != module.CANDIDATES or result['errors'] or result['execution_approved'] is not False:
++        raise ValueError('candidate/status mismatch')
++    urls = verify_receipts(files, result)
++    class Offline:
++        def get(self, url, headers=None):
++            return urls[url], {}  # Header absence is NOT proof of archived pagination headers.
++    resolver = module.Resolver(Offline())
++    r = result['resolved']
++    derived = {n: resolver.pypi(n, module.CANDIDATES[n]) for n in ('pip', 'wheel', 'setuptools')}
++    derived.update(torch_cpu=resolver.cpu_index('torch', '2.13.0+cpu'), vision_cpu=resolver.cpu_index('torchvision', '0.28.0+cpu'), vision_commit=resolver.vision_commit())
++    for n in ('checkout', 'upload-artifact'):
++        derived[n] = resolver.actions_inventory(n, r[n]['commit'])
++    for n, value in derived.items():
++        if value != r[n]:
++            raise ValueError('derived metadata mismatch: ' + n)
++    base = r['base']
++    index = json.loads(files[base['index_metadata_sha256'] + '.metadata'])
++    choices = [m for m in index['manifests'] if m.get('platform', {}).get('os') == 'linux' and m['platform'].get('architecture') == 'amd64' and m['platform'].get('variant') in (None, '')]
++    if len(choices) != 1 or choices[0]['digest'] != base['platform_manifest_digest']:
++        raise ValueError('OCI platform binding')
++    raw = files[base['platform_manifest_digest'].split(':')[1] + '.metadata']
++    if 'sha256:' + ident(raw)['sha256'] != choices[0]['digest'] or len(raw) != choices[0]['size']:
++        raise ValueError('OCI manifest digest/size')
++    manifest = json.loads(raw)
++    if manifest['config'] != base['config_publisher_descriptor'] or manifest['layers'] != base['layer_publisher_descriptors']:
++        raise ValueError('OCI descriptor mismatch')
++    advisories = [x for x in result['receipts'] if '/advisories?' in x['url']]
++    if len(advisories) != 5 or any(json.loads(files[x['evidence_file']]) != [] for x in advisories):
++        raise ValueError('advisory response mismatch')
++    for n in ('torch', 'torchvision', 'pip', 'wheel', 'setuptools'):
++        if r['advisory-' + n] != {'entries': [], 'pagination_complete': True, 'security_approved': False}:
++            raise ValueError('advisory derived mismatch')
++    artifacts = []
++    for n in ('pip', 'wheel', 'setuptools'):
++        artifacts.extend(dict(x, kind='wheel') for x in r[n]['wheels'])
++    for n in ('torch_cpu', 'vision_cpu'):
++        artifacts.append(dict(r[n], size=None, kind='wheel', size_status='not supplied; acquisition blocked until exact bounded size is established'))
++    for kind, desc in [('oci_config', manifest['config']), *[('oci_layer', x) for x in manifest['layers']]]:
++        artifacts.append(dict(kind=kind, filename=desc['digest'].replace(':', '_'), size=desc['size'], publisher_reported_sha256=desc['digest'].split(':')[1], url='https://registry-1.docker.io/v2/library/python/blobs/'+desc['digest'], artifact_bytes_verified=False))
++    return {'archive_sha256': META_SHA, 'base_archive_sha256': BASE_SHA, 'receipt_count': len(urls), 'unique_metadata_files': len({x['evidence_file'] for x in result['receipts']}), 'derived_metadata_reproduced': list(derived), 'oci': base, 'vision_commit': r['vision_commit'], 'actions': {n: {'commit': r[n]['commit'], 'candidate_count': len(r[n]['lockfile_candidates']), 'bundled_dist_equivalence_verified': False, 'runner_node_verified': False} for n in ('checkout','upload-artifact')}, 'advisory_receipts': advisories, 'advisory_limit': 'Five archived empty bodies verified; HTTP response headers absent, pagination_complete attributed to resolver, not independently header-verified. Not security clearance.', 'artifacts': artifacts, 'known_size_subtotal': sum(x['size'] for x in artifacts if x['size'] is not None), 'full_dependency_closure_verified': False, 'execution_approved': False, 'security_approved': False, 'pilot_execution_authorized': False}
++
++def main():
++    parent = Path(__file__).parent
++    base = archive(parent/'performance-v2-supported-runtime-review-20261004-final.zip', BASE_SHA)
++    ledger = json.loads(base['file-hashes.json'])
++    for name, item in ledger.items():
++        if ident(base[name]) != item:
++            raise ValueError('base ledger mismatch: '+name)
++    target = parent/'performance-v2-metadata-reconciliation-20261004'
++    target.mkdir(exist_ok=False)
++    for name, raw in base.items():
++        dest = target/name
++        dest.parent.mkdir(exist_ok=True, parents=True)
++        dest.write_bytes(raw)
++    meta = archive('D:/Downloads/metadata-run-01.zip', META_SHA)
++    files = {n.removeprefix('metadata-run-01/'): raw for n, raw in meta.items()}
++    spec = importlib.util.spec_from_file_location('reviewed_metadata', target/'metadata_resolution.py')
++    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
++    report = reconcile(files, module)
++    output = target/'reconciliation'; output.mkdir()
++    for name, raw in files.items():
++        (output/name).write_bytes(raw)
++    (output/'reconciled.json').write_text(json.dumps(report, indent=2, sort_keys=True)+'\n', encoding='utf-8')
++    (output/'reconcile_runtime_metadata.py').write_bytes(Path(__file__).read_bytes())
++    print(json.dumps({k:v for k,v in report.items() if k not in ('artifacts','advisory_receipts','oci')}, indent=2))
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ b/reconciliation/test_reconciliation.py
+@@ -0,0 +1,55 @@
++"""Offline integrity regressions; no network, installation or native operations."""
++import copy
++import importlib.util
++import json
++from pathlib import Path
++import unittest
++import reconcile_runtime_metadata as check
++
++ROOT = Path(__file__).parent
++spec = importlib.util.spec_from_file_location('resolver', ROOT.parent/'metadata_resolution.py')
++resolver = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(resolver)
++
++class ReviewTests(unittest.TestCase):
++    def setUp(self):
++        self.files = {p.name:p.read_bytes() for p in ROOT.glob('*.metadata')}
++        self.files['metadata-resolution.json'] = (ROOT/'metadata-resolution.json').read_bytes()
++
++    def mutate_result(self, fn):
++        d = json.loads(self.files['metadata-resolution.json']); fn(d)
++        self.files['metadata-resolution.json'] = json.dumps(d).encode()
++
++    def test_offline_reproduction_and_limits(self):
++        r = check.reconcile(self.files, resolver)
++        self.assertEqual(r['receipt_count'], 15)
++        self.assertEqual(r['known_size_subtotal'], 48568708)
++        self.assertEqual(sum(x['size'] is None for x in r['artifacts']), 2)
++        self.assertFalse(r['execution_approved'])
++        self.assertFalse(r['full_dependency_closure_verified'])
++
++    def test_metadata_corruption_rejected(self):
++        name = next(n for n in self.files if n.endswith('.metadata'))
++        self.files[name] += b' '
++        with self.assertRaises(ValueError): check.reconcile(self.files, resolver)
++
++    def test_wrong_publisher_hash_rejected(self):
++        self.mutate_result(lambda d:d['resolved']['torch_cpu'].update(publisher_reported_sha256='0'*64))
++        with self.assertRaises(ValueError): check.reconcile(self.files, resolver)
++
++    def test_oci_descriptor_substitution_rejected(self):
++        self.mutate_result(lambda d:d['resolved']['base']['config_publisher_descriptor'].update(size=1))
++        with self.assertRaises(ValueError): check.reconcile(self.files, resolver)
++
++    def test_approval_substitution_rejected(self):
++        self.mutate_result(lambda d:d.update(execution_approved=True))
++        with self.assertRaises(ValueError): check.reconcile(self.files, resolver)
++
++    def test_missing_receipt_bytes_rejected(self):
++        del self.files[next(n for n in self.files if n.endswith('.metadata'))]
++        with self.assertRaises(KeyError): check.reconcile(self.files, resolver)
++
++    def test_deterministic(self):
++        self.assertEqual(check.reconcile(self.files, resolver), check.reconcile(copy.deepcopy(self.files), resolver))
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ b/reconciliation/VALIDATION.json
+@@ -0,0 +1,24 @@
++{
++  "artifact_bytes_verified": false,
++  "base_content_unchanged": true,
++  "base_entries_verified": 135,
++  "command": [
++    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
++    "-B",
++    "-m",
++    "unittest",
++    "-v",
++    "test_reconciliation"
++  ],
++  "execution_approved": false,
++  "exit_code": 0,
++  "linux_acceptance": false,
++  "live_network_receipts_reverified": false,
++  "metadata_files_verified": 11,
++  "metadata_receipts_verified": 15,
++  "prior_176_tests": "historical result retained; not rerun because native/runtime source unchanged",
++  "runtime": "CPython 3.14.6 Windows",
++  "scope": "offline supplied metadata integrity and synthetic mutations only",
++  "security_approved": false,
++  "tests_passed": 7
++}

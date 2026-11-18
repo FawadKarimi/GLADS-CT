@@ -1,0 +1,786 @@
+{
+  "schema": "performance_v2_pilot_protocol_v2",
+  "created": "2026-10-07",
+  "status": "specification_only_not_a_launcher",
+  "stage_a_base": "f8278c34d6145170345dce0a518276adf0bb4144",
+  "pilot_execution_authorized": false,
+  "stage_b_paused": true,
+  "exploratory_development": true,
+  "primary_metric": "validation_macro_f1",
+  "secondary_metric": "accuracy_equals_micro_f1_for_complete_single_label_3_class",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "cohort": {
+    "train_nodules": 807,
+    "val_nodules": 143,
+    "expected_train_patients": 437,
+    "expected_val_patients": 84,
+    "patient_counts_verified_by_v2": true,
+    "class_order": [
+      "benign",
+      "indeterminate",
+      "malignant"
+    ],
+    "test_loader": "absent",
+    "frozen_eligibility_unchanged": true,
+    "patient_count_scope": "accepted archived TRAIN/VALIDATION input report; no fresh source-image or test-prediction read-back",
+    "input_cohort_sha256": "74ade0365dc6b7ea5593b4736692956b863b4245e122829e2921b0937663b5b1",
+    "train_class_counts": [
+      348,
+      224,
+      235
+    ],
+    "validation_class_counts": [
+      65,
+      38,
+      40
+    ],
+    "historical_test": {
+      "nodules": 183,
+      "patients": 99,
+      "class_counts": [
+        98,
+        41,
+        44
+      ],
+      "already_inspected": true,
+      "future_result_label": "exploratory_historical_benchmark"
+    },
+    "identity_fields": [
+      "patient_id",
+      "series_instance_uid",
+      "nodule_id",
+      "split",
+      "true_class"
+    ],
+    "outcome_semantics": "unchanged frozen hard-label/reader/eligibility rules; no rebinning, filtering, rerendering or split changes"
+  },
+  "model": {
+    "id": "performance_v2_r50_hybrid_v2",
+    "status": "exact_proposed_topology_not_implemented_or_approved",
+    "specification": "docs/performance_v2_model_topology_v2.md",
+    "plain_resnet50_control": false,
+    "historical_custom_CNN_relabelled": false,
+    "backbone": {
+      "family": "ResNet50 V1.5",
+      "blocks": [
+        3,
+        4,
+        6,
+        3
+      ],
+      "input_channels": 3,
+      "stem": {
+        "out": 64,
+        "kernel": 7,
+        "stride": 2,
+        "padding": 3,
+        "bias": false
+      },
+      "maxpool": {
+        "kernel": 3,
+        "stride": 2,
+        "padding": 1,
+        "ceil_mode": false
+      },
+      "groups": 1,
+      "width_per_group": 64,
+      "replace_stride_with_dilation": [
+        false,
+        false,
+        false
+      ],
+      "downsample_stride_location": "bottleneck 3x3",
+      "zero_init_residual": false,
+      "source_classifier": "validate source 2048-to-1000 state then exclude fc.weight/fc.bias from integration only",
+      "reference_commit": "6043bc250768b129e90a5321e318c1d51ee48a5c",
+      "reference_source_sha256": "7499a5059ad7b1a1f8f7543c04b4a13795140fad837c38530b48ff5d9610bf6e",
+      "approved_execution_library_pin": null
+    },
+    "features": [
+      {
+        "id": "C1",
+        "stage": "layer2",
+        "channels": 512,
+        "size": [
+          28,
+          28
+        ],
+        "stride": 8
+      },
+      {
+        "id": "C2",
+        "stage": "layer3",
+        "channels": 1024,
+        "size": [
+          14,
+          14
+        ],
+        "stride": 16
+      },
+      {
+        "id": "C3",
+        "stage": "layer4",
+        "channels": 2048,
+        "size": [
+          7,
+          7
+        ],
+        "stride": 32
+      }
+    ],
+    "token_projection": {
+      "input": 2048,
+      "output": 128,
+      "kernel": 1,
+      "bias": true,
+      "normalization": "none"
+    },
+    "position": {
+      "shape": [
+        1,
+        49,
+        128
+      ],
+      "learned": true,
+      "class_token": false,
+      "initialization": "truncated_normal mean0 std0.02 bounds[-2,2]"
+    },
+    "transformer": {
+      "embed_dim": 128,
+      "heads": 4,
+      "layers": 2,
+      "mlp_dim": 512,
+      "pre_norm": true,
+      "layernorm_eps": 1e-05,
+      "qkv_bias": true,
+      "activation": "GELU exact",
+      "dropout": 0,
+      "attention_dropout": 0,
+      "final_extra_norm": false,
+      "batch_first": true
+    },
+    "spatial_attention": {
+      "projection": [
+        128,
+        1
+      ],
+      "kernel": 1,
+      "bias": true,
+      "softmax_over": 49,
+      "operation": "transformer feature map multiplied by spatial softmax without renormalization"
+    },
+    "deep_fusion": {
+      "C3_projection": [
+        2048,
+        128
+      ],
+      "projection_bias": true,
+      "concat_channels": 256,
+      "fusion_conv": [
+        256,
+        128
+      ],
+      "kernel": 1,
+      "bias": false,
+      "post": "BatchNorm2d then ReLU"
+    },
+    "hierarchical_fusion": [
+      {
+        "lateral": "C2",
+        "input_channels": 1024,
+        "output_size": [
+          14,
+          14
+        ]
+      },
+      {
+        "lateral": "C1",
+        "input_channels": 512,
+        "output_size": [
+          28,
+          28
+        ]
+      }
+    ],
+    "fusion_rule": "bilinear deep upsample align_corners=false antialias=false; lateral 1x1 Conv(no bias)-BN-ReLU to128; sigmoid(1x1 Conv256-to128 with bias on concat); deep + gate*lateral; 3x3 Conv128-to128 padding1 no bias-BN-ReLU",
+    "batchnorm": {
+      "eps": 1e-05,
+      "momentum": 0.1,
+      "affine": true,
+      "track_running_stats": true,
+      "trainable": true
+    },
+    "pool": "adaptive average pool final 128x28x28 to 128",
+    "diagnostic_head": [
+      128,
+      3
+    ],
+    "head_type": "linear_with_bias_no_dropout",
+    "reader_head": [
+      128,
+      3
+    ],
+    "reader_head_present_in": [
+      "SEPARATE-010",
+      "CAPACITY-010"
+    ],
+    "ordinal_head_present": false,
+    "reader_or_mask_forward_inputs": false,
+    "fixed_shared_architecture_for_all_initializations": true,
+    "historical_module_semantics_reference": "src/consendxformer/phase4_model.py",
+    "historical_module_source_sha256": "06fef01fffdb2b4ae9ec2c1b611547a4768bd9b9f548072def1c455394e1ed89"
+  },
+  "initializations": [
+    "RANDOM",
+    "IMAGENET",
+    "RADIMAGENET"
+  ],
+  "initialization_release": {
+    "RANDOM": false,
+    "IMAGENET": false,
+    "RADIMAGENET": false
+  },
+  "input": {
+    "source": "unchanged_frozen_rendered_64_grayscale_ROI_bytes",
+    "source_rerendering": false,
+    "new_windows_views_crops": false,
+    "decode_policy": "frozen Stage A grayscale rule retained; archived report accepted for 950 finite float32 [64,64] arrays in [0,1], no division-by-255 triggers; original bytes not decoded here",
+    "size": [
+      224,
+      224
+    ],
+    "resize": "CPU torch.nn.functional.interpolate bilinear",
+    "align_corners": false,
+    "antialias": true,
+    "transform_support_verified": true,
+    "train_order": [
+      "decode_once",
+      "resize",
+      "independent_hflip_vflip",
+      "bilinear_affine_rotation_translation",
+      "clip_0_1",
+      "replicate_3_channels",
+      "normalize"
+    ],
+    "validation_order": [
+      "decode_once",
+      "resize",
+      "replicate_3_channels",
+      "normalize"
+    ],
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "status": "proposed_common_interface_not_RadImageNet_verified"
+    },
+    "augmentation": {
+      "hflip_probability": 0.5,
+      "vflip_probability": 0.5,
+      "angle_uniform_degrees": [
+        -10,
+        10
+      ],
+      "translation_uniform_fraction_per_axis": [
+        -0.08,
+        0.08
+      ],
+      "fill_before_normalization": 0,
+      "interpolation": "bilinear",
+      "affine_center_rounding_implementation": {
+        "status": "proposed_v2_not_verified_stage_a_equivalence",
+        "api": "torchvision.transforms.functional.affine",
+        "backend": "tensor",
+        "center_for_224": [
+          112,
+          112
+        ],
+        "scale": 1,
+        "shear": [
+          0,
+          0
+        ],
+        "fill": 0,
+        "angle_direction": "clockwise_degrees",
+        "translation_order": [
+          "horizontal",
+          "vertical"
+        ],
+        "translation_timing": "post_rotation",
+        "fraction_to_pixels": "int(round(fraction * axis_length)); ties-to-even on the floating-point product",
+        "antialias": "resize_only; affine has no antialias argument"
+      },
+      "intensity_jitter": false,
+      "noise": false,
+      "random_crop": false,
+      "scale": false,
+      "mixup": false,
+      "cutmix": false,
+      "tta": false
+    },
+    "transform_support_scope": "accepted synthetic CPU report only; oblique partial-edge pixels remain uncertified; no Stage A equivalence or GPU claim",
+    "evidence": {
+      "report_sha256": "cb147a14c487aa3487fddc08407aa0e77256e3a5611b667c2c153c76cf3dccff",
+      "transform_report_sha256": "3e79f956d99d39e79cd81dd218397f66f8bc4faa71ce07ccb62220ed3a69c894",
+      "preserved_register": "configs/performance_v2/pretraining_provenance_v1.json",
+      "register_sha256": "ec3a487005bb8328aea01177bb7cc399adb6ebeb4cde8f10ebcb1cc2b6dabab7"
+    }
+  },
+  "loader": {
+    "batch_size": 16,
+    "shuffle_train": true,
+    "drop_last": false,
+    "workers": 0,
+    "weighted_sampler": false,
+    "gradient_accumulation": false
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "weight_decay_conv_linear_weights": 0.0001,
+    "weight_decay_bias_norm_affine": 0,
+    "parameter_group_ledger_required": true,
+    "parameter_groups": [
+      {
+        "name": "encoder_weights",
+        "lr_source": "encoder",
+        "weight_decay": 0.0001
+      },
+      {
+        "name": "encoder_bias_normalization",
+        "lr_source": "encoder",
+        "weight_decay": 0
+      },
+      {
+        "name": "head_weights",
+        "lr_source": "head",
+        "weight_decay": 0.0001
+      },
+      {
+        "name": "head_bias_normalization",
+        "lr_source": "head",
+        "weight_decay": 0
+      }
+    ],
+    "partition_rule": "every trainable parameter exactly once by identity; no omissions or overlap; reject unclassified parameters before optimizer construction"
+  },
+  "lr_recipes": {
+    "A": {
+      "encoder": 0.0001,
+      "head": 0.001
+    }
+  },
+  "scheduler": {
+    "unit": "epoch_before_first_update",
+    "epochs_1_5": "0.1+0.9*(epoch-1)/4",
+    "epochs_6_100": "0.01+0.99*(1+cos(pi*(epoch-6)/94))/2",
+    "plateau": false
+  },
+  "stopping": {
+    "maximum_epochs": 100,
+    "minimum_stop_epoch": 20,
+    "patience": 15,
+    "improvement_strictly_greater_than": 0.0001,
+    "metric": "diagnostic_validation_macro_f1",
+    "patience_rule": "best raw macro-F1 improvement by > min_delta; maintain separately from tolerance-ranked checkpoint"
+  },
+  "precision": {
+    "dtype": "float32",
+    "amp": false,
+    "gradient_clip_norm": 1.0,
+    "ema": false,
+    "ensembles": false
+  },
+  "hard_loss": {
+    "formula": "sum_i w[y_i]*(-log_softmax(logits_d)[i,y_i])/sum_i w[y_i]",
+    "class_weights": "N_train/(3*n_train_c)",
+    "label_smoothing": 0,
+    "validation_diagnostic_ce": "unweighted"
+  },
+  "checkpoint_selection": {
+    "maximum": "diagnostic_validation_macro_f1",
+    "tolerance": 1e-12,
+    "algorithm": "candidate set within tolerance of global maximum; minimum unweighted diagnostic validation CE; then earliest epoch",
+    "total_auxiliary_loss_used": false
+  },
+  "aggregate_selection": {
+    "requires_all_three_seeds": true,
+    "maximum": "arithmetic mean selected-checkpoint validation macro-F1",
+    "tolerance": 0.0001,
+    "algorithm": "candidate set within tolerance of global maximum; minimum mean unweighted diagnostic validation CE; then fixed order",
+    "record_exact_maximum": true,
+    "failed_or_incomplete_recipe": "unrankable",
+    "accuracy_selection": false,
+    "phase3_order": [
+      "HARD",
+      "LEGACY",
+      "SHARED-010",
+      "SEPARATE-010"
+    ],
+    "population": "only nominated candidate and declared closest control; complete seeds42/43/44 for both"
+  },
+  "rng": {
+    "streams": [
+      "encoder_initialization",
+      "diagnostic_head_initialization",
+      "auxiliary_head_initialization",
+      "shuffle",
+      "augmentation",
+      "shared_fusion_initialization"
+    ],
+    "seed_derivation": "sha256('performance-v2-rng-v1|'+decimal_seed+'|'+stream_name) first 8 bytes big-endian modulo 2**32; no arm/recipe in common streams",
+    "common_initialization_and_transform_hash_tests_required": true,
+    "deterministic_algorithms": true,
+    "cudnn_benchmark": false,
+    "cuda_workspace_and_version_pins": null,
+    "execution_settings_verified": false,
+    "shared_fusion_policy": "isolated shared_fusion_initialization stream for every new non-backbone encoder module in declared topology order; same bytes across initialization/objective arms at each seed"
+  },
+  "logging": [
+    "per_epoch_actual_lr_per_group",
+    "weighted_train_losses",
+    "unweighted_validation_diagnostic_ce",
+    "accuracy_micro_f1",
+    "macro_and_per_class_metrics",
+    "confusion_matrix",
+    "elapsed_time",
+    "actual_completed_epochs",
+    "parameter_groups",
+    "initial_state_and_rng_hashes"
+  ],
+  "phase1": {
+    "matrix": "eligible RANDOM/IMAGENET/RADIMAGENET x recipe A x seed42 on identical proposed hybrid",
+    "model_id": "performance_v2_r50_hybrid_v2",
+    "objective": "HARD",
+    "seed": 42,
+    "recipe": "A",
+    "lambda_o": 0,
+    "lambda_a": 0,
+    "maximum_runs": 3,
+    "maximum_runs_if_radimagenet_blocked": 2,
+    "blocked_arms_remain_blocked": true,
+    "all_eligible_underconverged_or_invalid": "stop, record evidence and version a common amendment before any extra run",
+    "no_automatic_second_lr_recipe": true,
+    "initialize_later_runs_from": "original source weights, never trained screening checkpoint"
+  },
+  "phase2": {
+    "start_gate": "separate release after complete seed42 initialization screen and locked eligible winner",
+    "initialization": "original selected source weights, NEVER trained phase1 selected checkpoint",
+    "lr_recipe": "A",
+    "lambda_o": 0,
+    "lambda_a": 0,
+    "reader_loss": "mean_i[-sum_c q[i,c]*log_softmax(logits_reader)[i,c]]; unweighted",
+    "legacy_loss": "-sum_i,c w[c]*((1-u[i])*onehot(y[i],c)+u[i]*q[i,c])*log_softmax(logits_d)[i,c] / max(sum_i,c w[c]*((1-u[i])*onehot(y[i],c)+u[i]*q[i,c]),1e-8)",
+    "recipes": [
+      {
+        "id": "HARD",
+        "loss": "L_h"
+      },
+      {
+        "id": "LEGACY",
+        "loss": "exact Stage A batch-mass-normalized diagnostic loss"
+      },
+      {
+        "id": "SHARED-010",
+        "loss": "L_h + 0.1*CE(q,p_d)"
+      },
+      {
+        "id": "SEPARATE-010",
+        "loss": "L_h + 0.1*CE(q,p_r)"
+      }
+    ],
+    "maximum_runs": 4,
+    "hard_reuse": "reuse exactly one selected Phase1 seed42 HARD execution only after equality of every execution contract and input binding; otherwise stop/version budget",
+    "maximum_new_runs_if_exact_reuse": 3,
+    "auxiliary_head": {
+      "shape": [
+        128,
+        3
+      ],
+      "type": "linear",
+      "lr": 0.001,
+      "policy": "same schedule, decay, initialization distribution; separate RNG; no dropout/projection",
+      "inference": "discard auxiliary head; no labels/masks in forward"
+    },
+    "contrasts": [
+      "LEGACY-HARD",
+      "SHARED-HARD",
+      "SEPARATE-SHARED same lambda",
+      "SEPARATE-HARD"
+    ],
+    "capacity_control": {
+      "trigger": "separately declared reader-specific mechanism claim, not automatic on SEPARATE nomination",
+      "authorized": false,
+      "id": "CAPACITY-010",
+      "maximum_runs": 3,
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "objective": "L_h + 0.1*unweighted_CE(hard_label,p_r) with exactly the same supporting head",
+      "independent_confirmation": false
+    },
+    "triage": {
+      "malignant_recall_mean_drop_pp_vs_matched_HARD_strictly_greater_than": 5,
+      "failed_nonfinite_flag": true,
+      "clinical_noninferiority_margin": false,
+      "automatic_runner_up_substitution": false,
+      "screen_scope": "seed42 matched HARD descriptive recall flag; not a three-seed mean",
+      "repeat_mean_scope": "only when HARD is the nominated control and has all three completed seeds; otherwise report not estimable under this budget",
+      "extra_HARD_runs_to_fill_flag": false
+    },
+    "seed": 42
+  },
+  "budget": {
+    "phase1_cap": 3,
+    "phase2_additional_cap": 3,
+    "phase3_additional_cap": 4,
+    "core_cap": 10,
+    "core_cap_if_radimagenet_blocked": 9,
+    "capacity_followup_cap": 3,
+    "maximum_with_conditional_capacity": 13,
+    "maximum_with_conditional_capacity_radimagenet_blocked": 12,
+    "default_new_B1_training_runs": 0,
+    "automatic_extra_runs": false,
+    "requires_exact_HARD_and_seed42_reuse": true,
+    "count_all_candidates_failures_restarts": true,
+    "failed_attempts_consume_attempt_budget": true,
+    "retry_policy": "no automatic or result-driven restart/retry; stop and version budget if a replacement attempt is needed",
+    "narrowed_objective_only_core_cap": 8,
+    "narrowing_requires_prior_documented_hypothesis_amendment": true,
+    "gpu_hour_estimate": null,
+    "actual_GPU_time_logged_only_after_authorized_execution": true
+  },
+  "resource_policy": "one explicitly authorized GPU later; batch16 OOM stops common protocol, no arm-specific AMP/batch/fallback",
+  "deferred": [
+    "recipe_B",
+    "SHARED-030",
+    "SEPARATE-030",
+    "ordinal_and_attention_loss_reintroduction",
+    "conditional_matched_B1_or_plain_CNN_control",
+    "BiomedCLIP",
+    "LIDC_LUNA_SSL",
+    "URL",
+    "MOW-Net",
+    "PCGrad",
+    "learned_weighting",
+    "independent_evaluation_implementation",
+    "formal_tests",
+    "Stage_B"
+  ],
+  "unresolved_release_fields": [
+    "exact_topology_and_initialization_review_and_implementation",
+    "all_new_parameter_group_mapping_and_isolated_RNG_tests",
+    "compatible_secure_runtime_dependency_and_native_inventory_closure",
+    "source_weight_terms_all_split_overlap_and_semantic_mapping",
+    "RadImageNet_bytes_license_interface_and_overlap",
+    "accepted_archived_inputs_bound_to_future_execution",
+    "oblique_partial_edge_transform_limit",
+    "GPU_determinism_and_resource_feasibility",
+    "synthetic_implementation_acceptance",
+    "explicit_GPU_release"
+  ],
+  "supersedes_schedule": "pilot_protocol_v1.json remains immutable historical plain-CNN specification",
+  "predecessor_sha256": "93c1e3c9f9d4216a65b05cbdda4e40b2a62e8d6f085c80504d5c683800e6dcbd",
+  "amendment_sha256": "9f47644bebe6eeab4479435d65b45a6a0b0e85f57c67c1b15e743dd0c04eb33e",
+  "baseline_retraining_required": false,
+  "pretrained_integration_approved": false,
+  "topology_approved": false,
+  "training_implementation_exists": false,
+  "frozen_reference": {
+    "name": "LungDxFormer B1; B0 is separate historical context",
+    "upstream_commit": "0e5bcadcadfce5ea99df8484d23705d7bd4d778a",
+    "execution_commit": "21d25fde6a268222cc124e194da4d0f502b25d73",
+    "archive_sha256": "7046201b4e88ab87509028bdace0351c84b83e10284a587eca063b5ea9d53a40",
+    "evidence_document": "docs/stage_a_evidence_reconciliation.md",
+    "evidence_document_sha256": "de51801a44b0b710c8a77a506b1c49c0bd77d1998413805557eae9bfdad18ea2",
+    "runs": [
+      {
+        "seed": 42,
+        "experiment_id": "phase3-b1-s42-67d865cd9ff05a4c",
+        "epochs": 34,
+        "selected_epoch": 24
+      },
+      {
+        "seed": 43,
+        "experiment_id": "phase3-b1-s43-7947651595ca43ab",
+        "epochs": 23,
+        "selected_epoch": 13
+      },
+      {
+        "seed": 44,
+        "experiment_id": "phase3-b1-s44-be7454203e5b8aa0",
+        "epochs": 28,
+        "selected_epoch": 18
+      }
+    ],
+    "source_root": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase3/experiments/",
+    "checkpoint_relative_reference": "checkpoints/best.pt plus original metadata sidecar and artifact_manifest.json",
+    "predictions": "original saved validation/test tables per experiment; resolve exact paths/hashes through archived manifest before comparison",
+    "selection": "minimum validation loss; disclose mismatch with v2 validation Macro-F1 selection",
+    "original_tensor_bytes_freshly_verified": false,
+    "prediction_metrics_recomputed": false,
+    "automatic_retraining": false,
+    "automatic_inference": false,
+    "once_only_binding_audit_before_comparison": "verify original source/checkpoint metadata, prediction file hashes, exact patient/series/nodule/split/label/class order and metric definitions; no new score computation authorized here"
+  },
+  "baseline_exception": {
+    "required": false,
+    "authorized": false,
+    "reason": null,
+    "scientific_claim": null,
+    "invalid_or_missing_binding": null,
+    "why_recovery_or_frozen_inference_is_insufficient": null,
+    "minimum_control_family_and_run_count": null,
+    "protocol_and_budget_revision": null,
+    "explicit_owner_execution_authorization": false,
+    "mismatch_action": "stop and document; never auto-launch B1"
+  },
+  "metric_contract": {
+    "class_order": [
+      "benign",
+      "indeterminate",
+      "malignant"
+    ],
+    "prediction": "argmax in fixed order; first class wins exact ties",
+    "macro_f1": "unweighted arithmetic mean of all three class F1 values, including absent classes",
+    "zero_denominator": 0,
+    "secondary": "Accuracy equals Micro-F1 for complete single-label three-class predictions",
+    "confusion_matrix": "rows true, columns predicted",
+    "unit": "nodule with patient-cluster dependence retained",
+    "source": "src/consendxformer/baseline_evaluation.py and phase4_evaluation_metrics.py",
+    "selection_primary": "diagnostic validation Macro-F1",
+    "comparison_primary": "Macro-F1 on predeclared compatible evaluation cohort"
+  },
+  "optimizer_model_partition": {
+    "encoder_scope": [
+      "backbone",
+      "token_projection",
+      "position",
+      "transformer",
+      "dynamic_attention",
+      "deep_fusion",
+      "c2_fusion",
+      "c1_fusion"
+    ],
+    "head_scope": [
+      "diagnostic_head",
+      "reader_head_when_present"
+    ],
+    "decayed_weights": "all Conv/Linear weights including MHA in_proj_weight and out_proj.weight",
+    "zero_decay": "biases, BatchNorm/LayerNorm affine parameters; explicit named exception position.position",
+    "position_exception": "learned positional table belongs to encoder_bias_normalization at encoder LR and decay0; never silently unclassified",
+    "four_group_numeric_policy_unchanged": true,
+    "production_grouping_implemented": false
+  },
+  "screening_selection": {
+    "seed": 42,
+    "requires_complete_eligible_runs": true,
+    "maximum": "selected-checkpoint diagnostic validation Macro-F1",
+    "tolerance": 0.0001,
+    "algorithm": "global maximum candidate set within tolerance, then minimum unweighted diagnostic validation CE, then fixed order",
+    "phase1_order": [
+      "RANDOM-A",
+      "IMAGENET-A",
+      "RADIMAGENET-A"
+    ],
+    "phase2_order": [
+      "HARD",
+      "LEGACY",
+      "SHARED-010",
+      "SEPARATE-010"
+    ],
+    "accuracy_selection": false,
+    "single_seed_ranking_is_exploratory": true,
+    "record_exact_maximum": true
+  },
+  "phase3": {
+    "candidate_count": 1,
+    "control_count": 1,
+    "repeat_seeds": [
+      43,
+      44
+    ],
+    "maximum_new_runs": 4,
+    "reuse_seed42_only_if_exact": true,
+    "nomination_metric": "validation only",
+    "primary_claim_declared_before_repeats": true,
+    "control_by_claim": {
+      "separate_output_effect": "SHARED-010",
+      "whole_extra_output_addition": "HARD"
+    },
+    "candidate_and_control_must_be_distinct_and_completed_phase2_screens": true,
+    "other_claim": "stop and specify closest control before repeats",
+    "final_selection": "aggregate_selection over complete three-seed candidate/control only; report both and all signs",
+    "no_result_driven_expansion": true
+  },
+  "run_reuse": {
+    "automatic": false,
+    "same_model_id_required": true,
+    "same_protocol_version_required": true,
+    "equality_required": [
+      "effective_scientific_and_execution_config_sha256",
+      "source_revision_and_source_files_sha256",
+      "topology_and_module_initialization_spec_sha256",
+      "source_weight_file_and_loaded_state_sha256",
+      "common_encoder_and_diagnostic_head_initial_state_sha256",
+      "train_validation_cohort_identity_label_order_sha256",
+      "source_image_and_supervision_input_bindings_sha256",
+      "transform_contract_and_implementation_sha256",
+      "optimizer_groups_and_rates_schedule_sha256",
+      "objective_coefficients_and_reductions_sha256",
+      "rng_streams_seeds_shuffle_augmentation_sha256",
+      "runtime_hardware_precision_determinism_sha256",
+      "stopping_checkpoint_selection_metric_definition_sha256"
+    ],
+    "additional_required": [
+      "complete valid receipt and output-manifest binding",
+      "no failed/incomplete run reuse",
+      "record exactly one physical run with multiple analysis roles"
+    ],
+    "excluded_administrative_fields_only": [
+      "screen_or_repeat_phase_label",
+      "review_timestamp",
+      "analysis_role_alias"
+    ],
+    "v1_plain_CNN_run_reuse_allowed": false,
+    "mismatch_action": "stop; separately version budget; no implicit additional HARD run"
+  },
+  "confirmation": {
+    "historical_test_is_exploratory": true,
+    "matching_cases_alone_proves_fairness": false,
+    "B1_retraining_erases_test_exposure": false,
+    "independent_cohort_may_use_frozen_B1_inference": true,
+    "must_freeze": [
+      "primary_contrast_and_estimand",
+      "patient_cluster_sampling_unit",
+      "all_seed_aggregation",
+      "uncertainty_and_multiplicity",
+      "practically_worthwhile_effect_if_claimed",
+      "candidate_and_analysis_plan"
+    ],
+    "exclude_patient_overlap_with": [
+      "either_method_train",
+      "either_method_validation",
+      "pretraining"
+    ],
+    "repeated_seeds_are_not_independent_patients": true,
+    "nested_CV_requires_fold_specific_control_plan": true
+  }
+}

@@ -1,0 +1,371 @@
+{
+  "active_step": null,
+  "checks": {
+    "affine_angle_-10": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "exterior_pixels": 3671,
+      "interior_pixels": 45643,
+      "max_abs_error": 1.7683477004926118e-07,
+      "output_sha256": "6aab73ef5dbf2de44b34d99aa35236dcf6e4886c2ffb55c5ae2f5b9ace54fab0",
+      "partially_supported_edge_pixels": "not numerically certified by this fixture",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        45643
+      ]
+    },
+    "affine_angle_10": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "exterior_pixels": 3671,
+      "interior_pixels": 45643,
+      "max_abs_error": 1.8856320604943022e-07,
+      "output_sha256": "7cf739b1e02ada38679b641c8723dcc2a4c036cf98ffe5470f14459f690ee5d2",
+      "partially_supported_edge_pixels": "not numerically certified by this fixture",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        45643
+      ]
+    },
+    "affine_clockwise_90": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.1444091796875e-05,
+      "output_sha256": "5905a1f2e0a30f8d381b77bb3f8cb587e0ed80c9f12bb71b641b98190fda7d4c",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "affine_counterclockwise_90": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.1444091796875e-05,
+      "output_sha256": "b7ca0a681f5bf50b29c1a30502b245dc20ce3f69bca6449a54f7c152fdea3fb5",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "affine_identity": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.1444091796875e-05,
+      "output_sha256": "2bd4705441378b10b8e5d6869b35f3b31863c40108754cd46dff3edcbdc12f72",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "affine_negative_translation": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.1444091796875e-05,
+      "output_sha256": "dbb620b640d563ccec8fb02f96032da34b11d4751b4f62427fb8e3a703b8f423",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "affine_positive_translation": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.1444091796875e-05,
+      "output_sha256": "5bf73429f592b77c1c2293a785a1ef5c57e8bc6dd34221fa4eaf76ae19273dcd",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "affine_rotation_then_translation": {
+      "atol": 5e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 4.57763671875e-05,
+      "output_sha256": "33ca43963c0c5128b8efef97e2cdf269cd6eca09da69e9b27a5c6d35f4b6d3d2",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "clipping_replication_normalization": {
+      "atol": 1e-06,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.3623918793115308e-07,
+      "output_sha256": "d5d798952c283ce1525522d17135343f8e09f2618eafd19657a5f9dc407df1d1",
+      "rtol": 0,
+      "shape": [
+        1,
+        3,
+        224,
+        224
+      ]
+    },
+    "cpu_process_guard": null,
+    "cpu_threads": null,
+    "disable_gradients": null,
+    "flip_horizontal": {
+      "atol": 0,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 0.0,
+      "output_sha256": "e4ff9cec9d0d1a290454644aa0caa45e8d71d5abcda32998da638e8fee731e06",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "flip_vertical": {
+      "atol": 0,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 0.0,
+      "output_sha256": "e40bf4d96daa4bf9f30e8576ee08e7b4f81d511fe38e052ac1e939d4cdb1f746",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "fraction_to_pixel_rounding": {
+      "ties": "ties-to-even on floating product; horizontal then vertical"
+    },
+    "grayscale_scaling_validation": {
+      "checks": "uint8/float32 raw and unit ranges; NaN/Inf/negative/>255/shape rejected"
+    },
+    "import_numpy": null,
+    "import_torch": null,
+    "import_torchvision": null,
+    "resize_checkerboard": {
+      "atol": 1e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 4.359654020902326e-06,
+      "output_sha256": "e5aaa695538b0436472e16f6548a2844b4af09917ebb149eb4f7b4f169724fc6",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "resize_ones": {
+      "atol": 1e-06,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 0.0,
+      "output_sha256": "3e3cdee24c52a922c1d6680248a8d9e725d506a0130b3b81d5b7b8092f6e830a",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "resize_ramp": {
+      "atol": 1e-05,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 1.371515041537208e-07,
+      "output_sha256": "39f2ecf122779fa919091237b6662983f7ccc5bc1f6d3b25170067111e948e8b",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "resize_zeros": {
+      "atol": 1e-06,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "max_abs_error": 0.0,
+      "output_sha256": "ba0ee4b797b99449ebc7396d09562a0f64ec8795eabf62376fe36e289fb0f3c8",
+      "rtol": 0,
+      "shape": [
+        1,
+        1,
+        224,
+        224
+      ]
+    },
+    "synthetic_train_validation_chains": {
+      "train": {
+        "atol": 0.0003,
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "max_abs_error": 8.98526335250116e-05,
+        "output_sha256": "09777f18c6bdc9a29077d95beed0d52a37d0b9d6fbdf42b96e729697da2f5c03",
+        "rtol": 0,
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ]
+      },
+      "validation": {
+        "atol": 5e-05,
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "max_abs_error": 8.39082021641957e-07,
+        "output_sha256": "eaf81cf57d8eb21ea2de61f1546924a9a66a1f2d806d4fefdea1ba39c6c455db",
+        "rtol": 0,
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ]
+      }
+    }
+  },
+  "contract": {
+    "affine": {
+      "angle": "degrees_clockwise",
+      "antialias": "not provided by affine; antialias=True applies only to resize",
+      "api": "torchvision.transforms.functional.affine",
+      "backend": "tensor",
+      "center": [
+        112,
+        112
+      ],
+      "fill": 0,
+      "fraction_to_pixels": "int(round(fraction * axis_length)); Python ties-to-even",
+      "interpolation": "bilinear",
+      "scale": 1,
+      "shear": [
+        0,
+        0
+      ],
+      "translation": "[horizontal, vertical], post-rotation"
+    },
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    },
+    "resize": {
+      "align_corners": false,
+      "antialias": true,
+      "mode": "bilinear",
+      "size": [
+        224,
+        224
+      ]
+    },
+    "status": "proposed_v2_not_stage_a_equivalence",
+    "tolerances": {
+      "affine_atol": 5e-05,
+      "flips_repetition_atol": 0,
+      "normalized_train_chain_atol": 0.0003,
+      "normalized_validation_chain_atol": 5e-05,
+      "resize_general_atol": 1e-05,
+      "rtol": 0,
+      "scaling_constants_normalization_atol": 1e-06
+    }
+  },
+  "executable": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+  "failed_step": null,
+  "failure_traceback": null,
+  "fixture_sha256": {
+    "checkerboard": "a48c520cdbe301267f10cf178aede67079ac9a2c0f3dcedae65d2737be0dc935",
+    "geometry": "428a6e8f20f55c0f79d7a7b8a589239050aef71b1d5a301ca085c1f6cd873979",
+    "ones": "3035aac5fb87474c303702f9030301b4e6bb7aee93be3710b8ab8dcea201db70",
+    "ramp": "ff08d91f85524fa876376df596630da875985beecdd8df67bb1f337de5f16d9a",
+    "zeros": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+  },
+  "gpu_api_calls": 0,
+  "model_forwards": 0,
+  "package_versions": {
+    "numpy": "2.2.6",
+    "torch": "2.3.0+cu121",
+    "torchvision": "0.18.0+cu121"
+  },
+  "passed_steps": [
+    "cpu_process_guard",
+    "import_numpy",
+    "import_torch",
+    "import_torchvision",
+    "cpu_threads",
+    "disable_gradients",
+    "grayscale_scaling_validation",
+    "resize_zeros",
+    "resize_ones",
+    "resize_ramp",
+    "resize_checkerboard",
+    "flip_horizontal",
+    "flip_vertical",
+    "affine_identity",
+    "affine_positive_translation",
+    "affine_negative_translation",
+    "affine_clockwise_90",
+    "affine_counterclockwise_90",
+    "affine_rotation_then_translation",
+    "affine_angle_-10",
+    "affine_angle_10",
+    "fraction_to_pixel_rounding",
+    "clipping_replication_normalization",
+    "synthetic_train_validation_chains"
+  ],
+  "pilot_execution_authorized": false,
+  "python": "3.10.17",
+  "runtime_versions": {
+    "numpy": "2.2.6",
+    "torch": "2.3.0+cu121",
+    "torchvision": "0.18.0+cu121"
+  },
+  "schema": "performance_v2_synthetic_cpu_transforms_v1",
+  "scope": "synthetic_cpu_transforms_only",
+  "script_sha256": "3203c0d99072e2bc03574b67e1ad47a8ea61bf5dbef3ee8572594274897efab6",
+  "stage_a_equivalence_verified": false,
+  "status": "passed",
+  "training_performed": false,
+  "transforms_checked": true,
+  "warnings": []
+}

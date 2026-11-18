@@ -1,0 +1,64 @@
+{
+  "accounting_sha256": "de0139fe96e2bfa5d250f93850894567ce76ddb6d2094085893ba517bbff9530",
+  "available_bytes": 30474563584,
+  "controller_outer_numeric_exit": 0,
+  "filesystem": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n",
+  "filesystem_exit": 0,
+  "free_inodes": 27838788,
+  "private_paths": [
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "device": 64768,
+      "exit": 0,
+      "inode": 5767169,
+      "mode": "0o755",
+      "path": "/home",
+      "stderr": "",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "device": 64768,
+      "exit": 0,
+      "inode": 7078041,
+      "mode": "0o755",
+      "path": "/home/chaidir",
+      "stderr": "",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "device": 64768,
+      "exit": 0,
+      "inode": 7091996,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-scratch",
+      "stderr": "",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "device": 64768,
+      "exit": 0,
+      "inode": 7903537,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-reports",
+      "stderr": "",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "device": 64768,
+      "exit": 0,
+      "inode": 7248483,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-replication-20261013",
+      "stderr": "",
+      "uid": 1009
+    }
+  ],
+  "quota_note": "disabled formats recorded by previous authenticated accounting; no quota mutation",
+  "quota_observation_sha256": "de0139fe96e2bfa5d250f93850894567ce76ddb6d2094085893ba517bbff9530",
+  "uid": 1009,
+  "utc": "2026-10-13T17:29:12Z"
+}

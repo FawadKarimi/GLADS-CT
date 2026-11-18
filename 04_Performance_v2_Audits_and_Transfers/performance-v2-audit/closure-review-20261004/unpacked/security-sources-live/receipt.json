@@ -1,0 +1,234 @@
+{
+  "retrieved_utc": "2026-09-28T11:19:20.951999+00:00",
+  "sources": [
+    {
+      "file": "pip-0.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=torch%402.10.0&per_page=100",
+      "sha256": "2af454973d2e3bd34725f80e27213cecbd2732dbe3b83c32c45e6a2659235cf5",
+      "size_bytes": 2126,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-1.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=torchvision%400.25.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-2.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=numpy%402.2.6&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-3.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=pillow%4012.3.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-4.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=fsspec%402026.9.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-5.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=networkx%403.4.2&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-6.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=sympy%401.14.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-7.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=mpmath%401.3.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-8.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=typing_extensions%404.16.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-9.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=filelock%404.0.4&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-10.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=Jinja2%403.1.6&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-11.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=MarkupSafe%403.0.3&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-12.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=setuptools%4084.0.0&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-13.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=pip%4023.0.1&per_page=100",
+      "sha256": "d7c4071b3012a3067f51ad6b85ca16d2237c01511d39e1183c85fb621342a53a",
+      "size_bytes": 25211,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-14.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=setuptools%4065.5.1&per_page=100",
+      "sha256": "9425b92022f6de17256268b59b80bb990da635b22cf061f5ff96d7c23dee572f",
+      "size_bytes": 14147,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "pip-15.json",
+      "url": "https://api.github.com/advisories?ecosystem=pip&affects=wheel%400.45.1&per_page=100",
+      "sha256": "e810be4f952cc51207c1da7cb8aa88daad7cc46705845662bb567a99db7274d6",
+      "size_bytes": 13105,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "checkout.json",
+      "url": "https://api.github.com/advisories?ecosystem=actions&affects=actions/checkout%404.2.2&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "upload-artifact.json",
+      "url": "https://api.github.com/advisories?ecosystem=actions&affects=actions/upload-artifact%404.6.2&per_page=100",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "python-31018.html",
+      "url": "https://www.python.org/downloads/release/python-31018/",
+      "sha256": "96daa7ddba008edc93d13e1431ac9963429b70ae4d25402ad20f9964d2571ab4",
+      "size_bytes": 8298,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "python-31019.html",
+      "url": "https://www.python.org/downloads/release/python-31019/",
+      "sha256": "755f064366b02b0c1b882e070c7cbcf8d534959a44caad344e847cdab7615432",
+      "size_bytes": 9487,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "python-31020.html",
+      "url": "https://www.python.org/downloads/release/python-31020/",
+      "sha256": "6c63293389e76f6cce9bb79cfc4e92d40275cfee3e7dafa2d9f579f12ccf49b0",
+      "size_bytes": 9327,
+      "pagination_incomplete": false
+    },
+    {
+      "file": "python-31021.html",
+      "url": "https://www.python.org/downloads/release/python-31021/",
+      "sha256": "ca0a87916160502c725d809c938d3cd95979826352b2caa24966bdff2a57c540",
+      "size_bytes": 11804,
+      "pagination_incomplete": false
+    }
+  ],
+  "errors": [
+    {
+      "file": "debian-tracker.json",
+      "url": "https://security-tracker.debian.org/tracker/data/json",
+      "error": "oversize advisory metadata"
+    }
+  ],
+  "inventory_sha256": "2c94569c99ce23a1ed4bf6ff5e2ff091e1dcf1d97076c79066cb96033d8207ab",
+  "lock_sha256": "176630ef627d3e25b970a2493aa8d6742cd1c9ab4d989607f8ad9396c2996faf",
+  "python_queries": [
+    [
+      "torch",
+      "2.10.0"
+    ],
+    [
+      "torchvision",
+      "0.25.0"
+    ],
+    [
+      "numpy",
+      "2.2.6"
+    ],
+    [
+      "pillow",
+      "12.3.0"
+    ],
+    [
+      "fsspec",
+      "2026.9.0"
+    ],
+    [
+      "networkx",
+      "3.4.2"
+    ],
+    [
+      "sympy",
+      "1.14.0"
+    ],
+    [
+      "mpmath",
+      "1.3.0"
+    ],
+    [
+      "typing_extensions",
+      "4.16.0"
+    ],
+    [
+      "filelock",
+      "4.0.4"
+    ],
+    [
+      "Jinja2",
+      "3.1.6"
+    ],
+    [
+      "MarkupSafe",
+      "3.0.3"
+    ],
+    [
+      "setuptools",
+      "84.0.0"
+    ],
+    [
+      "pip",
+      "23.0.1"
+    ],
+    [
+      "setuptools",
+      "65.5.1"
+    ],
+    [
+      "wheel",
+      "0.45.1"
+    ]
+  ]
+}
