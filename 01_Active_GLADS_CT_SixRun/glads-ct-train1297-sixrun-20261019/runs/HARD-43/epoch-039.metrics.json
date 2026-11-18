@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.37147903442383,
+  "epoch": 39,
+  "learning_rates": {
+    "encoder_bias_normalization": 7.282500090119704e-05,
+    "encoder_weights": 7.282500090119704e-05,
+    "head_bias_normalization": 0.0007282500090119704,
+    "head_weights": 0.0007282500090119704
+  },
+  "objective": "HARD",
+  "patience": {
+    "best": 0.7029783761729907,
+    "last_epoch": 39,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 5
+  },
+  "run_id": "HARD-43",
+  "seed": 43,
+  "selected_so_far": {
+    "diagnostic_ce": 0.6926969645876222,
+    "epoch": 34,
+    "macro_f1": 0.7029783761729907
+  },
+  "train": {
+    "accuracy": 0.6985350809560524,
+    "confusion_matrix": [
+      [
+        396,
+        159,
+        27
+      ],
+      [
+        94,
+        292,
+        56
+      ],
+      [
+        18,
+        37,
+        218
+      ]
+    ],
+    "diagnostic_ce": 0.6622630441121979,
+    "epoch_objective_loss": 0.6566828012889434,
+    "exposed_views_sha256": "20d663a89237fcf2fe41817881b57ac2578c1f804974dcadb6d7d254b719bf04",
+    "loss_totals": {
+      "hard": 0.6566828012889434,
+      "legacy": 0.0,
+      "reader": 0.0
+    },
+    "macro_f1": 0.7047147917891895,
+    "max_grad_norm": 4.054390907287598,
+    "mean_batch_objective_loss": 0.6602745350541138,
+    "mean_grad_norm": 2.4916101955785983,
+    "per_class": {
+      "0": {
+        "f1": 0.726605504587156,
+        "precision": 0.7795275590551181,
+        "recall": 0.6804123711340206,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.6279569892473118,
+        "precision": 0.5983606557377049,
+        "recall": 0.6606334841628959,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.759581881533101,
+        "precision": 0.7242524916943521,
+        "recall": 0.7985347985347986,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.726605504587156,
+        "precision": 0.7795275590551181,
+        "recall": 0.6804123711340206,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.6279569892473118,
+        "precision": 0.5983606557377049,
+        "recall": 0.6606334841628959,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.759581881533101,
+        "precision": 0.7242524916943521,
+        "recall": 0.7985347985347986,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.6566828049441839
+  },
+  "validation": {
+    "accuracy": 0.6223776223776224,
+    "confusion_matrix": [
+      [
+        35,
+        25,
+        5
+      ],
+      [
+        5,
+        16,
+        17
+      ],
+      [
+        0,
+        2,
+        38
+      ]
+    ],
+    "diagnostic_ce": 0.8292608699420226,
+    "macro_f1": 0.6072427983539095,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.6223776223776224,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.6666666666666667,
+        "precision": 0.875,
+        "recall": 0.5384615384615384,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.3950617283950617,
+        "precision": 0.37209302325581395,
+        "recall": 0.42105263157894735,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7599999999999999,
+        "precision": 0.6333333333333333,
+        "recall": 0.95,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.6666666666666667,
+        "precision": 0.875,
+        "recall": 0.5384615384615384,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.3950617283950617,
+        "precision": 0.37209302325581395,
+        "recall": 0.42105263157894735,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7599999999999999,
+        "precision": 0.6333333333333333,
+        "recall": 0.95,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.7221876212954373
+  }
+}

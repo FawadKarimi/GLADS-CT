@@ -1,0 +1,1654 @@
+--- /dev/null
++++ b/activation_bridge.py
+@@ -0,0 +1,348 @@
++"""Connected native role handlers. All effects use explicit injectable boundaries.
++
++There is no fake CLI switch. The CLI creates Runtime only from a verified Grant.
++Mock tests replace Runtime/host/TrustedIO, not authorization with an is_fake flag.
++"""
++from copy import deepcopy
++import hashlib
++import json
++import os
++from pathlib import Path
++import time
++
++from activation_trust import Reservations, STATE, valid_grant
++from launcher_binding import command, need, canonical
++from linux_integration import Coordinator, LinuxBackend, Services, recover_records
++from linux_lifecycle import LinuxLifecycle
++from supervisor_v2 import Supervisor, within
++
++
++def restore(host, journal, capsule, token):
++    """Reconstruct from serialized independent state, never inherited Python objects."""
++    need(capsule['token'] == token, 'capsule token')
++    life = LinuxLifecycle(host, journal, token)
++    need(life.boot == capsule['boot_id'], 'capsule boot')
++    life.parent = capsule['controller']['cgroup']
++    life.resources = deepcopy(capsule['resources'])
++    life.control_processes = deepcopy(capsule.get('control_processes', []))
++    life.owned_slices = {x['requested']: x['identity'] for x in life.resources if x['kind'] == 'systemd-slice'}
++    need(set(life.owned_slices) == {life.manager.work_unit, life.manager.guard_unit}, 'capsule slice coverage')
++    identity = life.cgroup_identity()
++    need(identity == capsule['identity'], 'capsule fresh identity')
++    life.guard_path = life.manager.show(life.manager.guard_unit)['ControlGroup']
++    need(not within(life.guard_path, life.work_path) and not within(life.work_path, life.guard_path), 'capsule branches')
++    need(life.owned_slices[life.manager.guard_unit]['inode'] == host.stat(life.cgmount+life.guard_path).st_ino,
++         'guard replaced')
++    return life
++
++
++def controller_unit(token, argv):
++    return ['systemd-run', '--unit=pv2-'+token+'-controller.service', '--service-type=exec',
++            '--property=Restart=no', '--property=KillMode=control-group',
++            '--property=RuntimeMaxSec=1080', '--property=TimeoutStopSec=10',
++            '--property=MemoryMax=268435456', '--property=MemorySwapMax=0',
++            '--property=CPUQuota=25%', '--property=TasksMax=16',
++            '--property=StandardOutput=null', '--property=StandardError=null', '--', *argv]
++
++
++def dispatch(runtime):
++    """Role capability, service placement and single-use reservation precede effects."""
++    role = runtime.g.args.role
++    runtime.verify_role()
++    runtime.reservations.claim(role, runtime.me())
++    handlers = {'bootstrap': bootstrap, 'controller': controller, 'watchdog': watchdog, 'helper': helper}
++    return handlers[role](runtime)
++
++
++def bootstrap(rt):
++    primary = None
++    result = None
++    cleanup_errors = []
++    try:
++        rt.write('controller-start-intent.json', {'argv': controller_unit(rt.token, rt.argv('controller'))})
++        rt.host.command(controller_unit(rt.token, rt.argv('controller')), 10)
++        # Poll the independently managed service, not a long-running Docker CLI.
++        rt.wait_controller(1100)
++    except BaseException as exc:
++        primary = repr(exc)
++    finally:
++        # Independent recovery even on start failure, timeout, or controller loss.
++        try:
++            rt.stop_controller()
++        except BaseException as exc:
++            cleanup_errors.append(repr(exc))
++        try:
++            result = rt.collect_and_finalize()
++        except BaseException as exc:
++            result = {'complete': False, 'collector_error': repr(exc), 'resources_retained': True}
++        result['bootstrap_error'] = primary
++        result['bootstrap_cleanup_errors'] = cleanup_errors
++        result['complete'] = bool(result.get('complete') and primary is None and not cleanup_errors)
++    return rt.finish(result)
++
++
++def controller(rt):
++    journal = rt.evidence('journal')
++    coordinator = Coordinator(rt.host, journal, rt.token)
++    coordinator.l.control_processes = [rt.read('bootstrap.claim.json')['process']]
++    operation = rt.evidence('operation')
++    def save_capsule(identity, name, record=None):
++        capsule = {'token': rt.token, 'boot_id': coordinator.l.boot, 'identity': identity,
++                   'controller': rt.me(), 'resources': deepcopy(coordinator.l.resources), 'record': record,
++                   'control_processes': deepcopy(coordinator.l.control_processes)}
++        rt.write(name, capsule)
++    coordinator.before_watchdog = lambda identity: save_capsule(identity, 'watchdog-bootstrap.json')
++    coordinator.after_record = lambda record: save_capsule(coordinator.l.cgroup_identity(), 'full-state.json', record)
++    inventory = {p: r['sha256'] for p, r in rt.g.inventory['executables'].items()}
++    result = coordinator.execute(inventory, rt.argv('watchdog'), rt.argv('helper'), '1', '1', operation)
++    rt.write('controller-result.json', result)
++    # Bootstrap owns final disposal; the watchdog stays independently alive.
++    return result
++
++
++def watchdog(rt):
++    from watchdog_worker import worker
++    capsule = rt.read('watchdog-bootstrap.json')
++    report = rt.evidence('watchdog')
++    life = restore(rt.host, report, capsule, rt.token)
++    result = worker(life, capsule['identity'], capsule['controller'], report, lambda: rt.controller_done())
++    rt.write('watchdog-result.json', result)
++    # Remain observable until independently stopped by finalization. No busy loop.
++    rt.park_watchdog(1200)
++    return result
++
++
++def helper(rt):
++    from synthetic_helper import blocks
++    # Snapshot admission binds fixed scenario/role chain. No images/containers.
++    rt.read('full-state.json')
++    if rt.g.args.scenario == 'timeout':
++        rt.synthetic_wait(65)  # exceeds operation budget; systemd/parent terminate
++    else:
++        for block in blocks(rt.g.args.scenario): rt.output(block)
++    return {'complete': True, 'scope': 'synthetic_helper_only'}
++
++
++class Runtime:
++    def __init__(self, grant, io, host):
++        need(valid_grant(grant), 'runtime grant')
++        self.g, self.io, self.host = grant, io, host
++        self.token, self.root = grant.args.token, STATE+'/'+grant.args.token
++        self.reservations = Reservations(io, grant)
++
++    def argv(self, role): return command(role, self.token, self.g.args.scenario)
++    def me(self): return self.host.process(os.getpid())
++    def write(self, name, value): self.io.exclusive(self.root+'/'+name, value)
++    def read(self, name): return self.io.json(self.root+'/'+name)
++
++    def verify_role(self):
++        from systemd_ownership import SystemdOwnership
++        from linux_host import resolve_cgroup
++        mount, group = resolve_cgroup(self.host.text('/proc/self/mountinfo'), self.host.text('/proc/self/cgroup'))
++        role = self.g.args.role
++        suffix = 'operation' if role == 'helper' else role
++        unit = 'pv2-'+self.token+'-'+suffix+'.service'
++        raw = self.host.command(['systemctl', 'show', unit, '--property=Id,ActiveState,MainPID,ControlGroup'], 10).decode()
++        found = dict(x.split('=', 1) for x in raw.splitlines() if '=' in x)
++        need(found.get('Id') == unit and found.get('ActiveState') == 'active' and
++             found.get('MainPID') == str(os.getpid()) and found.get('ControlGroup') == group,
++             'role service identity')
++        # Bootstrap must itself be launched in a bounded independent unit by the
++        # owner; no uncontained self-reexec or privilege escalation is performed.
++        limits = {'memory.max': 256*1024**2, 'pids.max': 16}
++        for key, maximum in limits.items():
++            need(0 < int(self.host.text(mount+group+'/'+key)) <= maximum, 'role '+key)
++        need(self.host.text(mount+group+'/memory.swap.max').strip() == '0', 'role swap')
++        q, p = map(int, self.host.text(mount+group+'/cpu.max').split())
++        need(0 < q*4 <= p, 'role cpu')
++        if role != 'bootstrap':
++            parent = 'bootstrap' if role == 'controller' else 'controller'
++            saved = self.read(parent+'.claim.json')['process']
++            current = self.host.process(saved['pid'])
++            need(all(current[k] == saved[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')), 'parent process changed')
++
++    def evidence(self, name):
++        from supervisor_evidence import FileEvidence
++        return FileEvidence(self.root+'/'+name)
++
++    def controller_done(self):
++        try: self.read('controller-result.json'); return True
++        except FileNotFoundError: return False
++
++    def wait_controller(self, timeout):
++        deadline = self.host.now()+timeout
++        unit = 'pv2-'+self.token+'-controller.service'
++        while self.host.now() < deadline:
++            remaining = deadline-self.host.now()
++            raw = self.host.command(['systemctl', 'show', unit, '--property=Id,ActiveState'], min(10, remaining)).decode()
++            need(self.host.now() <= deadline, 'controller wait backend overrun')
++            fields = dict(x.split('=', 1) for x in raw.splitlines() if '=' in x)
++            need(fields.get('Id') == unit, 'controller wait identity')
++            if fields.get('ActiveState') in ('inactive', 'failed'): return
++            self.host.pause(min(.1, max(.001, deadline-self.host.now())))
++        raise TimeoutError('controller aggregate wait')
++
++    def stop_controller(self):
++        unit = 'pv2-'+self.token+'-controller.service'
++        need(self.read('controller-start-intent.json')['argv'] == controller_unit(self.token, self.argv('controller')), 'controller start ownership')
++        raw = self.host.command(['systemctl', 'show', unit, '--property=Id,ActiveState,MainPID,ControlGroup'], 10).decode()
++        fields = dict(x.split('=', 1) for x in raw.splitlines() if '=' in x)
++        need(fields.get('Id') == unit, 'controller stop identity')
++        if fields.get('ActiveState') in ('inactive', 'failed'): return
++        pid = int(fields.get('MainPID', '0'))
++        need(pid > 1, 'controller stop PID')
++        argv = self.host.text('/proc/'+str(pid)+'/cmdline').rstrip('\0').split('\0')
++        expected = self.argv('controller')
++        expected[0] = self.g.inventory['executables'][expected[0]]['resolved_path']
++        need(argv == expected and self.host.process(pid)['cgroup'] == fields.get('ControlGroup'), 'controller stop argv/cgroup')
++        self.host.command(['systemctl', 'stop', unit], 10)
++        try: self.host.process(pid)
++        except FileNotFoundError: return
++        raise ValueError('controller stop unconfirmed')
++
++    def synthetic_wait(self, seconds):
++        end = self.host.now()+seconds
++        while self.host.now() < end: self.host.pause(min(1, end-self.host.now()))
++
++    def park_watchdog(self, seconds): self.synthetic_wait(seconds)
++
++    def wait_watchdog(self, timeout=35):
++        deadline = self.host.now()+timeout
++        while self.host.now() < deadline:
++            try:
++                result = self.read('watchdog-result.json')
++                need(result.get('token') == self.token and result.get('termination_confirmed') is True
++                     and result.get('errors') == [] and 'persistence_error' not in result, 'watchdog result failed')
++                return result
++            except FileNotFoundError:
++                self.host.pause(min(.1, max(.001, deadline-self.host.now())))
++        raise TimeoutError('independent watchdog result deadline')
++    def output(self, block):
++        import sys
++        sys.stdout.buffer.write(block); sys.stdout.buffer.flush()
++
++    def collect_and_finalize(self):
++        # Start only after controller absence is independently confirmed.
++        try:
++            owner = self.read('controller.claim.json')['process']
++            current = self.host.process(owner['pid'])
++            need(not all(current.get(k) == owner.get(k) for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')),
++                 'controller still active; refuse concurrent recovery')
++        except FileNotFoundError:
++            pass
++        try:
++            capsule = self.read('full-state.json')
++        except FileNotFoundError:
++            # Partial provisioning is evidence, not ownership authorization.
++            # The armed watchdog still terminates workload if it was started.
++            partial = {'complete': False, 'resources_retained': True, 'reason': 'no complete ownership capsule'}
++            try:
++                early = self.read('watchdog-bootstrap.json')
++                life = restore(self.host, self.evidence('partial-collector'), early, self.token)
++                partial['termination'] = life.terminate(early['identity'])
++            except BaseException as exc:
++                partial['cleanup_error'] = repr(exc)
++            return partial
++        journal = self.evidence('collector')
++        life = restore(self.host, journal, capsule, self.token)
++        # Independently armed worker must also report its observation. Merely
++        # killing it during successful controller cleanup is not watchdog evidence.
++        watchdog_result = self.wait_watchdog()
++        need(watchdog_result['ownership'] == capsule['identity'], 'watchdog ownership result')
++        recovered = recover_records(self.root+'/journal', self.token, life.boot)
++        need(not recovered['unresolved_intents'] and recovered['observed'] == capsule['resources'], 'journal/capsule mismatch')
++        c = Coordinator.__new__(Coordinator)
++        c.l, c.host, c.journal = life, self.host, journal
++        c.services = Services(self.host, life)
++        backend = LinuxBackend(life, c.services, self.argv('helper'))
++        backend.record = capsule['record']
++        # Loss may precede supervisor cleanup. Observe mount presence, then use
++        # the same receipt/identity checks, never infer successful termination.
++        termination = life.terminate(capsule['identity'])
++        life.require_termination(termination)
++        from linux_host import mount_records
++        if any(m['mount'] == life.root+'/data' for m in mount_records(self.host.text('/proc/self/mountinfo'))):
++            data = next(x['identity'] for x in life.resources if x['kind'] == 'mount' and x['identity']['mount']['mount'] == life.root+'/data')
++            life.detach_volume('data', data, termination)
++        from evidence_export import LocalEvidenceExport
++        exporter = LocalEvidenceExport(life.root+'/evidence', self.root+'/export')
++        def manifest():
++            files = {}
++            for path in Path(life.root+'/evidence').iterdir():
++                need(path.is_file() and not path.is_symlink(), 'evidence member')
++                size = path.stat().st_size
++                need(size <= 512*1024**2, 'evidence size')
++                files[path.name] = {'sha256': self.host.digest(str(path)), 'size_bytes': size}
++            return {'files': files}
++        teardown = c.finalize(backend, exporter, manifest, self.evidence('final'))
++        try: outcome = self.read('controller-result.json')
++        except FileNotFoundError: outcome = {'state': 'FAILED', 'primary_error': 'controller loss'}
++        # Cleanup completion never erases a failed/missing operation result.
++        return {'complete': teardown.get('complete', False) and outcome.get('state') == 'VERIFIED_NATIVE',
++                'operation': outcome, 'watchdog': watchdog_result, 'teardown': teardown, 'scope': 'A_native_synthetic_only'}
++
++    def finish(self, result):
++        result = dict(result, pilot_execution_authorized=False, stage_b='paused', dependency_inspection_authorized=False)
++        outcome = bool(result.get('complete'))
++        provisional = dict(result, complete=False, operation_teardown_complete=outcome, state='EVIDENCE_PENDING')
++        try:
++            self.write('activation-result.json', provisional)
++            self.write('activation-manifest.json', {'files': self.collect_manifest()})
++            self.emit(provisional)  # stdout is provisional before the final durable receipt
++            self.write('activation-receipt.json', {'manifest_sha256': self.host.digest(self.root+'/activation-manifest.json'),
++                                                 'complete': outcome, 'scope': 'A_native_synthetic_only'})
++        except BaseException as exc:
++            result = dict(result, complete=False, state='FAILED', persistence_error=repr(exc))
++            try: self.write('activation-persistence-failure.json', result)
++            except BaseException as persistence: result['failure_record_error'] = repr(persistence)
++            try: self.emit(result)
++            except BaseException as fallback: result['fallback_error'] = repr(fallback)
++        return result
++
++    def emit(self, value):
++        raw = json.dumps(value, sort_keys=True)
++        need(len(raw.encode()) <= 128*1024, 'activation stdout bound')
++        print(raw, flush=True)
++
++    def collect_manifest(self):
++        files, total = {}, 0
++        for path in sorted(Path(self.root).rglob('*')):
++            need(not path.is_symlink(), 'final symlink')
++            if path.is_file():
++                total += path.stat().st_size
++                need(total <= 768*1024**2 and len(files) < 2048, 'final export bound')
++                files[path.relative_to(self.root).as_posix()] = {'sha256': self.host.digest(str(path)), 'size_bytes': path.stat().st_size}
++        return files
++
++
++def validate_activation(root):
++    """Read-only offline acceptance check. A provisional result alone is invalid."""
++    from supervisor_evidence import validate_complete
++    root = Path(root)
++    need(not root.is_symlink(), 'activation root symlink')
++    receipt = json.loads((root/'activation-receipt.json').read_bytes())
++    raw = (root/'activation-manifest.json').read_bytes()
++    need(receipt.get('manifest_sha256') == hashlib.sha256(raw).hexdigest() and receipt.get('complete') is True
++         and receipt.get('scope') == 'A_native_synthetic_only', 'activation incomplete')
++    entries = json.loads(raw)['files']
++    need(0 < len(entries) <= 2048, 'activation member count')
++    actual = {p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
++    need(actual == set(entries) | {'activation-manifest.json', 'activation-receipt.json'}
++         and 'activation-persistence-failure.json' not in actual, 'activation coverage/failure')
++    total = 0
++    for name, rec in entries.items():
++        need(not name.startswith('/') and '\\' not in name and '..' not in name.split('/'), 'activation member path')
++        path = root/name
++        need(not any(p.is_symlink() for p in [path, *path.parents]) and path.is_file(), 'activation member symlink/type')
++        total += path.stat().st_size
++        need(total <= 768*1024**2 and path.stat().st_size == rec['size_bytes'], 'activation size')
++        h = hashlib.sha256()
++        with path.open('rb') as f:
++            while block := f.read(65536): h.update(block)
++        need(h.hexdigest() == rec['sha256'], 'activation bytes')
++    result = json.loads((root/'activation-result.json').read_bytes())
++    need(result.get('state') == 'EVIDENCE_PENDING' and result.get('complete') is False and
++         result.get('operation_teardown_complete') is True, 'activation provisional binding')
++    need(validate_complete(root/'operation')['outcome'] == 'VERIFIED_NATIVE', 'native operation receipt')
++    need(validate_complete(root/'final')['outcome'] == 'CLEANUP_VERIFIED_NATIVE', 'native teardown receipt')
++    return receipt
+--- /dev/null
++++ b/ACTIVATION_REVIEW.md
+@@ -0,0 +1,157 @@
++# Activation bridge source review — 2026-09-29
++
++Base ZIP: `8a0365021c70f5fe0110fee2ef5ef8e209e52c232e81cd5b06aa78b1e8b68988`.
++Source preparation and mocked tests only. No execution, native acceptance,
++security approval, dependency approval or pilot permission is granted here.
++Stage A and production pins are unchanged; Stage B remains paused.
++
++This document supersedes only the implementation-gap statements in historical
++LAUNCHER_REVIEW.md. Historical documents/reports remain unchanged, not evidence
++that the new code has been run on Linux.
++
++## Connected implementation
++
++`native_launcher.py` now dispatches real bootstrap/controller/watchdog/helper
++handlers, not a placeholder backend.launch_role. Native LinuxHost construction
++requires a capability produced by source, inventory, environment and authorization
++verification. The CLI cannot select an injected/fake backend. is_fake=true alone
++does not activate LinuxHost. Historical injected test backends remain available
++to unit tests; they are not CLI configuration or an authorization bypass.
++
++The controller uses existing Coordinator/Supervisor provisioning, snapshots,
++operation budgets and cleanup. It publishes an exclusive pre-watchdog capsule
++after durable storage/branch ownership, before starting either daemon. A new
++watchdog interpreter reads this capsule, reobserves boot, slice paths/inodes and
++its own service identity, and arms through the existing worker. No controller
++boolean substitutes for that arm. A complete capsule is separately persisted
++before operation admission. Helpers use the fixed synthetic payloads; timeout
++waits 65 seconds against the existing 60-second operation cap. Helper units now
++also have explicit 256 MiB/zero-swap/.25-CPU/16-task limits.
++
++The bootstrap is an independently bounded systemd service supplied by the future
++owner launch, outside work/guard branches. It starts the controller with 1080s
++RuntimeMaxSec, polls for at most 1100s, requests identity-bound stop if necessary,
++and always attempts collection. This wrapper does not claim a hard guarantee
++against uninterruptible kernel operations. Watchdog and workload keep their
++existing 1200s bounds. TERM/KILL/read-back retain their independent 10s budgets.
++
++Controller loss is not operation success. The watchdog records independent
++termination and remains available for a bounded wait until the collector stops
++it. The collector checks controller absence, reconstructs the complete capsule,
++compares the durable journal, issues fresh termination receipts, detaches data
++if still mounted, stops the watchdog writer, builds the export manifest, performs
++read-back acknowledgment and calls the existing final teardown. A failed/missing
++controller result stays failed even when teardown succeeds. Partial provisioning
++without a complete capsule is retained for review; any available early capsule
++permits independently verified termination, not speculative resource deletion.
++Unpaired mutation intents remain fail-closed as previously agreed.
++
++The bootstrap is excluded from workload escape checks only by its exact saved
++PID/start-time/executable/cgroup identity. It is not granted a broad system.slice
++exemption. Manager-reported work/guard paths and filesystem-bound teardown remain.
++
++## Authorization, identity and trust
++
++The authorization binds exact scenario (`success`, `output_overflow` or `timeout`),
++the ordered role chain `[bootstrap, controller, watchdog, helper]`, source-manifest
++canonical SHA-256, inventory canonical SHA-256, token, boot and a <=3600s validity
++window. Old scenario-agnostic authorizations now fail. Every interpreter validates
++authorization on entry. Changing scenario/role does not reuse an existing grant.
++No sample file with granted approvals is included.
++
++An exclusive, directory-fsynced token directory under `/var/lib/pv2-acceptance`
++and exclusive per-role claims enforce one bootstrap/controller/watchdog/helper
++per token. Failed reservation durability consumes the token; it is never removed
++for retry. Children require matching predecessor records and current parent
++process identity; helper admission additionally requires the watchdog claim.
++Authority expires for new role admission, not for already admitted safe cleanup.
++
++The stdlib-only launcher bootstrap verifies root ownership, no group/other write
++and no symlink components for authorization/source paths before adjacent imports.
++It verifies source bytes against the owner-authorized canonical manifest hash.
++Python uses `-I -S -B`: no cwd, user/site package startup or bytecode writes.
++The interpreter/stdlib running this initial check is a separately trusted host
++prerequisite; code cannot authenticate the interpreter before it starts.
++
++The native validator rechecks the closed source set and sizes; exact executable
++and declared runtime-closure hashes; root-owned host/security evidence documents;
++boot, architecture, kernel release/build, OS-release bytes, Python version and
++running interpreter; canonical executable aliases; and protected path modes.
++Declared versions are metadata bound to byte hashes, not inferred by running an
++untrusted version command. Runtime closure completeness still requires review;
++the program hashes the declared closure, not an invented automatic proof that
++all potential native dependencies were found. Daemon canonical-path differences
++require an explicit reviewed path amendment, never PATH fallback.
++
++Native command dispatch resolves inventoried commands/embedded helper executables
++to the approved absolute paths. Manifest and inventory hash conventions are sorted
++compact UTF-8 JSON; the package ledger separately records original file bytes.
++Root is trusted. This is not protection against a malicious concurrent root or
++kernel: root-owned immutability and the verified interpreter are trust anchors.
++
++## Proposed prerequisites and invocation — NOT EXECUTED
++
++A dedicated root-owned `/var/lib/pv2-acceptance` filesystem must already exist,
++at most 1 GiB with >=768 MiB available; this bounds control journals and exported
++evidence outside the disposed workload filesystems. At least 12 GiB available
++on /var/tmp is also required. This is a newly explicit host-layout prerequisite,
++not a change to inspection dependency pins or an instruction to mount anything
++during this task. Reuse/exhaustion fails closed. Native host loss may still prevent
++all report channels; no software receipt proves termination after host loss.
++
++The owner must first supply a reviewed fresh Linux x86-64/systemd/cgroup-v2
++inventory and root-owned authorization. Fields beyond the previous schema include
++`kernel_version`, `os_release_sha256`, `runtime_files` (absolute canonical path to
++SHA-256 map), and `runtime_closure_reviewed`. The last boolean is NOT set by this
++package; it represents a later independent review decision. Required fixed
++security/host documents are `/run/pv2-authorization/security_review.json` and
++`host_evidence.json`. Actual bytes/hashes, current inventory and security clearance
++remain missing. No fabricated values are supplied.
++
++Future bounded bootstrap command (NOT EXECUTED; authorization and readiness must
++be independently reviewed first; substitute a newly approved 32-hex token in
++both places and in its authorization):
++
++```sh
++systemd-run --unit=pv2-0123456789abcdef0123456789abcdef-bootstrap.service --service-type=exec --property=Restart=no --property=KillMode=control-group --property=RuntimeMaxSec=1320 --property=TimeoutStopSec=10 --property=MemoryMax=268435456 --property=MemorySwapMax=0 --property=CPUQuota=25% --property=TasksMax=16 -- /usr/bin/python3 -I -S -B /opt/pv2-native-acceptance/native_launcher.py --role bootstrap --token 0123456789abcdef0123456789abcdef --scenario success --source-manifest /opt/pv2-native-acceptance/launcher-sources.json --inventory /run/pv2-authorization/inventory.json --authorization /run/pv2-authorization/authorization.json
++```
++
++Expected retained tree: role claims/reservation/start intent, early/full capsules,
++controller/watchdog results, journal/operation/watchdog/collector/final evidence,
++local read-back-verified export, activation result/manifest/receipt. Missing or
++false completion is failure, not acceptance. Do not delete retained evidence on
++failure. Remote transfer remains an owner step; local copy acknowledgment is not
++GitHub artifact delivery. No historical workflow is published or enabled.
++
++## Remaining implementation versus evidence prerequisites
++
++Connected role handlers, bounded controller creation/polling, serialized watchdog
++reconstruction, synthetic helper dispatch, one-use chain, controller-loss collection
++and export/finalization are implemented as source. Ambiguous partial provisioning
++intentionally retains resources; automatic cleanup without established ownership
++is not an unfinished bypass to add. There is no claimed native acceptance.
++
++Native tests still must establish actual independent interpreter startup/races,
++systemd MainPID and service state behavior, daemon startup/socket readiness,
++controller-loss/cancellation timing, quota enforcement, fd confinement, durability,
++storage capacity and teardown on the chosen host. Mock reconstruction is not a
++real interpreter launch. Stop and retain evidence if any native assumption fails.
++Those observations may reveal further implementation defects requiring review.
++
++A also still requires exact current host/native/runtime inventory, declared
++runtime closure review, dated advisory applicability and residual-risk decisions,
++trusted deployment/authorization and a fresh bounded execution approval. None is
++granted here. B still separately requires reviewed dependency artifacts/security,
++compatibility, inspector Linux acceptance and loading authorization. Passing A
++would not clear B, change pins, permit weight loading or approve pilots.
++
++## Validation
++
++See ACTIVATION_VALIDATION.json and activation-tests.log for actual commands,
++runtime and results. Tests use invented process/clock/filesystem observations
++and mocked OS boundaries, not Docker, cgroups, native services or research data.
++One historical launcher fixture gained explicit scenario/role-chain fields to
++match the now-mandatory contract. Prior rejection tests are preserved. Initial
++development failures (error-message compatibility and Windows path fixture
++semantics) were corrected without weakening production guards. The historical
++acceptance_driver.py Python 3.14 return-in-finally warning remains unchanged.
+--- /dev/null
++++ b/activation_trust.py
+@@ -0,0 +1,169 @@
++"""Root-owned trust boundary and durable, single-use role admission.
++
++No native activation on import. Tests inject a filesystem/OS boundary. A native
++grant is minted only after all checks; is_fake does not mint a native grant.
++"""
++import hashlib
++import json
++import os
++from pathlib import Path
++import stat
++import sys
++import time
++from copy import deepcopy
++
++from launcher_binding import ROOT, PYTHON, authorize, canonical, need, sha, verify_sources
++
++STATE = '/var/lib/pv2-acceptance'
++AUTH = '/run/pv2-authorization'
++_SEAL = object()
++
++
++class Grant:
++    def __init__(self, seal, args, inventory, auth):
++        need(seal is _SEAL, 'grant issuer')
++        self._seal, self.args, self.inventory, self.auth = seal, deepcopy(args), deepcopy(inventory), deepcopy(auth)
++
++
++def valid_grant(grant):
++    return type(grant) is Grant and grant._seal is _SEAL
++
++
++def host_allowed(host):
++    # Historical injected fake tests remain allowed; native hosts never identify
++    # as fake. The public CLI has no host/fake factory argument.
++    return (getattr(host, 'is_fake', False) is True and type(host).__module__.startswith('test_')) or valid_grant(getattr(host, 'grant', None))
++
++
++def no_duplicates(items):
++    out = {}
++    for key, value in items:
++        need(key not in out, 'duplicate JSON key')
++        out[key] = value
++    return out
++
++
++class TrustedIO:
++    """Actual Linux filesystem boundary; never constructed by mocked tests."""
++    def check_path(self, path, directory=False):
++        p = Path(path)
++        need(p.is_absolute() and '..' not in p.parts, 'absolute trusted path required')
++        for component in [*reversed(p.parents), p]:
++            s = os.lstat(component)
++            need(s.st_uid == 0 and not s.st_mode & 0o022 and not stat.S_ISLNK(s.st_mode),
++                 'untrusted ownership/mode/link: ' + str(component))
++        need(stat.S_ISDIR(s.st_mode) if directory else stat.S_ISREG(s.st_mode), 'trusted type')
++        return s
++
++    def read(self, path):
++        before = self.check_path(path)
++        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
++        with os.fdopen(fd, 'rb') as f:
++            current = os.fstat(f.fileno())
++            need((before.st_dev, before.st_ino) == (current.st_dev, current.st_ino), 'file replaced')
++            raw = f.read(2*1024*1024+1)
++            need(len(raw) <= 2*1024*1024, 'metadata size')
++        return raw
++
++    def digest(self, path):
++        before = self.check_path(path)
++        h = hashlib.sha256()
++        with open(path, 'rb') as f:
++            current = os.fstat(f.fileno())
++            need((before.st_dev, before.st_ino) == (current.st_dev, current.st_ino), 'artifact replaced')
++            while block := f.read(65536): h.update(block)
++            after = os.fstat(f.fileno())
++        need((current.st_size, current.st_mtime_ns) == (after.st_size, after.st_mtime_ns), 'artifact mutated')
++        return h.hexdigest()
++
++    def json(self, path):
++        return json.loads(self.read(path), object_pairs_hook=no_duplicates)
++
++    def exclusive(self, path, value):
++        from supervisor_evidence import sync_directory
++        self.check_path(str(Path(path).parent), directory=True)
++        raw = canonical(value)
++        need(len(raw) <= 128*1024, 'record bound')
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
++        with os.fdopen(fd, 'wb') as f:
++            f.write(raw); f.flush(); os.fsync(f.fileno())
++        sync_directory(Path(path).parent)
++
++    def mkdir(self, path):
++        from supervisor_evidence import sync_directory
++        self.check_path(str(Path(path).parent), directory=True)
++        os.mkdir(path, 0o700)
++        sync_directory(Path(path).parent); sync_directory(path)
++
++    def identity(self):
++        return {'boot_id': Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
++                'python_version': '.'.join(map(str, sys.version_info[:3])),
++                'kernel': os.uname().release, 'architecture': os.uname().machine}
++
++    def verify_environment(self, inventory):
++        need(sys.platform == 'linux' and os.geteuid() == 0 and sys.version_info >= (3, 10), 'Linux root controller >=3.10 required')
++        for k, v in self.identity().items(): need(inventory.get(k) == v, 'host inventory drift: '+k)
++        need(inventory.get('kernel_version') == os.uname().version, 'kernel build drift')
++        need(inventory.get('os_release_sha256') == self.digest(os.path.realpath('/etc/os-release')), 'OS release bytes')
++        need(self.digest(os.path.realpath(sys.executable)) == inventory['executables'][PYTHON]['sha256'], 'running interpreter bytes')
++        for path, entry in inventory['executables'].items():
++            need(os.path.realpath(path) == entry['resolved_path'], 'executable alias drift: '+path)
++        for path in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc'):
++            need(inventory['executables'][path]['resolved_path'] == path, 'daemon canonical-path amendment required')
++        # A trusted dedicated filesystem bounds control/journal storage; it is
++        # provisioned separately, never mounted or expanded by this launcher.
++        self.check_path(STATE, directory=True)
++        s, parent = os.stat(STATE), os.stat(str(Path(STATE).parent))
++        fs = os.statvfs(STATE)
++        need(s.st_dev != parent.st_dev and fs.f_blocks*fs.f_frsize <= 1024**3 and
++             fs.f_bavail*fs.f_frsize >= 768*1024**2, 'dedicated <=1GiB state filesystem with >=768MiB free required')
++        need(os.statvfs('/var/tmp').f_bavail*os.statvfs('/var/tmp').f_frsize >= 12*1024**3, 'host storage reserve')
++
++
++def validate_trust(args, io, now):
++    need(str(args.source_manifest) == ROOT+'/launcher-sources.json' and
++         str(args.inventory) == AUTH+'/inventory.json' and
++         str(args.authorization) == AUTH+'/authorization.json', 'fixed trust paths')
++    manifest, inventory, auth = [io.json(str(p)) for p in (args.source_manifest, args.inventory, args.authorization)]
++    authorize(auth, manifest, inventory, args.token, now, args.scenario, args.role)
++    io.check_path(ROOT, directory=True)
++    from launcher_binding import SOURCES
++    need(set(manifest.get('files', {})) == {ROOT+'/'+s for s in SOURCES}, 'closed source coverage')
++    for path, rec in manifest['files'].items():
++        raw = io.read(path)
++        need(sha(raw) == rec['sha256'] and len(raw) == rec['size_bytes'], 'source bytes: '+path)
++    for path, rec in inventory['executables'].items():
++        # Aliases must resolve exactly as independently inventoried; canonical
++        # target and all parent directories still pass ownership/mode checks.
++        need(io.digest(rec['resolved_path']) == rec['sha256'], 'executable bytes: '+path)
++    closure = inventory.get('runtime_files')
++    need(isinstance(closure, dict) and closure and inventory.get('runtime_closure_reviewed') is True,
++         'reviewed interpreter/stdlib/native runtime closure absent')
++    for path, digest in closure.items(): need(io.digest(path) == digest, 'runtime bytes: '+path)
++    for field in ('security_review', 'host_evidence'):
++        need(io.digest(AUTH+'/'+field+'.json') == inventory[field+'_sha256'], field+' evidence bytes')
++    io.verify_environment(inventory)
++    return Grant(_SEAL, args, inventory, auth)
++
++
++class Reservations:
++    def __init__(self, io, grant):
++        need(valid_grant(grant), 'reservation grant')
++        self.io, self.g = io, grant
++        self.root = STATE+'/'+grant.args.token
++        self.binding = {'token': grant.args.token, 'authorization_sha256': sha(canonical(grant.auth)),
++                        'scenario': grant.args.scenario, 'boot_id': grant.inventory['boot_id']}
++
++    def claim(self, role, process):
++        need(role == self.g.args.role, 'claim role')
++        if role == 'bootstrap':
++            self.io.mkdir(self.root)  # EEXIST permanently rejects reused token.
++            self.io.exclusive(self.root+'/reservation.json', self.binding)
++        else:
++            need(self.io.json(self.root+'/reservation.json') == self.binding, 'reservation binding')
++            parent = 'bootstrap' if role == 'controller' else 'controller'
++            record = self.io.json(self.root+'/'+parent+'.claim.json')
++            need(record['binding'] == self.binding, 'parent binding')
++            if role == 'helper':
++                need(self.io.json(self.root+'/watchdog.claim.json')['binding'] == self.binding, 'watchdog must precede helper')
++        self.io.exclusive(self.root+'/'+role+'.claim.json', {'binding': self.binding, 'process': process})
+--- a/launcher-sources.json
++++ b/launcher-sources.json
+@@ -1,36 +1,44 @@
+ {
+   "files": {
++    "/opt/pv2-native-acceptance/activation_bridge.py": {
++      "sha256": "d31032bb69a746c15ff1f7a378a01401f6d1340b4684da07fcd09b4f3574e174",
++      "size_bytes": 19250
++    },
++    "/opt/pv2-native-acceptance/activation_trust.py": {
++      "sha256": "0ed8148677562fa81aac0f1c3b159fb6cd975c44a778e8ebf54e7574ff3cbf5e",
++      "size_bytes": 8507
++    },
+     "/opt/pv2-native-acceptance/evidence_export.py": {
+       "sha256": "6fc8c36101804a997f02d769dfd8338740a25fc284f49cb94a86b99abe0e3418",
+       "size_bytes": 4850
+     },
+     "/opt/pv2-native-acceptance/launcher_binding.py": {
+-      "sha256": "d2e64837d63b47a61caf039827e3301461e5865345bc333900780885121564b6",
+-      "size_bytes": 4945
++      "sha256": "613977d383738907a9f9517766f864c1c542e84991c58978b72d472eb883e433",
++      "size_bytes": 5737
+     },
+     "/opt/pv2-native-acceptance/linux_host.py": {
+-      "sha256": "63b6f8977e1c6fedcef174092e4236ac5a6d6d5517c038c03011b3d001d9a743",
+-      "size_bytes": 9848
++      "sha256": "f0693fd541ec02761c115903bcfd7d2ec07d2a09bc6915cc5757af0d88da8277",
++      "size_bytes": 10476
+     },
+     "/opt/pv2-native-acceptance/linux_integration.py": {
+-      "sha256": "3c003e93db3de6226950262453f0818702de1706126c6e6bd76aadd7044e057a",
+-      "size_bytes": 28128
++      "sha256": "14b93a98f2d802efe95edbdd31952b442581a8de2c3ba25123ef1380819a1844",
++      "size_bytes": 28944
+     },
+     "/opt/pv2-native-acceptance/linux_lifecycle.py": {
+-      "sha256": "924ad53c23cdd68402791acc856a5ef11382a44884ba518c56b93f4b12b1464f",
+-      "size_bytes": 21561
++      "sha256": "5441f3e6f0bf82b2d00ae6256e357d7b24e99b2e8b5bf1451d3b95cca1dcd05f",
++      "size_bytes": 21953
+     },
+     "/opt/pv2-native-acceptance/native_launcher.py": {
+-      "sha256": "e7aef7ef22eae68ae048d3c3cae4999a720fe6b812642643fb011d3b58bf62b9",
+-      "size_bytes": 1759
++      "sha256": "124c942da14669f91b32246b4bfba1e0ad9c79a8b091b112f5ae7fa2591c546d",
++      "size_bytes": 4491
+     },
+     "/opt/pv2-native-acceptance/supervisor_evidence.py": {
+-      "sha256": "0012b8c87ac2370f6b6aabc6e817f23f19c6eaa7b23374926e91c066332e6229",
+-      "size_bytes": 5072
++      "sha256": "3bd7b1b8abb9ce821ce932f941a8b35371544d16ea3fef738e6d1bda486fd140",
++      "size_bytes": 5118
+     },
+     "/opt/pv2-native-acceptance/supervisor_v2.py": {
+-      "sha256": "0a9a83fb2542f1e89c348326a3c9d6bef598c7d4fe48a22e7191540e783918b8",
+-      "size_bytes": 16437
++      "sha256": "6b4c75f7fc17b9e740e39fbb24580eace44fe40db95e2f9a88a719b6578451d1",
++      "size_bytes": 16760
+     },
+     "/opt/pv2-native-acceptance/synthetic_helper.py": {
+       "sha256": "e87f160619a9457d65f025f606c24b1b2a71abdaf739577472275553d300a146",
+@@ -41,8 +49,8 @@
+       "size_bytes": 5120
+     },
+     "/opt/pv2-native-acceptance/watchdog_worker.py": {
+-      "sha256": "998d16556426985779f1ace5e84af6369f05aa1f05ac798b579317883672fa80",
+-      "size_bytes": 1526
++      "sha256": "5028552af048a6ddba0a4ab83ced29387b396eea0b5250491145bc3abcba52cf",
++      "size_bytes": 1660
+     }
+   },
+   "root": "/opt/pv2-native-acceptance",
+--- a/launcher_binding.py
++++ b/launcher_binding.py
+@@ -1,4 +1,4 @@
+-"""Closed launcher contract. Local verification only; no host activation."""
++"""Closed, hash-bound launcher contract; no host activation on import."""
+ import argparse
+ import hashlib
+ import json
+@@ -7,11 +7,12 @@
+ 
+ ROOT = '/opt/pv2-native-acceptance'
+ PYTHON = '/usr/bin/python3'
+-ROLES = ('controller', 'watchdog', 'helper')
++ROLES = ('bootstrap', 'controller', 'watchdog', 'helper')
+ SOURCES = ('launcher_binding.py', 'native_launcher.py', 'synthetic_helper.py',
+            'watchdog_worker.py', 'linux_host.py', 'linux_lifecycle.py',
+            'linux_integration.py', 'systemd_ownership.py', 'supervisor_v2.py',
+-           'supervisor_evidence.py', 'evidence_export.py')
++           'supervisor_evidence.py', 'evidence_export.py', 'activation_bridge.py',
++           'activation_trust.py')
+ EXECUTABLES = ('/usr/bin/python3', '/usr/bin/systemctl', '/usr/bin/systemd-run',
+                '/usr/bin/busctl', '/usr/bin/dockerd', '/usr/bin/containerd',
+                '/usr/bin/runc', '/usr/bin/fallocate', '/usr/sbin/mkfs.ext4',
+@@ -51,7 +52,7 @@
+     need(role in ROLES, 'unknown role')
+     need(re.fullmatch('[a-f0-9]{32}', token), 'token')
+     need(scenario in ('success', 'output_overflow', 'timeout'), 'scenario')
+-    return [PYTHON, '-I', '-B', ROOT + '/native_launcher.py', '--role', role,
++    return [PYTHON, '-I', '-S', '-B', ROOT + '/native_launcher.py', '--role', role,
+             '--token', token, '--scenario', scenario,
+             '--source-manifest', ROOT + '/launcher-sources.json',
+             '--inventory', '/run/pv2-authorization/inventory.json',
+@@ -76,8 +77,10 @@
+         need(bool(entry['version']), 'executable version')
+ 
+ 
+-def authorize(auth, manifest, inventory, token, now):
++def authorize(auth, manifest, inventory, token, now, scenario=None, role=None):
++    need(isinstance(token, str) and re.fullmatch('[a-f0-9]{32}', token), 'authorization token syntax')
+     validate_inventory(inventory)
++    need(manifest.get('schema') == 'pv2_launcher_sources_v1' and manifest.get('root') == ROOT, 'manifest schema/root')
+     need(auth.get('schema') == 'pv2_native_authorization_v1', 'authorization schema')
+     need(auth.get('scope') == 'A_native_synthetic_only', 'scope')
+     need(auth.get('execution_authorized') is True, 'execution not authorized')
+@@ -90,10 +93,17 @@
+          'authorization validity window')
+     need(auth.get('dependency_inspection_authorized') is False and auth.get('pilot_execution_authorized') is False,
+          'scope escalation')
++    # Mandatory even for legacy call sites: old scenario-agnostic grants fail.
++    need(auth.get('scenario') in ('success', 'output_overflow', 'timeout'), 'scenario binding missing')
++    if scenario is not None:
++        need(auth['scenario'] == scenario, 'scenario substitution')
++    need(auth.get('role_chain') == ['bootstrap', 'controller', 'watchdog', 'helper'], 'role chain')
++    if role is not None:
++        need(role in auth['role_chain'], 'role substitution')
+ 
+ 
+ def parser():
+-    p = argparse.ArgumentParser(description='Review-only native acceptance interface; live dispatch disabled')
++    p = argparse.ArgumentParser(description='Native acceptance source; explicit verified authorization required')
+     p.add_argument('--role', choices=ROLES, required=True)
+     p.add_argument('--token', required=True)
+     p.add_argument('--scenario', choices=('success', 'output_overflow', 'timeout'), default='success')
+--- a/linux_host.py
++++ b/linux_host.py
+@@ -1,7 +1,7 @@
+-"""Linux host primitives, inert on import; no live construction is enabled.
+-
+-Source for review only. Tests patch OS/subprocess boundaries. Native entry-point
+-approval, executable inventory and Linux acceptance remain separate gates.
++"""Linux host primitives, inert on import; verified grant required to construct.
++
++Source for review only. Tests patch OS/subprocess boundaries. Execution approval,
++executable inventory and Linux acceptance remain separate gates.
+ """
+ import hashlib
+ import os
+@@ -25,8 +25,11 @@
+ class LinuxHost:
+     is_fake = False
+ 
+-    def __init__(self):
+-        raise RuntimeError('live Linux backend disabled pending review and acceptance')
++    def __init__(self, grant=None):
++        from activation_trust import valid_grant
++        if not valid_grant(grant):
++            raise RuntimeError('live Linux backend disabled without verified authorization')
++        self.grant = grant
+ 
+     def now(self):
+         return time.monotonic()
+@@ -158,6 +161,13 @@
+                 raise ValueError('provisioning helper containment unavailable')
+             argv = ['systemd-run', '--pipe', '--wait', '--collect', '--slice=' + slice_name,
+                     '--property=RuntimeMaxSec=60', '--property=KillMode=control-group', '--', *argv]
++        if hasattr(self, 'grant'):
++            # No PATH lookup in activated native dispatch, including nested helpers.
++            records = self.grant.inventory['executables']
++            by_name = {Path(p).name: r['resolved_path'] for p, r in records.items()}
++            argv = [records[x]['resolved_path'] if x in records else by_name.get(x, x) for x in argv]
++            if argv[0] not in {r['resolved_path'] for r in records.values()}:
++                raise ValueError('uninventoried executable')
+         p = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, close_fds=True, start_new_session=True,
+                              env={'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C'})
+--- a/linux_integration.py
++++ b/linux_integration.py
+@@ -1,9 +1,8 @@
+-"""Internal orchestration source. No public live CLI; injected fake host only.
++"""Internal orchestration source; verified native grant or injected test host.
+ 
+ All commands below are source for Linux acceptance, not commands run by tests.
+ The supplied host must implement the LinuxHost OS boundary, never Docker APIs
+-against a shared socket. Watchdog deployment needs the internal worker described
+-in the integration review. Missing observations block admission.
++against a shared socket. Missing observations block admission.
+ """
+ from copy import deepcopy
+ import hashlib
+@@ -95,7 +94,10 @@
+     """Supervisor Backend.request/read adapter; fresh native observations."""
+     is_fake = True
+     def __init__(self, lifecycle, services, operation):
+-        require(lifecycle.host.is_fake is True, 'live backend disabled')
++        from activation_trust import host_allowed
++        require(host_allowed(lifecycle.host), 'verified backend capability required')
++        self.is_fake = lifecycle.host.is_fake
++        self.grant = getattr(lifecycle.host, 'grant', None)
+         self.l, self.host, self.services, self.operation = lifecycle, lifecycle.host, services, operation
+         self.handle = None
+         self.result = None
+@@ -115,6 +117,9 @@
+                 continue
+             p = self.host.process(int(path.name))
+             argv = self.host.text(str(path) + '/cmdline')
++            if any(all(p.get(k) == saved.get(k) for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup'))
++                   for saved in self.l.control_processes):
++                continue
+             baseline = getattr(self.host, 'baseline_processes', {})
+             if any(name in argv for name in ('containerd-shim', '/runc', '/dockerd', '/containerd')) and not within(p['cgroup'], self.l.work_path):
+                 require(baseline.get(p['pid']) == p, 'new or changed external runtime process; ownership inconclusive')
+@@ -214,7 +219,9 @@
+             # not the cleanup mechanism. No shell expansion or shared socket.
+             argv = ['systemd-run', '--pipe', '--wait', '--unit=pv2-' + self.l.token + '-operation.service',
+                     '--slice=' + self.l.manager.work_unit, '--property=RuntimeMaxSec=60',
+-                    '--property=KillMode=control-group', '--', *self.operation]
++                    '--property=KillMode=control-group', '--property=MemoryMax=268435456',
++                    '--property=MemorySwapMax=0', '--property=TasksMax=16',
++                    '--property=CPUQuota=25%', '--', *self.operation]
+             self.handle = self.host.start(argv)
+             return {'handle': 'operation', 'deadline_seconds': 60}
+         if action == 'operation_status':
+@@ -293,6 +300,8 @@
+                   lambda: next(m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == l.runtime))
+         for path in (l.root + '/data/tmp', l.root + '/data/downloads'):
+             self.directory(path)
++        if hasattr(self, 'before_watchdog'):
++            self.before_watchdog(identity)
+         watchdog = self.services.start('watchdog', watchdog_argv, outside=True)
+         wd = {k: watchdog[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}
+         wd.update(outside_workload=True, lifetime_seconds=1200)
+@@ -336,6 +345,8 @@
+         backend = LinuxBackend(l, self.services, operation)
+         backend.record = deepcopy(r)
+         backend.snapshot(r)
++        if hasattr(self, 'after_record'):
++            self.after_record(r)
+         l.admission = True
+         return backend, r
+ 
+@@ -378,7 +389,9 @@
+                 pass
+             else:
+                 raise ValueError('watchdog termination not confirmed')
+-            report['export'] = l.export_and_ack(exporter, manifest, evidence, termination)
++            # Generate the final manifest only after the external writer stops.
++            final_manifest = manifest() if callable(manifest) else manifest
++            report['export'] = l.export_and_ack(exporter, final_manifest, evidence, termination)
+             fresh = l.terminate(l.cgroup_identity())
+             l.require_termination(fresh)
+             runtime = next(x['identity'] for x in l.resources if x['kind'] == 'runtime-mount')
+@@ -420,7 +433,7 @@
+         # than introducing another saved-success-before-ledger failure mode.
+         finalizer = Supervisor(backend, final_sink)
+         finalizer.report.update({'teardown': deepcopy(report), 'complete': False,
+-                                 'state': 'CLEANUP_VERIFIED_FAKE' if report['complete'] else 'FAILED'})
++                                 'state': ('CLEANUP_VERIFIED_FAKE' if backend.is_fake else 'CLEANUP_VERIFIED_NATIVE') if report['complete'] else 'FAILED'})
+         finalizer.persist()
+         finalizer.report['complete'] = report['complete'] and finalizer.report['evidence_finalized']
+         return deepcopy(finalizer.report)
+--- a/linux_lifecycle.py
++++ b/linux_lifecycle.py
+@@ -1,6 +1,6 @@
+ """Review-only Linux lifecycle implementation, all effects through injected host.
+ 
+-No CLI and no live host accepted. Incremental journals preserve intent before
++No activation on import; native hosts require a verified grant. Journals preserve intent before
+ mutation, then independent observed identities. Incomplete intent is not proof
+ of ownership and blocks destructive recovery rather than guessing.
+ """
+@@ -18,7 +18,8 @@
+ 
+ class LinuxLifecycle:
+     def __init__(self, host, journal, token):
+-        require(host.is_fake is True, 'live lifecycle disabled')
++        from activation_trust import host_allowed
++        require(host_allowed(host), 'live lifecycle disabled without verified capability')
+         require(re.fullmatch('[0-9a-f]{32}', token), 'token')
+         self.host, self.journal, self.token = host, journal, token
+         self.root = '/var/tmp/pv2-' + token
+@@ -33,6 +34,7 @@
+         self.work_path = None
+         self.guard_path = None
+         self.owned_slices = {}
++        self.control_processes = []
+         self.boot = host.text('/proc/sys/kernel/random/boot_id').strip()
+ 
+     def acquire(self, kind, identity, mutate, observe):
+@@ -190,6 +192,9 @@
+                 continue
+             p = self.host.process(int(entry.name))
+             argv = self.host.text(str(entry) + '/cmdline')
++            if any(all(p.get(k) == saved.get(k) for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup'))
++                   for saved in self.control_processes):
++                continue  # exact independently observed bootstrap; no branch-wide exemption
+             if self.token in argv or within(p['cgroup'], self.work_path):
+                 require((self.guard_path and within(p['cgroup'], self.guard_path)) or within(p['cgroup'], self.parent),
+                         'owned process survives outside empty subtree')
+--- a/native_launcher.py
++++ b/native_launcher.py
+@@ -1,20 +1,67 @@
+-"""Concrete role interfaces; live bridge intentionally unavailable pending review.
++"""Concrete role interfaces; native bridge requires explicit verified authorization.
+ 
+-The injectable dispatcher is solely a mocked integration seam, never selected by
+-CLI arguments or an authorization file. Authorization is necessary, not enough.
++The injectable legacy dispatcher is solely a mocked integration seam, never
++selected by CLI arguments. CLI handlers use validated native capabilities.
+ """
+ import json
++import hashlib
++import os
++import stat
+ from pathlib import Path
+ import sys
+ import time
+ 
+-# -I omits the script directory. Import only from this explicit package location.
+-sys.path.insert(0, str(Path(__file__).resolve().parent))
+-from launcher_binding import authorize, command, parser, verify_sources
++def trusted_bootstrap():
++    """Stdlib-only trust check BEFORE importing any adjacent source.
++
++    Trust anchors are owner-delivered, root-owned authorization and reviewed
++    interpreter/runtime. Root compromise is outside the threat model.
++    """
++    root = Path('/opt/pv2-native-acceptance')
++    if Path(__file__).absolute() != root/'native_launcher.py':
++        raise ValueError('fixed launcher path required')
++    if sys.platform != 'linux' or os.geteuid() != 0 or not sys.flags.isolated or not sys.flags.no_site:
++        raise ValueError('root Linux python -I -S required')
++    def read(path):
++        for p in [*reversed(path.parents), path]:
++            s = os.lstat(p)
++            if s.st_uid != 0 or s.st_mode & 0o022 or stat.S_ISLNK(s.st_mode):
++                raise ValueError('untrusted bootstrap path')
++        if not stat.S_ISREG(s.st_mode) or s.st_size > 2*1024*1024:
++            raise ValueError('bootstrap file type/size')
++        return path.read_bytes()
++    def pairs(rows):
++        out = {}
++        for k, v in rows:
++            if k in out: raise ValueError('duplicate bootstrap key')
++            out[k] = v
++        return out
++    auth = json.loads(read(Path('/run/pv2-authorization/authorization.json')), object_pairs_hook=pairs)
++    manifest = json.loads(read(root/'launcher-sources.json'), object_pairs_hook=pairs)
++    raw = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode()
++    if auth.get('execution_authorized') is not True or auth.get('sources_sha256') != hashlib.sha256(raw).hexdigest():
++        raise ValueError('bootstrap source authorization')
++    # Closed bootstrap list is deliberately duplicated here: importing the list
++    # from an adjacent module before authenticating it would defeat this gate.
++    expected = {'launcher_binding.py', 'native_launcher.py', 'synthetic_helper.py',
++                'watchdog_worker.py', 'linux_host.py', 'linux_lifecycle.py',
++                'linux_integration.py', 'systemd_ownership.py', 'supervisor_v2.py',
++                'supervisor_evidence.py', 'evidence_export.py', 'activation_bridge.py',
++                'activation_trust.py'}
++    if set(manifest.get('files', {})) != {str(root/name) for name in expected}:
++        raise ValueError('closed bootstrap source coverage')
++    for name, entry in manifest['files'].items():
++        path = Path(name)
++        if path.parent != root or path.suffix != '.py': raise ValueError('bootstrap source path')
++        data = read(path)
++        if len(data) != entry['size_bytes'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
++            raise ValueError('bootstrap source bytes')
++    sys.path.insert(0, str(root))
+ 
+ 
+ def dispatch_mocked(args, manifest, inventory, auth, now, backend):
+-    authorize(auth, manifest, inventory, args.token, now)
++    from launcher_binding import authorize, command
++    authorize(auth, manifest, inventory, args.token, now, args.scenario, args.role)
+     if getattr(backend, 'is_fake', False) is not True:
+         raise RuntimeError('live launcher binding disabled')
+     argv = command(args.role, args.token, args.scenario)
+@@ -22,17 +69,22 @@
+ 
+ 
+ def main():
+-    args = parser().parse_args()
+     try:
+-        manifest = json.loads(args.source_manifest.read_bytes())
+-        verify_sources(Path(__file__).resolve().parent, manifest)
+-        inventory = json.loads(args.inventory.read_bytes())
+-        auth = json.loads(args.authorization.read_bytes())
+-        authorize(auth, manifest, inventory, args.token, int(time.time()))
+-        raise RuntimeError('NOT EXECUTED: native activation bridge remains disabled pending separate review')
++        trusted_bootstrap()
++        from launcher_binding import parser
++        from activation_trust import TrustedIO, validate_trust
++        from activation_bridge import Runtime, dispatch
++        from linux_host import LinuxHost
++        args = parser().parse_args()
++        io = TrustedIO()
++        grant = validate_trust(args, io, int(time.time()))
++        result = dispatch(Runtime(grant, io, LinuxHost(grant)))
++        if args.role == 'controller':
++            return 0 if result.get('state') == 'VERIFIED_NATIVE' and result.get('evidence_finalized') is True else 1
++        return 0 if result.get('complete') else 1
+     except Exception as exc:
+         print(json.dumps({'schema': 'pv2_launcher_rejection_v1', 'complete': False,
+-                          'role': args.role, 'error': str(exc), 'host_operations': 0,
++                          'error': str(exc), 'host_operations': 'consult journal; not inferred from failure',
+                           'stage_b': 'paused', 'pilot_execution_authorized': False}), flush=True)
+         return 2
+ 
+--- /dev/null
++++ b/package_activation.py
+@@ -0,0 +1,98 @@
++"""Explicit local packaging and mocked validation; never invokes native roles."""
++import argparse
++import ast
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++from launcher_binding import source_manifest
++
++BASE = '8a0365021c70f5fe0110fee2ef5ef8e209e52c232e81cd5b06aa78b1e8b68988'
++EDITED = {'launcher_binding.py', 'native_launcher.py', 'linux_host.py', 'linux_lifecycle.py',
++          'linux_integration.py', 'watchdog_worker.py', 'supervisor_v2.py',
++          'supervisor_evidence.py', 'test_launcher_binding.py', 'launcher-sources.json'}
++
++
++def sha(raw): return hashlib.sha256(raw).hexdigest()
++
++
++def write(path, value):
++    path.write_text(json.dumps(value, indent=2, sort_keys=True)+'\n', encoding='utf-8', newline='\n')
++
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): p.add_argument('--'+name, type=Path, required=True)
++    a = p.parse_args(); root = a.root.resolve()
++    if sha(a.base.read_bytes()) != BASE: raise ValueError('base SHA')
++    with zipfile.ZipFile(a.base) as z:
++        previous = json.loads(z.read('file-hashes.json'))
++        if set(z.namelist()) != set(previous) | {'file-hashes.json'}: raise ValueError('base coverage')
++        for name, rec in previous.items():
++            raw = z.read(name)
++            if sha(raw) != rec['sha256'] or len(raw) != rec['size_bytes']: raise ValueError('parent '+name)
++            if name not in EDITED and (root/name).read_bytes() != raw: raise ValueError('unintended edit '+name)
++        (root/'history'/'launcher-file-hashes.json').write_bytes(z.read('file-hashes.json'))
++        (root/'history'/'launcher-sources-before-activation.json').write_bytes(z.read('launcher-sources.json'))
++        write(root/'launcher-sources.json', source_manifest(root))
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        targeted = [sys.executable, '-B', '-m', 'unittest', 'test_activation_bridge', 'test_launcher_binding', '-v']
++        full = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        results = []
++        for label, cmd in (('targeted', targeted), ('full', full)):
++            run = subprocess.run(cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
++            (root/('activation-'+label+'-tests.log')).write_text(run.stdout+run.stderr, encoding='utf-8')
++            if run.returncode: raise RuntimeError(label+' tests failed')
++            results.append({'suite': label, 'command': cmd, 'exit_code': run.returncode,
++                            'summary': re.search(r'Ran \d+ tests in [^\n]+', run.stderr).group()})
++        changed, diff = [], []
++        for path in sorted(root.iterdir()):
++            if path.suffix not in ('.py', '.md') and path.name != 'launcher-sources.json': continue
++            raw = path.read_bytes()
++            before = z.read(path.name) if path.name in previous else b''
++            if raw == before: continue
++            text = raw.decode()
++            if any(line.rstrip() != line for line in text.splitlines()): raise ValueError('whitespace '+path.name)
++            if path.suffix == '.py':
++                ast.parse(text, feature_version=(3, 10)); compile(text, path.name, 'exec')
++            changed.append(path.name)
++            diff.extend(difflib.unified_diff(before.decode().splitlines(True), text.splitlines(True),
++                                             fromfile='a/'+path.name if before else '/dev/null', tofile='b/'+path.name))
++        (root/'activation-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root/'ACTIVATION_VALIDATION.json', {
++            'base_sha256': BASE, 'base_entries_verified': len(previous), 'tests': results,
++            'runtime': sys.version, 'platform': platform.platform(), 'changed_source_documents': changed,
++            'python_310_syntax': 'passed for changed source; execution used recorded Windows runtime',
++            'test_boundaries': 'invented kernel/processes, filesystem, clocks and mocked subprocess boundaries; synthetic temporary files',
++            'real_separate_interpreter_tested': False, 'native_linux_acceptance_executed': False,
++            'implementation': 'connected role handlers, trust/admission, independent reconstruction, loss collection and teardown source',
++            'unresolved': ['native inventory/runtime closure/security evidence', 'owner execution authorization', 'native Linux acceptance'],
++            'execution_approved': False, 'security_approved': False, 'dependencies_approved': False,
++            'pilot_execution_authorized': False, 'stage_b': 'paused', 'production_pins_unchanged': True,
++            'preserved_warning': 'historical acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14',
++            'development_failures': ['old rejection error-message assertions restored', 'invented Linux path fixtures corrected to PurePosixPath on Windows'],
++            'original_15_regressions_unchanged': True})
++    ledger = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path != root/'file-hashes.json':
++            raw = path.read_bytes(); ledger[path.relative_to(root).as_posix()] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    write(root/'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.output, 'x', zipfile.ZIP_DEFLATED) as z:
++        for name in [*sorted(ledger), 'file-hashes.json']: z.write(root/name, name)
++    with zipfile.ZipFile(a.output) as z:
++        if set(z.namelist()) != set(ledger) | {'file-hashes.json'}: raise ValueError('output coverage')
++        for name, rec in ledger.items():
++            raw = z.read(name)
++            if len(raw) != rec['size_bytes'] or sha(raw) != rec['sha256']: raise ValueError('output '+name)
++    print(json.dumps({'zip': str(a.output.resolve()), 'sha256': sha(a.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': results}, indent=2))
++
++
++if __name__ == '__main__': main()
+--- a/supervisor_evidence.py
++++ b/supervisor_evidence.py
+@@ -112,7 +112,7 @@
+             reports.append(json.loads(data))
+     if len(reports) != 1 or reports[0].get('persistence_errors'):
+         raise ValueError('missing/ambiguous report')
+-    if receipt.get('outcome') not in ('VERIFIED_FAKE', 'CLEANUP_VERIFIED_FAKE'):
++    if receipt.get('outcome') not in ('VERIFIED_FAKE', 'CLEANUP_VERIFIED_FAKE', 'VERIFIED_NATIVE', 'CLEANUP_VERIFIED_NATIVE'):
+         raise ValueError('operation or cleanup failed')
+     if reports[0].get('operation_cleanup_outcome') != receipt['outcome'] or reports[0].get('state') != 'EVIDENCE_PENDING':
+         raise ValueError('outcome mismatch')
+--- a/supervisor_v2.py
++++ b/supervisor_v2.py
+@@ -147,14 +147,17 @@
+ 
+ class Supervisor:
+     def __init__(self, backend, evidence):
+-        # There is intentionally no live backend or override flag in this candidate.
+-        require(getattr(backend, 'is_fake', False) is True, 'preparation-only: live backend unavailable')
++        # Native activation requires a verified grant; no override flag exists.
++        from activation_trust import valid_grant
++        require(getattr(backend, 'is_fake', False) is True or valid_grant(getattr(backend, 'grant', None)), 'live backend requires verified capability')
+         self.backend, self.evidence = backend, evidence
+         self.report = {'schema': 'pv2_supervisor_report_v2', 'state': 'NEW', 'events': [],
+                        'primary_error': None, 'cleanup_errors': [], 'persistence_errors': [],
+                        'daemon_io_termination_verified': False, 'work_storage_detached': False,
+                        'evidence_volume_retained': True, 'execution_approved': False,
+-                       'pilot_execution_authorized': False, 'stage_b': 'paused', 'backend': 'fake'}
++                       'pilot_execution_authorized': False, 'stage_b': 'paused',
++                       'backend': 'fake' if backend.is_fake else 'native',
++                       'native_synthetic_scope': not backend.is_fake}
+         self.record = None
+         self.persisted = False
+ 
+@@ -271,7 +274,7 @@
+             self.cleanup()
+             good = (not self.report['primary_error'] and not self.report['cleanup_errors']
+                     and self.report['daemon_io_termination_verified'] and self.report['work_storage_detached'])
+-            self.event('VERIFIED_FAKE' if good else 'FAILED')
++            self.event(('VERIFIED_FAKE' if self.backend.is_fake else 'VERIFIED_NATIVE') if good else 'FAILED')
+             self.persist()
+         if self.report['persistence_errors']:
+             self.report['state'] = 'FAILED'
+@@ -287,7 +290,7 @@
+         except BaseException as exc:
+             self.report['primary_error'] = repr(exc)
+         finally:
+-            self.event('FAILED' if self.report['cleanup_errors'] or self.report['primary_error'] else 'CLEANUP_VERIFIED_FAKE')
++            self.event('FAILED' if self.report['cleanup_errors'] or self.report['primary_error'] else ('CLEANUP_VERIFIED_FAKE' if self.backend.is_fake else 'CLEANUP_VERIFIED_NATIVE'))
+             self.persist()
+         if self.report['persistence_errors']:
+             self.report['state'] = 'FAILED'
+--- /dev/null
++++ b/test_activation_bridge.py
+@@ -0,0 +1,367 @@
++"""Mocked boundaries only: invented Linux state and in-memory trusted filesystem.
++
++Separate reconstruction is a new object from serialized JSON, not a real Linux
++interpreter. No native launch, mount, daemon, package or network call is made.
++"""
++from copy import deepcopy
++import json
++import stat
++import tempfile
++from pathlib import Path, PurePosixPath
++from types import SimpleNamespace
++import unittest
++from unittest.mock import Mock, patch
++
++import activation_bridge as bridge
++from activation_trust import (AUTH, STATE, Reservations, TrustedIO, validate_trust)
++from launcher_binding import ROOT, SOURCES, canonical, command, sha
++from test_launcher_binding import fixture
++from test_linux_integration import Kernel
++from test_supervisor_v2 import FakeEvidence
++from linux_integration import Coordinator
++
++
++class IO:
++    """Invented ownership/hash/OS observations; not a real trust check."""
++    def __init__(self): self.files = {}; self.dirs = {STATE}; self.digests = {}; self.denied = set(); self.calls = []
++    def check_path(self, path, directory=False):
++        self.calls.append(('check', path))
++        if path in self.denied: raise ValueError('untrusted ownership/mode/link')
++    def read(self, path):
++        self.check_path(path)
++        if path not in self.files: raise FileNotFoundError(path)
++        return self.files[path]
++    def json(self, path): return json.loads(self.read(path))
++    def digest(self, path):
++        self.check_path(path)
++        return self.digests[path] if path in self.digests else sha(self.read(path))
++    def verify_environment(self, inventory): self.check_path('invented-environment')
++    def mkdir(self, path):
++        if path in self.dirs: raise FileExistsError(path)
++        self.dirs.add(path)
++    def exclusive(self, path, value):
++        if path in self.files: raise FileExistsError(path)
++        self.files[path] = canonical(value)
++
++
++def setup(role='bootstrap', scenario='success'):
++    manifest, inventory, auth = fixture()
++    auth['scenario'] = scenario
++    inventory['runtime_files'] = {'/usr/lib/invented-stdlib.py': 'd'*64}
++    inventory['runtime_closure_reviewed'] = True
++    auth['inventory_sha256'] = sha(canonical(inventory))
++    args = SimpleNamespace(role=role, token='a'*32, scenario=scenario,
++                           source_manifest=PurePosixPath(ROOT+'/launcher-sources.json'),
++                           inventory=PurePosixPath(AUTH+'/inventory.json'), authorization=PurePosixPath(AUTH+'/authorization.json'))
++    io = IO()
++    for name in SOURCES: io.files[ROOT+'/'+name] = (Path(__file__).parent/name).read_bytes()
++    io.files[str(args.source_manifest)] = canonical(manifest)
++    io.files[str(args.inventory)] = canonical(inventory)
++    io.files[str(args.authorization)] = canonical(auth)
++    io.digests.update({r['resolved_path']: r['sha256'] for r in inventory['executables'].values()})
++    io.digests.update(inventory['runtime_files'])
++    io.digests[AUTH+'/security_review.json'] = inventory['security_review_sha256']
++    io.digests[AUTH+'/host_evidence.json'] = inventory['host_evidence_sha256']
++    return args, io
++
++
++class TrustTests(unittest.TestCase):
++    def test_native_path_ownership_mode_and_symlink_checks(self):
++        good = SimpleNamespace(st_uid=0, st_mode=stat.S_IFREG | 0o600)
++        parent = SimpleNamespace(st_uid=0, st_mode=stat.S_IFDIR | 0o755)
++        # Mock lstat, including every ancestor. No real protected path opened.
++        for bad in (SimpleNamespace(st_uid=1000, st_mode=stat.S_IFREG | 0o600),
++                    SimpleNamespace(st_uid=0, st_mode=stat.S_IFREG | 0o622),
++                    SimpleNamespace(st_uid=0, st_mode=stat.S_IFLNK | 0o777)):
++            with patch('activation_trust.Path', PurePosixPath), patch('activation_trust.os.lstat', return_value=bad):
++                with self.assertRaisesRegex(ValueError, 'untrusted ownership'):
++                    TrustedIO().check_path('/invented/file')
++
++    def test_grant_does_not_retain_mutable_authorization(self):
++        args, io = setup(); grant = validate_trust(args, io, 150)
++        args.role = 'helper'; args.scenario = 'timeout'
++        self.assertEqual(grant.args.role, 'bootstrap'); self.assertEqual(grant.args.scenario, 'success')
++
++    def test_verified_mock_grant_is_required_by_native_host(self):
++        from linux_host import LinuxHost
++        for invalid in (None, SimpleNamespace(is_fake=True)):
++            with self.assertRaises(RuntimeError): LinuxHost(invalid)
++        args, io = setup()
++        grant = validate_trust(args, io, 150)
++        # Constructor does no host effects; no method on this native object runs.
++        host = LinuxHost(grant)
++        self.assertFalse(host.is_fake)
++
++    def test_scenario_substitution(self):
++        for other in ('output_overflow', 'timeout'):
++            args, io = setup(); args.scenario = other
++            with self.assertRaisesRegex(ValueError, 'scenario substitution'): validate_trust(args, io, 150)
++
++    def test_bad_source_inventory_and_closure(self):
++        for target in (ROOT+'/activation_bridge.py', '/usr/bin/runc', '/usr/lib/invented-stdlib.py', AUTH+'/security_review.json'):
++            args, io = setup()
++            if target in io.digests: io.digests[target] = '0'*64
++            else: io.files[target] += b'altered'
++            with self.subTest(target=target), self.assertRaises(ValueError): validate_trust(args, io, 150)
++
++    def test_owner_modes_links_and_environment_fail_closed(self):
++        for target in (ROOT, ROOT+'/native_launcher.py', AUTH+'/authorization.json', 'invented-environment'):
++            args, io = setup(); io.denied.add(target)
++            with self.subTest(target=target), self.assertRaises(ValueError): validate_trust(args, io, 150)
++
++    def test_single_use_chain_and_controller_replay(self):
++        args, io = setup()
++        for role in ('bootstrap', 'controller', 'watchdog', 'helper'):
++            args.role = role
++            grant = validate_trust(args, io, 150)
++            reservation = Reservations(io, grant)
++            reservation.claim(role, {'pid': 100})
++            with self.assertRaises(FileExistsError): reservation.claim(role, {'pid': 101})
++        args.role = 'bootstrap'
++        with self.assertRaises(FileExistsError): Reservations(io, validate_trust(args, io, 150)).claim('bootstrap', {})
++
++    def test_helper_before_watchdog_rejected(self):
++        args, io = setup()
++        for role in ('bootstrap', 'controller'):
++            args.role = role; Reservations(io, validate_trust(args, io, 150)).claim(role, {})
++        args.role = 'helper'
++        with self.assertRaises(FileNotFoundError): Reservations(io, validate_trust(args, io, 150)).claim('helper', {})
++
++    def test_reservation_changed_auth_fails(self):
++        args, io = setup(); Reservations(io, validate_trust(args, io, 150)).claim('bootstrap', {})
++        a = io.json(str(args.authorization)); a['expires'] = 199; io.files[str(args.authorization)] = canonical(a)
++        args.role = 'controller'
++        with self.assertRaisesRegex(ValueError, 'reservation binding'):
++            Reservations(io, validate_trust(args, io, 150)).claim('controller', {})
++
++    def test_durable_reservation_failure_is_consumed(self):
++        args, io = setup(); r = Reservations(io, validate_trust(args, io, 150))
++        with patch.object(io, 'exclusive', side_effect=OSError('directory fsync failure')):
++            with self.assertRaises(OSError): r.claim('bootstrap', {})
++        with self.assertRaises(FileExistsError): r.claim('bootstrap', {})
++
++
++class RoleRT:
++    """Handlers connect to real coordinator, with fake kernel and fake evidence."""
++    def __init__(self):
++        self.host = Kernel(); self.token = 'a'*32; self.saved = {}; self.sinks = {}
++        self.g = SimpleNamespace(args=SimpleNamespace(scenario='success'), inventory={'executables': {
++            p: {'sha256': 'a'*64} for p in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc')}})
++        self.saved['bootstrap.claim.json'] = {'process': {'pid': 900, 'start_ticks': 1, 'executable_sha256': 'a'*64, 'cgroup': '/system.slice/bootstrap'}}
++        self.owner = {'pid': 901, 'start_ticks': 2, 'executable_sha256': 'a'*64, 'cgroup': self.host.controller_path}
++        self.parked = False; self.output_blocks = []
++    def evidence(self, name):
++        self.sinks[name] = FakeEvidence(); return self.sinks[name]
++    def read(self, name):
++        if name not in self.saved: raise FileNotFoundError(name)
++        return deepcopy(self.saved[name])
++    def write(self, name, value):
++        if name in self.saved: raise FileExistsError(name)
++        self.saved[name] = deepcopy(value)
++    def me(self): return deepcopy(self.owner)
++    def argv(self, role): return command(role, self.token, self.g.args.scenario)
++    def controller_done(self): return 'controller-result.json' in self.saved
++    def wait_watchdog(self):
++        # Invented separate-interpreter result at this OS boundary; worker
++        # reconstruction/arming/owner-loss algorithm is independently tested below.
++        return {'token': self.token, 'termination_confirmed': True, 'errors': [],
++                'ownership': self.saved['full-state.json']['identity']}
++    def park_watchdog(self, seconds): self.parked = seconds
++    def synthetic_wait(self, seconds): self.parked = seconds
++    def output(self, block): self.output_blocks.append(block)
++
++
++class HandlerTests(unittest.TestCase):
++    def test_actual_role_placement_and_resource_rejection(self):
++        args, io = setup(); grant = validate_trust(args, io, 150)
++        host = Kernel()
++        group = '/system.slice/pv2-'+args.token+'-bootstrap.service'
++        unit = 'pv2-'+args.token+'-bootstrap.service'
++        host.files['/proc/self/cgroup'] = '0::'+group+'\n'
++        for k, v in {'memory.max': '268435456', 'memory.swap.max': '0', 'pids.max': '16', 'cpu.max': '25000 100000'}.items():
++            host.files['/sys/fs/cgroup'+group+'/'+k] = v
++        rt = bridge.Runtime(grant, io, host)
++        answer = f'Id={unit}\nActiveState=active\nMainPID=42\nControlGroup={group}\n'.encode()
++        with patch('activation_bridge.os.getpid', return_value=42), patch.object(host, 'command', return_value=answer):
++            rt.verify_role()
++            host.files['/sys/fs/cgroup'+group+'/memory.max'] = 'max'
++            with self.assertRaises(ValueError): rt.verify_role()
++
++    def test_offline_receipt_validates_all_bytes_and_rejects_incomplete(self):
++        from supervisor_evidence import FileEvidence
++        with tempfile.TemporaryDirectory() as td:
++            root = Path(td)
++            for directory, outcome in (('operation', 'VERIFIED_NATIVE'), ('final', 'CLEANUP_VERIFIED_NATIVE')):
++                sink = FileEvidence(root/directory, directory_sync=lambda p: None)  # explicitly fake directory fsync
++                sink.append('supervisor-report', {'state': 'EVIDENCE_PENDING', 'operation_cleanup_outcome': outcome,
++                                                  'persistence_errors': [], 'fixture': 'invented native result; not executed'})
++                sink.seal(); sink.complete(outcome)
++            (root/'activation-result.json').write_bytes(canonical({'complete': False, 'state': 'EVIDENCE_PENDING', 'operation_teardown_complete': True}))
++            entries = {p.relative_to(root).as_posix(): {'sha256': sha(p.read_bytes()), 'size_bytes': p.stat().st_size}
++                       for p in root.rglob('*') if p.is_file()}
++            raw = canonical({'files': entries}); (root/'activation-manifest.json').write_bytes(raw)
++            receipt = {'manifest_sha256': sha(raw), 'complete': True, 'scope': 'A_native_synthetic_only'}
++            (root/'activation-receipt.json').write_bytes(canonical(receipt))
++            self.assertTrue(bridge.validate_activation(root)['complete'])
++            (root/'activation-result.json').write_bytes(b'altered')
++            with self.assertRaises(ValueError): bridge.validate_activation(root)
++            receipt['complete'] = False; (root/'activation-receipt.json').write_bytes(canonical(receipt))
++            with self.assertRaisesRegex(ValueError, 'incomplete'): bridge.validate_activation(root)
++
++    def test_finalization_persistence_never_saves_premature_success(self):
++        for fail in ('activation-manifest.json', 'activation-receipt.json', 'stdout'):
++            rt = Mock(root='/invented')
++            saved, stdout = {}, []
++            def write(name, value):
++                if name == fail: raise OSError('invented persistence')
++                saved[name] = deepcopy(value)
++            rt.write.side_effect = write
++            rt.collect_manifest.return_value = {}
++            rt.host.digest.return_value = 'a'*64
++            def emit(value):
++                stdout.append(deepcopy(value))
++                if fail == 'stdout': raise OSError('invented pipe')
++            rt.emit.side_effect = emit
++            result = bridge.Runtime.finish(rt, {'complete': True})
++            self.assertFalse(result['complete'])
++            self.assertFalse(saved['activation-result.json']['complete'])
++            self.assertFalse(stdout[-1]['complete'])
++            self.assertIn('activation-persistence-failure.json', saved)
++            self.assertNotIn('activation-receipt.json', saved)
++
++    def test_finalization_receipt_last(self):
++        rt = Mock(root='/invented'); sequence = []
++        rt.write.side_effect = lambda name, value: sequence.append(name)
++        rt.emit.side_effect = lambda value: sequence.append('stdout-provisional')
++        rt.collect_manifest.return_value = {}; rt.host.digest.return_value = 'a'*64
++        self.assertTrue(bridge.Runtime.finish(rt, {'complete': True})['complete'])
++        self.assertEqual(sequence[-2:], ['stdout-provisional', 'activation-receipt.json'])
++
++    def test_collector_connects_export_and_final_teardown(self):
++        rt = RoleRT(); bridge.controller(rt)
++        rt.root = STATE+'/'+rt.token
++        # The coordinator result is fake, so cleanup can finish but native
++        # acceptance must remain false. File listing/export are OS-boundary fakes.
++        capsule = rt.saved['full-state.json']
++        exporter = Mock()
++        exporter.export.side_effect = lambda raw, manifest, **kw: {'manifest_sha256': sha(raw), 'readback_verified': True}
++        member = Mock(); member.name = 'watchdog-armed.json'
++        member.is_file.return_value = True; member.is_symlink.return_value = False
++        member.stat.return_value = SimpleNamespace(st_size=10)
++        with patch('activation_bridge.recover_records', return_value={'unresolved_intents': [], 'observed': capsule['resources']}), \
++             patch('activation_bridge.Path') as paths, patch('evidence_export.LocalEvidenceExport', return_value=exporter):
++            paths.return_value.iterdir.return_value = [member]
++            result = bridge.Runtime.collect_and_finalize(rt)
++        self.assertTrue(result['teardown']['complete'], result)
++        self.assertFalse(result['complete'])
++        self.assertFalse(rt.host.loops); self.assertFalse(rt.host.mounts)
++        exporter.export.assert_called_once()
++
++    def test_collector_loss_not_reported_as_operation_success(self):
++        rt = RoleRT(); bridge.controller(rt); rt.root = STATE+'/'+rt.token
++        rt.saved.pop('controller-result.json')
++        capsule = rt.saved['full-state.json']
++        exporter = Mock()
++        exporter.export.side_effect = lambda raw, manifest, **kw: {'manifest_sha256': sha(raw), 'readback_verified': True}
++        with patch('activation_bridge.recover_records', return_value={'unresolved_intents': [], 'observed': capsule['resources']}), \
++             patch('activation_bridge.Path') as paths, patch('evidence_export.LocalEvidenceExport', return_value=exporter):
++            paths.return_value.iterdir.return_value = []
++            result = bridge.Runtime.collect_and_finalize(rt)
++        self.assertFalse(result['complete']); self.assertEqual(result['operation']['primary_error'], 'controller loss')
++        self.assertTrue(result['teardown']['complete'])
++
++    def test_collector_partial_ownership_retains_resources(self):
++        rt = RoleRT(); bridge.controller(rt); rt.root = STATE+'/'+rt.token
++        rt.saved.pop('full-state.json')
++        result = bridge.Runtime.collect_and_finalize(rt)
++        self.assertFalse(result['complete']); self.assertTrue(result['resources_retained'])
++        self.assertTrue(rt.host.loops)
++
++    def test_dispatch_calls_real_role_only_after_admission(self):
++        rt = Mock(); rt.g.args.role = 'helper'; rt.g.args.scenario = 'success'
++        rt.me.return_value = {'pid': 12}
++        rt.output = Mock()
++        result = bridge.dispatch(rt)
++        self.assertTrue(result['complete']); rt.verify_role.assert_called_once()
++        rt.reservations.claim.assert_called_once_with('helper', {'pid': 12})
++        rt.verify_role.side_effect = ValueError('placement denied')
++        rt.reservations.reset_mock(); rt.output.reset_mock()
++        with self.assertRaises(ValueError): bridge.dispatch(rt)
++        rt.reservations.claim.assert_not_called(); rt.output.assert_not_called()
++
++    def test_controller_connected_and_capsules_saved(self):
++        rt = RoleRT(); result = bridge.controller(rt)
++        self.assertEqual(result['state'], 'VERIFIED_FAKE')
++        self.assertTrue(rt.host.worker_seen_before_daemon)
++        self.assertEqual(rt.saved['full-state.json']['record']['token'], rt.token)
++        self.assertTrue(rt.saved['watchdog-bootstrap.json']['resources'])
++        self.assertFalse(any('configuration' == x['kind'] for x in rt.saved['watchdog-bootstrap.json']['resources']))
++
++    def test_new_watchdog_reconstructs_and_arms(self):
++        rt = RoleRT(); bridge.controller(rt)
++        capsule = json.loads(json.dumps(rt.saved['watchdog-bootstrap.json']))
++        restored = bridge.restore(rt.host, FakeEvidence(), capsule, rt.token)
++        self.assertIsNot(restored.resources, capsule['resources'])
++        self.assertEqual(restored.parent, rt.host.controller_path)
++        wd = rt.saved['full-state.json']['record']['watchdog']
++        del rt.host.files[restored.root+'/evidence/watchdog-armed.json']
++        from watchdog_worker import arm
++        with patch('watchdog_worker.os.getpid', return_value=wd['pid']): arm(restored)
++        self.assertEqual(json.loads(rt.host.files[restored.root+'/evidence/watchdog-armed.json'])['watchdog'], wd)
++
++    def test_watchdog_handler_controller_loss_collects_and_parks(self):
++        rt = RoleRT(); bridge.controller(rt)
++        rt.saved.pop('controller-result.json')
++        wd = rt.saved['full-state.json']['record']['watchdog']
++        del rt.host.files['/var/tmp/pv2-'+rt.token+'/evidence/watchdog-armed.json']
++        with patch('watchdog_worker.os.getpid', return_value=wd['pid']):
++            result = bridge.watchdog(rt)
++        self.assertTrue(result['termination_confirmed'])
++        self.assertIn('watchdog-result.json', rt.saved)
++        self.assertEqual(rt.parked, 1200)
++        self.assertIn(wd['pid'], rt.host.processes)
++
++    def test_capsule_rejects_boot_and_identity_change(self):
++        rt = RoleRT(); bridge.controller(rt)
++        for field, value in (('boot_id', 'other'), ('token', 'b'*32), ('identity', {})):
++            capsule = deepcopy(rt.saved['watchdog-bootstrap.json']); capsule[field] = value
++            with self.subTest(field=field), self.assertRaises(ValueError): bridge.restore(rt.host, FakeEvidence(), capsule, rt.token)
++
++    def test_helper_dispatch_no_model_or_shell(self):
++        rt = RoleRT(); rt.saved['full-state.json'] = {}
++        bridge.helper(rt); self.assertEqual(rt.output_blocks, [b'pv2-native-synthetic-v1\n'])
++        rt.g.args.scenario = 'output_overflow'; rt.output_blocks = []; bridge.helper(rt)
++        self.assertEqual(sum(map(len, rt.output_blocks)), 17*65536)
++        rt.g.args.scenario = 'timeout'; bridge.helper(rt); self.assertEqual(rt.parked, 65)
++
++    def test_bootstrap_failure_collects_preserves_primary(self):
++        rt = Mock(token='a'*32)
++        rt.argv.return_value = command('controller', rt.token)
++        rt.host.command.side_effect = OSError('invented start failure')
++        rt.collect_and_finalize.return_value = {'complete': True}
++        rt.finish.side_effect = lambda x: x
++        result = bridge.bootstrap(rt)
++        self.assertFalse(result['complete'])
++        self.assertIn('start failure', result['bootstrap_error'])
++        rt.stop_controller.assert_called_once(); rt.collect_and_finalize.assert_called_once()
++
++    def test_bootstrap_cleanup_error_preserves_primary(self):
++        rt = Mock(token='a'*32); rt.argv.return_value = command('controller', rt.token)
++        rt.host.command.side_effect = OSError('primary')
++        rt.stop_controller.side_effect = OSError('cleanup')
++        rt.collect_and_finalize.return_value = {'complete': False}
++        rt.finish.side_effect = lambda x: x
++        result = bridge.bootstrap(rt)
++        self.assertIn('primary', result['bootstrap_error']); self.assertIn('cleanup', result['bootstrap_cleanup_errors'][0])
++        rt.collect_and_finalize.assert_called_once()
++        rt.finish.assert_called_once()
++
++    def test_bootstrap_timeout_requests_independent_stop(self):
++        rt = Mock(token='a'*32); rt.argv.return_value = command('controller', rt.token)
++        rt.wait_controller.side_effect = TimeoutError('invented timeout')
++        rt.collect_and_finalize.return_value = {'complete': False, 'resources_retained': True}
++        rt.finish.side_effect = lambda x: x
++        self.assertFalse(bridge.bootstrap(rt)['complete']); rt.stop_controller.assert_called_once()
++
++
++if __name__ == '__main__': unittest.main()
+--- a/test_launcher_binding.py
++++ b/test_launcher_binding.py
+@@ -25,7 +25,8 @@
+             'execution_authorized': True, 'security_approved': True, 'token': 'a'*32,
+             'boot_id': 'invented-boot', 'sources_sha256': sha(canonical(manifest)),
+             'inventory_sha256': sha(canonical(inventory)), 'not_before': 100, 'expires': 200,
+-            'dependency_inspection_authorized': False, 'pilot_execution_authorized': False}
++            'dependency_inspection_authorized': False, 'pilot_execution_authorized': False,
++            'scenario': 'success', 'role_chain': ['bootstrap', 'controller', 'watchdog', 'helper']}
+     return manifest, inventory, auth
+ 
+ 
+--- a/watchdog_worker.py
++++ b/watchdog_worker.py
+@@ -5,9 +5,10 @@
+ from supervisor_v2 import require, within
+ 
+ 
+-def worker(lifecycle, identity, owner, report, acknowledgment):
++def arm(lifecycle):
+     host = lifecycle.host
+-    require(host.is_fake is True, 'live watchdog entry disabled')
++    from activation_trust import host_allowed
++    require(host_allowed(host), 'verified watchdog capability required')
+     me = host.process(os.getpid())
+     work = lifecycle.manager.show(lifecycle.manager.work_unit)['ControlGroup']
+     guard = lifecycle.manager.show(lifecycle.manager.guard_unit)['ControlGroup']
+@@ -18,6 +19,12 @@
+     wd.update(outside_workload=True, lifetime_seconds=1200)
+     host.write_exclusive(lifecycle.root + '/evidence/watchdog-armed.json',
+                          canonical({'token': lifecycle.token, 'boot_id': lifecycle.boot, 'watchdog': wd}))
++    return wd
++
++
++def worker(lifecycle, identity, owner, report, acknowledgment):
++    host = lifecycle.host
++    arm(lifecycle)
+     def alive():
+         try:
+             current = host.process(owner['pid'])

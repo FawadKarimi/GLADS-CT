@@ -1,0 +1,66 @@
+seed: 42
+device: auto
+
+dataset:
+  metadata_csv: data/processed/synthetic_demo_small/metadata.csv
+  image_root: data/processed/synthetic_demo_small
+  image_size: 48
+  num_classes: 3
+  class_names: [benign, indeterminate, malignant]
+  split_mode: csv_or_random
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  batch_size: 4
+  num_workers: 0
+  in_channels: 1
+
+augmentation:
+  train:
+    hflip: true
+    vflip: false
+    rotation_deg: 10
+    translation_frac: 0.04
+    intensity_jitter: 0.05
+    gaussian_noise_std: 0.005
+  eval:
+    enabled: false
+
+model:
+  cnn_channels: [8, 16]
+  embed_dim: 16
+  transformer_heads: 2
+  transformer_layers: 1
+  transformer_mlp_ratio: 2.0
+  dropout: 0.1
+  attention_dropout: 0.1
+  classifier_hidden_dim: 16
+  use_transformer: true
+  use_positional_encoding: true
+  use_spatial_attention: true
+  fusion_type: concat
+  use_raw_transformer_in_fusion: false
+
+training:
+  epochs: 1
+  lr: 0.0005
+  weight_decay: 0.0
+  label_smoothing: 0.0
+  class_weights: auto
+  early_stopping_patience: 2
+  scheduler: reduce_on_plateau
+  scheduler_patience: 1
+  scheduler_factor: 0.5
+  amp: false
+  grad_clip_norm: 1.0
+
+evaluation:
+  save_confusion_matrix: true
+  save_roc_curves: true
+  save_predictions_csv: true
+
+paths:
+  checkpoint_dir: outputs/checkpoints
+  metrics_dir: outputs/metrics
+  plots_dir: outputs/plots
+  predictions_dir: outputs/predictions

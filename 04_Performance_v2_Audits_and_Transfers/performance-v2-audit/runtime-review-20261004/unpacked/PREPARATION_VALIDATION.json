@@ -1,0 +1,26 @@
+{
+  "approvals": false,
+  "base_implementation_members_unchanged": true,
+  "base_sha256": "c374d9c61c29f2ee08fbdb95ab8ca1277429112b67f8dfe78046a9eef4b95caf",
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-supervisor-preparation-20260928",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "dependency_binaries_downloaded": false,
+  "docker_executed": false,
+  "limitations": "fake backend only; no Linux acceptance or security clearance",
+  "metadata_network_executed": false,
+  "platform": "Windows-11-10.0.22621-SP0",
+  "proposal_sha256": "d850279dbf6e13e5f774d174e6a3a6455e4073877cd3c6ed899fbef66b995d74",
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "status": "mocked_tests_passed",
+  "test_summary": "Ran 51 tests in 0.318s"
+}

@@ -1,0 +1,2327 @@
+{
+  "active_references": [
+    {
+      "command_matched_roots": [],
+      "pid": 354927,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    },
+    {
+      "command_matched_roots": [],
+      "pid": 992472,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/ARTIFACT-ORGANIZATION-001.exit.log",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/ARTIFACT-ORGANIZATION-001.stderr.log",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/ARTIFACT-ORGANIZATION-001.stdout.log"
+      ]
+    },
+    {
+      "command_matched_roots": [],
+      "pid": 1724657,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    },
+    {
+      "command_matched_roots": [],
+      "pid": 3040837,
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "bytes": 3523,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/02_generate_patient_manifest.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/02_generate_patient_manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3346,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/01_prepare_locked_baseline.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/01_prepare_locked_baseline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1494,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/24_export_baseline_metadata.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/24_export_baseline_metadata.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6863,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/00_lock_environment.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/00_lock_environment.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1661,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/22_extract_lidc_nodules.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/22_extract_lidc_nodules.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3952,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/00_lock_environment.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/00_lock_environment.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1857,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/20_check_lidc_source.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/20_check_lidc_source.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1566,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/21_inventory_lidc.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/21_inventory_lidc.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 419,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/11_run_b1.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/11_run_b1.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 419,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/10_run_b0.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/10_run_b0.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 536,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/12_evaluate_baseline.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/12_evaluate_baseline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4741,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/25_smoke_pylidc_runtime.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/25_smoke_pylidc_runtime.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 484,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/31_run_phase3_matrix.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/31_run_phase3_matrix.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2492,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/02_generate_patient_manifest.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/02_generate_patient_manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1989,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/23_render_lidc_rois.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/23_render_lidc_rois.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 467,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/30_run_phase3_baseline.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/30_run_phase3_baseline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5426,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/__pycache__/01_prepare_locked_baseline.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/scripts/01_prepare_locked_baseline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6073,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/__pycache__/generate_synthetic_dataset.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/generate_synthetic_dataset.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1586,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/__pycache__/run_ablation.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/run_ablation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2236,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/__pycache__/prepare_lidc_metadata.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/scripts/prepare_lidc_metadata.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1469,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/positional_encoding.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/positional_encoding.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3071,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/fusion.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/fusion.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2473,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/cnn_encoder.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/cnn_encoder.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 163,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1772,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/classifier_head.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/classifier_head.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5858,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/lungdxformer.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/lungdxformer.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3196,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/transformer_encoder.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/transformer_encoder.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1650,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/__pycache__/spatial_attention.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/models/spatial_attention.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2625,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/__pycache__/gradcam.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/gradcam.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 140,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 612,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/__pycache__/attention_maps.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/explainability/attention_maps.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2592,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__pycache__/confusion_matrix.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/confusion_matrix.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 167,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2113,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__pycache__/roc_auc.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/roc_auc.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 686,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__pycache__/ablation.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/ablation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1905,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/__pycache__/metrics.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/evaluation/metrics.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 182,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1374,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/early_stopping.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/early_stopping.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7597,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/trainer.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/trainer.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 165,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 823,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/scheduler.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/scheduler.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 709,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/losses.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/losses.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2102,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/__pycache__/validate.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/training/validate.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2507,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/visualization.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/visualization.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1033,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/seed.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/seed.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 858,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/checkpoints.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/checkpoints.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 162,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2761,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/config.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1400,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/__pycache__/logger.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/lungdxformer/utils/logger.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7073,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/__pycache__/test.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/test.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5707,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/__pycache__/train.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/train.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6501,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/__pycache__/inference.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/external/LungDxFormer/LungDxFormer/src/inference.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3438464,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/evaluation/phase4-evaluation-22cb656eabd040c2.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 171215,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/evaluation/phase4-evaluation-7894ae140c091dba.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 3667436,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/evaluation/phase4-evaluation-38c18ff5e30b0773.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1122432,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/evidence_gaps/boundary/phase4-evaluation-febe8402535570e1.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 380384,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/evidence_gaps/uncertainty/phase4-evaluation-8c5876a39d46aaa7.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 3052771,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/ablations/analysis/phase4-ablation-analysis-176ea15e44b74b35.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 3052645,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/ablations/analysis/phase4-ablation-analysis-318be1fe46e06ef3.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 3052271,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/ablations/analysis/phase4-ablation-analysis-b94f7e27dc153cf9.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 3048199,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase4/ablations/analysis/phase4-ablation-analysis-da694a08aa6d7d66.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 389834,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/synthetic_timing/phase5-timing-030925dee6228ebb.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/r4_claims_packaging_acceptance.md"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 507554,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/r3_entropy/r3-entropy-83023569d06acd93.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/r3_entropy_results_and_closure.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/stage_a_evidence_reconciliation.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/stage_a_evidence_reconciliation.md"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 380384,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/r3_entropy/r3-entropy-83023569d06acd93/source/archive.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/r3_entropy/r3-entropy-83023569d06acd93/artifact_manifest.json",
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/docs/r3_entropy_implementation_authorization.md",
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/r3_entropy.py",
+        "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_r3_entropy.py",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-r50-full-preparation-20261011/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/baseline/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-r50-radimagenet42-20261013/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/r3_entropy_results_and_closure.md",
+        "/home/chaidir/.performance-v2-supervision-readiness-20261013/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-supervision-readiness-r2-20261013/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-20261013/candidate/src/consendxformer/r3_entropy.py",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013/candidate/src/consendxformer/r3_entropy.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 80333310,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/insertion_deletion/phase5-perturbation-5e31065629b5137c.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/r4_claims_packaging_acceptance.md"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 2821065,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/pointing_and_accuracy/phase5-descriptive-04d6daaccc698431.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/r4_claims_packaging_acceptance.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/r4_claims_packaging_acceptance.md"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 178921,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/paired_correctness/phase5-inference-preflight-5b67b8e275de62f5.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 195230,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/artifacts/phase5/paired_correctness/phase5-inference-results-79f6f8de6cab19b6.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 6319,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_dataset.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_dataset.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7518,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase2_config.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase2_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10247,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_render.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_render.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13646,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/manifest_guard.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/manifest_guard.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 15709,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/manifest.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3368,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_metadata_export.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_metadata_export.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11072,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_masks.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_masks.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11477,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_checkpoints.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_checkpoints.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7947,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_artifacts.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_artifacts.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5990,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_evaluator.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_evaluator.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8481,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_reconciliation.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_reconciliation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2503,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase2_provenance.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase2_provenance.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 23186,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_runner.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6122,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_render_pipeline.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_render_pipeline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 20487,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_attention_comparison.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_attention_comparison.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 25596,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_evaluation_metrics.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_evaluation_metrics.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7744,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_boundary_dataset.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_boundary_dataset.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 15447,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_predictions.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_predictions.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13593,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_execution.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_execution.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 251,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/__init__.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 37713,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_boundary.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_boundary.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8176,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/reproducibility.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/reproducibility.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5040,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_input_lock.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_input_lock.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6508,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_losses.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_losses.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 16528,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_bootstrap.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_bootstrap.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6016,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase2_io.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase2_io.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 229,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/__init__.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__init__.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8812,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_runner.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8278,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_predictions.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_predictions.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2628,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/reproducibility.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/reproducibility.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7188,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_records.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_records.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 12239,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_checkpoints.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_checkpoints.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1297,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/hashing.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/hashing.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1833,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/hashing.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/hashing.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10117,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_posthoc_runner.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_posthoc_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3102,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/config.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 70411,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_evaluation_runner.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_evaluation_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10072,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_source.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_source.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2131,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_provenance.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_provenance.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7269,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_ledger.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_ledger.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10223,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_ablations.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_ablations.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2172,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/config.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9939,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/manifest.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4018,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_inventory.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_inventory.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7154,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_supervision.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_supervision.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 28197,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_posthoc.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_posthoc.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 17774,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_execution.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_execution.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 19287,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_runner.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8428,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_training.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_training.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 30813,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_readiness.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_readiness.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 12573,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_model.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_model.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5486,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_protocol.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_protocol.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6713,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/pylidc_numpy_compat.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/pylidc_numpy_compat.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11147,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_attention_runtime.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_attention_runtime.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4020,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_identity.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_identity.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10061,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_artifacts.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_artifacts.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 17134,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_readiness.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_readiness.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5532,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_pipeline.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_pipeline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11166,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_orchestrator.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_orchestrator.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5852,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_comparison.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_comparison.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 14973,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/lidc_targets.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/lidc_targets.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10200,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase3_config.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase3_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9249,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_config.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13796,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_attention_evidence.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_attention_evidence.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 15126,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/pylidc_provider.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/pylidc_provider.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 15536,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_evaluation.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_evaluation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1528,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase2_runtime.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase2_runtime.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9982,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/phase4_config.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/phase4_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11192,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/__pycache__/baseline_metadata.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/src/consendxformer/baseline_metadata.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8839,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_cohort_text_dtypes.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_cohort_text_dtypes.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11092,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_completed_sources.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_completed_sources.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3138,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_manifest.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10199,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_lidc_reconciliation.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_lidc_reconciliation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 19218,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_predictions_checkpoints.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_predictions_checkpoints.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9315,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_dataset.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_dataset.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8579,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_config.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 19324,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_pylidc_numpy_compat.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_pylidc_numpy_compat.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 21969,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_evaluation.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_evaluation.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 26099,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_runner_orchestrator.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_runner_orchestrator.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 19591,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_readiness.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_readiness.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13328,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_bootstrap.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_bootstrap.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7954,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_model.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_model.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 17460,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_execution.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_execution.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9842,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_manifest_guard.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_manifest_guard.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7261,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_ablations_provenance.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_ablations_provenance.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 3091,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/phase2_fakes.cpython-310.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/phase2_fakes.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 22546,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_attention_comparison.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_attention_comparison.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11554,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_lidc_masks.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_lidc_masks.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 11805,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_lidc_render.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_lidc_render.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 12472,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_config.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4979,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase2_config.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase2_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 31093,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_runner.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 15718,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_lidc_targets.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_lidc_targets.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9106,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_supervision.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_supervision.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13758,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_ablations_boundary.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_ablations_boundary.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4948,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase2_immutability.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase2_immutability.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5368,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_comparison.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_comparison.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 2645,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_config.cpython-313-pytest-9.0.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 17641,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_single_run_contracts.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_single_run_contracts.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13730,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_attention_runtime.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_attention_runtime.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 16425,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_boundary_runtime.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_boundary_runtime.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 8473,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_pylidc_provider_contract.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_pylidc_provider_contract.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 14206,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_metadata.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_metadata.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 12831,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_lidc_pipeline.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_lidc_pipeline.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 20735,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_readiness.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_readiness.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1076,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_config.cpython-313.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 21826,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_runner.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7280,
+      "mode": "0o644",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_manifest.cpython-313-pytest-9.0.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 10430,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_config_identity.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_config_identity.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 4030,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_manifest.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_manifest.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6792,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_metadata_export.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_metadata_export.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5464,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_evaluation_sources.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_evaluation_sources.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 13610,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_evaluation_runner.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_evaluation_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 9799,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_losses.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_losses.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 7359,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_evaluation_artifacts.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_evaluation_artifacts.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 1454,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_config.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_config.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 20587,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_posthoc.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_posthoc.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 21201,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_evaluation_metrics.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_evaluation_metrics.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 19096,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_attention_evidence.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_attention_evidence.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 6546,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase3_reproducibility.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase3_reproducibility.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 5920,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_baseline_source.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_baseline_source.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 12888,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/__pycache__/test_phase4_posthoc_runner.cpython-310-pytest-8.4.2.pyc",
+      "references": [],
+      "source": "/experiment-storage/chaidir/fawad-dsai/ConsenDxFormer/tests/test_phase4_posthoc_runner.py",
+      "uid": 1009
+    },
+    {
+      "bytes": 344691,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-reader-integration-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-reader-integration-001-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/performance-v2-reader-integration-001-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 19490,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-timing-corrected-final-records-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 556160,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/r50-hard-seed42-pair-001-metadata-evidence-20261012.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/r50-hard-seed42-pair-001-outcomes-bindings-20261012.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/r50-hard-seed42-pair-001-outcomes-bindings-20261012-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 53131,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-probe-binding-REVIEW-20261011.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/gpu003_stage.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1704037,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-materialization-COMPLETE-REVIEW-20261008.zip",
+      "references": [
+        "/home/chaidir/.performance-v2-materialization-20261008/review/package_review.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 150527,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-attempt-003-preflight-failure-evidence.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 51793089,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-native-inventory-correction-REVIEW-20261008.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/package_review.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1664086,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/r50-checkpoint-cpu-synthetic-001-20261012-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/evidence_archive.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 65524,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-execution-next-SCAN-CORRECTED-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 2512589,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-train-val-mapping-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-train-val-mapping-001-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/performance-v2-train-val-mapping-001-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1274018,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-imagenet-synthetic-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/imagenet-synthetic-001-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/imagenet-synthetic-001-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 823631,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/audit-20260927T100333767013Z-539541171cb6.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/input-audit-server-command.sh",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/input-audit-20260927T121832477449883Z/source_hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/before/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/before/configs/performance_v2/pretraining_provenance_v1.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/package_review.py",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/archived-source-references.json",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/project_archived_evidence.py",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/evidence/input-audit-20260927T121832477449883Z/source_hashes.json",
+        "/home/chaidir/.performance-v2-r50-full-preparation-20261011/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/baseline/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-r50-radimagenet42-20261013/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/evidence/archived-source-references.json",
+        "/home/chaidir/.performance-v2-source-20261008/docs/performance_v2_stage_a_diagnostic_review.md",
+        "/home/chaidir/.performance-v2-source-20261008/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-20261013/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-r2-20261013/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-20261013/candidate/configs/performance_v2/pretraining_provenance_v1.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013/candidate/configs/performance_v2/pretraining_provenance_v1.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 2712267,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-imagenet-synthetic-002-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/imagenet-synthetic-002-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/imagenet-synthetic-002-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1496945,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-imagenet-loading-CORRECTED-20261008.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 232527,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/input-audit-20260927T121832477449883Z.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/before/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/candidate/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/package_review.py",
+        "/home/chaidir/.performance-v2-materialization-20261008/review/project_archived_evidence.py",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/docs/performance_v2_input_acceptance_and_acquisition.md",
+        "/home/chaidir/.performance-v2-source-20261008/docs/performance_v2_input_acceptance_and_acquisition.md"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1685412,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-materialization-synthetic-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-materialization-synthetic-001-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/performance-v2-materialization-synthetic-001-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 6198,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-cpu-integration-attempt-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/matched-r50-preparation-records-20261011.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/timing-attempt-001-retained-records-20261011.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/timing-corrected-final-review-records-20261011.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/timing-attempt-001-retained-records-20261011-checkpoint.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/matched-r50-preparation-records-20261011-checkpoint.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/timing-corrected-final-review-records-20261011-checkpoint.json",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/TIMING-RUNTIME-ACCEPTANCE.json",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/native-cpu-observation.json",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/timing-final-records-cudnn-corrected/TIMING-RUNTIME-ACCEPTANCE.json",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/timing-cudnn-delivery-20261011/records/TIMING-RUNTIME-ACCEPTANCE.json",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/timing-final-records-review/TIMING-RUNTIME-ACCEPTANCE.json",
+        "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012/TRAINING-RUNTIME-INACTIVE.json",
+        "/home/chaidir/.performance-v2-r50-matched-plan-20261011/TRAINING-RUNTIME-INACTIVE.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/records/RUNTIME-ACCEPTANCE.json",
+        "/home/chaidir/.performance-v2-r50-radimagenet42-20261013/records/RUNTIME-ACCEPTANCE.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 17213,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-shared-gpu-DELTA-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 20020808,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-native-acceptance-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-full-preparation-20261011/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/baseline/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-radimagenet42-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-r2-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 83142,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-cuda-pin-DELTA-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 659922,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/r50-checkpoint-source-only-20261012.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 719724,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-supported-runtime-review-20261004-final.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/reconciliation/reconcile_runtime_metadata.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 17954,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-synthetic-attempt-001-evidence-COMPLETE.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/gpu003_stage.py",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/GPU-ATTEMPT-003-HISTORICAL-BASE.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1126091,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-closure-metadata-review-20261004.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 19038,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/cpu-closure-round-01.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1702528,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-real-mapping-orchestration-CORRECTED-r2-20261008.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 7387,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-preflight-blocked-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 15196,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-synthetic-attempt-001-evidence.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 146122,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-synthetic-attempt-002-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/gpu003_stage.py",
+        "/home/chaidir/.performance-v2-r50-execution-next-20261011/GPU-ATTEMPT-003-HISTORICAL-BASE.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 338614,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-reader-correction-REVIEW-20261008.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/PROPOSED-COMMAND.sh",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/DELIVERY-LEDGER.json",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/performance-v2-reader-correction-20261008/package_review.py",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/performance-v2-reader-correction-20261008/REVIEW.md",
+        "/home/chaidir/.performance-v2-reports/reader-integration-001-launch/LAUNCH-UPLOADED.sh"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 2848095,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-imagenet-loading-LF-CORRECTED-20261008.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 51062,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-timing-cudnn-STAGING-20261011.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1596039,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-orchestration-dryrun-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-orchestration-dryrun-001-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/performance-v2-orchestration-dryrun-001-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 143639,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-timing-attempt-001-evidence-20261011.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/timing-attempt-001-retained-records-20261011.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/timing-attempt-001-retained-records-20261011-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1142392,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-production-preparation-REVIEW-20261011.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/stage_and_cpu.py",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/stage_and_cpu.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 108503,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-r50-gpu-synthetic-attempt-003-evidence.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 361645,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/metadata-run-01.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/reconciliation/reconcile_runtime_metadata.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 236982,
+      "mode": "0o666",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/reviewed/inspector.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/generate_review.py",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/REVIEW.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/linux-synthetic-acceptance.yml",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/supervisor-parent-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/deadline-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/revised-base-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/hierarchy-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/launcher-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/integrated-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/linux-revision-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/storage-admission-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/activation-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/generate_review.py",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/REVIEW.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/linux-synthetic-acceptance.yml",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/reconciliation/prior-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/supervisor-parent-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/deadline-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/revised-base-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/hierarchy-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/launcher-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/integrated-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/metadata-reconciliation-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/linux-revision-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/storage-admission-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/activation-file-hashes.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 58955860,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/references/performance-v2-consolidated-native-acceptance-REVIEW-20261007.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/PACKAGE-LEDGER.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/corrected-inventory-20261008-xxal7daw/package_review.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 236982,
+      "mode": "0o666",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/reviewed/inspector.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/generate_review.py",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/REVIEW.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/linux-synthetic-acceptance.yml",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/supervisor-parent-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/deadline-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/revised-base-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/hierarchy-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/launcher-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/integrated-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/linux-revision-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/storage-admission-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/runtime-review-20261004/unpacked/history/activation-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/generate_review.py",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/REVIEW.md",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/linux-synthetic-acceptance.yml",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/reconciliation/prior-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/supervisor-parent-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/deadline-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/revised-base-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/hierarchy-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/launcher-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/integrated-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/metadata-reconciliation-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/linux-revision-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/storage-admission-file-hashes.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/closure-review-20261004/unpacked/history/activation-file-hashes.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 655114,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-source-delivery-001-20261012/performance-v2-imagenet-model-import-SOURCE-ONLY-20261012.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 84167,
+      "mode": "0o664",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-source-delivery-001-20261012/performance-v2-imagenet-cpu-model-import-attempt-001-evidence-20261012.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 93415945,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-transfer-private-20261012/IMAGENET-CPU-RECEIVER-TRANSFER-001.zip",
+      "references": [
+        "/home/chaidir/.performance-v2-imagenet-receiver-20261012/source/TRANSFER-PLAN-INACTIVE.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 42830,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-transfer-private-20261012/performance-v2-imagenet-cpu-receiver-attempt-001-evidence-20261012.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 125179795,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET-CPU-RECEIVER-IMPORT-001.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 5642424,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET42-training-attempt-001-evidence-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 633256,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/SUPERVISION-SOURCE-ONLY-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 72690,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET-NATIVE-IMPORT-001-EVIDENCE.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/native-completion-summary.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/.ipynb_checkpoints/native-completion-summary-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 61371,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET-STORAGE-SOURCE-AUDIT-001.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 870908,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/RADIMAGENET42-LAUNCH-PREPARATION-001.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 239208,
+      "mode": "0o600",
+      "path": "/experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013/R50-FINAL-EVALUATION-SOURCE-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1496945,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-imagenet-review-20261008/baseline/reviewed-original.zip",
+      "references": [
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/CONTENT-LEDGER.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/validate.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 20020808,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/performance-v2-native-acceptance-001-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001/candidate/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-materialization-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-full-preparation-20261011/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-preparation-20261011/baseline/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-r50-radimagenet42-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-reader-correction-20261008/ConsenDxFormer-performance-v2/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-real-mapping-candidate-20261008/source/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-readiness-r2-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json",
+        "/home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013/candidate/configs/performance_v2/native_attempt_001_bounded_acceptance.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1766,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/R50-FINAL-EVALUATION-STAGING-001-FAILURE-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 556160,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-pair-001-metadata-evidence-20261012.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/r50-hard-seed42-pair-001-outcomes-bindings-20261012.json",
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/.ipynb_checkpoints/r50-hard-seed42-pair-001-outcomes-bindings-20261012-checkpoint.json"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 150756,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/R50-FINAL-TEST-EVALUATION-001-EVIDENCE-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 1664086,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012-evidence.zip",
+      "references": [
+        "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/radimagenet-disposable-review-001-20261013.json",
+        "/home/chaidir/.performance-v2-r50-matched-training-20261012/evidence_archive.py"
+      ],
+      "source": null,
+      "uid": 1009
+    },
+    {
+      "bytes": 5642424,
+      "mode": "0o600",
+      "path": "/home/chaidir/.performance-v2-reports/rad42-completion-review-001-20261013/RADIMAGENET42-training-attempt-001-evidence-20261013.zip",
+      "references": [],
+      "source": null,
+      "uid": 1009
+    }
+  ],
+  "deletion_authorized_by_naming": false,
+  "excluded_texts": [],
+  "quota_formats": {
+    "group": {
+      "errno": 3,
+      "format": 0,
+      "return_code": -1
+    },
+    "project": {
+      "errno": 3,
+      "format": 0,
+      "return_code": -1
+    },
+    "user": {
+      "errno": 3,
+      "format": 0,
+      "return_code": -1
+    }
+  },
+  "reference_scan_bytes": 104525803,
+  "unreadable_processes": 4
+}

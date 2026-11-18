@@ -1,0 +1,15 @@
+{
+  "CPU_only": true,
+  "pgid": 1033106,
+  "pid": 1033106,
+  "reviewed_cleanup_seconds": 10,
+  "reviewed_worker_deadline_seconds": 180,
+  "start_observation": [
+    {
+      "pgid": 1033106,
+      "pid": 1033106,
+      "rss_bytes": 3289088,
+      "start_ticks": 1247249798
+    }
+  ]
+}

@@ -1,0 +1,646 @@
+--- /dev/null
++++ b/DEADLINE_REVIEW.md
+@@ -0,0 +1,88 @@
++# Aggregate kill deadline correction
++
++Date: 2026-09-28. Preparation and mocked testing only. Execution approvals false;
++production pins and Stage A unchanged; Stage B paused.
++
++Parent archive SHA-256:
++`194e103548a0fe4167e377a85e4c7a9d2af045fe8038429054fb34fced8b1d99`.
++The generator independently verifies all 87 parent ledger entries and restricts
++edits to the three timeout/caller source files. Existing tests, hierarchy,
++mount lifetime, persistence/finalization code and all historical artifacts are
++preserved. New tests and this review describe the present change.
++
++## Correction and regression evidence
++
++kill_members starts its absolute monotonic deadline before the initial slice
++identity query. That same deadline covers inventory, every unit show (including
++unrelated units), the pre-signal identity recheck, and the signal command.
++command_until checks positive remaining time before invoking the backend, passes
++only that budget, and checks for overrun after return. An overrun accompanying
++a backend exception raises a TimeoutError with the original exception as cause.
++Stage/operation and deadline/time details remain in timeout diagnostics.
++
++No unrelated-unit branch bypasses the budget. Exhaustion prevents additional
++queries/signals. Exactly-on-deadline completion is permitted only if no further
++operation is needed; the next blocking call is refused. There are no retries.
++
++The reported 20-unrelated-unit reproduction now fails at 10 fake seconds after
++10 commands, with decreasing budgets 10 through 1. It cannot return success at
++22 seconds. Other fixtures cover exhausted budget before reaching the workload,
++slow inventories/rechecks, overruns at each command boundary, original-error
++preservation, inherited shorter deadlines, and successful boundary completion.
++
++## Immediate caller audit and correction
++
++The backend previously called full terminate() from both kill_subtree and
++wait_empty even though each request advertised 10 seconds. That could nest
++three separate cleanup phases inside one caller budget. It now maps:
++
++- term_service: one TERM phase, including fresh ownership verification;
++- kill_subtree: one KILL phase, including fresh ownership verification;
++- wait_empty: read-back/authorization/snapshot only, all sharing its deadline.
++
++Relevant identity, service and volume commands within the snapshot inherit the
++remaining caller budget; no query gets a fresh ten seconds inside wait_empty.
++Direct standalone calls retain their existing per-command behavior where no
++aggregate deadline is supplied. Timeout plumbing does not change hierarchy,
++file identities, mount disposal or persistence success criteria.
++
++Standalone lifecycle terminate(), including the watchdog caller, intentionally
++retains three independent cleanup phases: TERM <=10s, KILL <=10s, read-back
++<=10s. A TERM failure does not cancel the independent safe KILL/read-back attempt.
++Its errors remain recorded even if a later read-back is empty. The watchdog
++explicitly reports termination_confirmed=false when cleanup errors remain.
++The existing teardown authorization already rejects any receipt with errors.
++
++These are cooperative backend budgets with post-return overrun detection, not
++an ability to preempt a blocked syscall or undo elapsed time. Native file/proc
++reads and diagnostic persistence still carry the previously documented host-loss
++and uninterruptible-I/O limitations. This focused correction is not a new claim
++that every operation in the entire launcher has a hard aggregate wall-clock cap.
++
++## Actual validation
++
++See DEADLINE_VALIDATION.json and deadline-tests.log for the exact command,
++Windows interpreter, elapsed time and full result. Twelve new tests use invented
++monotonic time and fake command results only; no real sleeps, subprocess host
++commands, Docker, cgroups, mounts, downloads or research data were used.
++The unchanged original 15 regression tests remain included in the full suite.
++The retained acceptance_driver.py emits its historical return-in-finally
++SyntaxWarning under the existing Python 3.14 runtime; it is not altered here.
++
++## What still prevents live launcher binding
++
++The public live constructor/entry point remains disabled. A reviewed executable
++controller/watchdog launcher, source/inventory binding, correct privileged host
++bootstrap and final execution authorization are not supplied by mocked success.
++Dependency candidates remain unapproved; immutable metadata, actual binary hash
++verification, native/Python/Actions security and compatibility clearance remain
++outstanding. Remote evidence transport and fresh zero-paid-usage gates remain
++outside this correction. No historical workflow is published or dispatched.
++
++## What still prevents Linux acceptance
++
++No native Linux execution was authorized or performed. Actual systemd, kernel,
++Docker scope placement, process races, backend timeout enforcement, quota behavior,
++filesystem/directory durability and teardown must be evaluated in a separately
++authorized disposable Linux environment after source/security review. Ambiguous
++recovery and host-loss limitations remain; passing mocks do not close these gates.
+--- a/linux_integration.py
++++ b/linux_integration.py
+@@ -56,14 +56,17 @@
+         self.host, self.l = host, lifecycle
+         self.arguments = {}
+ 
+-    def inspect(self, unit):
+-        raw = self.host.command(['systemctl', 'show', unit, '--property=Id,ActiveState,MainPID,ControlGroup'], 10).decode()
++    def inspect(self, unit, deadline=None):
++        deadline = self.host.now() + 10 if deadline is None else deadline
++        raw = self.l.manager.command_until(['systemctl', 'show', unit, '--property=Id,ActiveState,MainPID,ControlGroup'],
++                                           deadline, 'service identity').decode()
+         values = dict(line.split('=', 1) for line in raw.splitlines() if '=' in line)
+         require(values.get('Id') == unit and values.get('ActiveState') == 'active', 'service not independently active')
+         pid = int(values.get('MainPID', '0'))
+         require(pid > 1, 'missing service PID')
+         proc = self.host.process(pid)
+         require(proc['cgroup'] == values.get('ControlGroup'), 'service/proc cgroup mismatch')
++        self.l.manager.check_return(deadline, 'service identity read-back')
+         return proc
+ 
+     def start(self, role, argv, outside=False):
+@@ -98,6 +101,7 @@
+         self.result = None
+         self.record = None
+         self.terminated = None
++        self.cleanup_phase_errors = []
+ 
+     def now(self):
+         return self.host.now()
+@@ -125,11 +129,11 @@
+                 owned.append(p)
+         return owned, escaped
+ 
+-    def snapshot(self, record):
+-        identity = self.l.cgroup_identity()
++    def snapshot(self, record, deadline=None):
++        identity = self.l.cgroup_identity(deadline=deadline)
+         owner = record['systemd_owner']
+-        require(self.l.manager.show(owner['guard_unit'])['ControlGroup'] == owner['guard_path'], 'guard slice path changed')
+-        require(self.l.manager.show(owner['controller_unit'])['ControlGroup'] == owner['controller_path'], 'controller unit path changed')
++        require(self.l.manager.show(owner['guard_unit'], deadline=deadline)['ControlGroup'] == owner['guard_path'], 'guard slice path changed')
++        require(self.l.manager.show(owner['controller_unit'], deadline=deadline)['ControlGroup'] == owner['controller_path'], 'controller unit path changed')
+         _, controller_path = resolve_cgroup(self.host.text('/proc/self/mountinfo'), self.host.text('/proc/self/cgroup'))
+         require(controller_path == owner['controller_path'], 'controller process moved')
+         require(identity['inode'] == record['cgroup_inode'] and identity['boot_id'] == record['boot_id'], 'cgroup changed')
+@@ -149,7 +153,7 @@
+             normalized.append(q)
+         volumes = {}
+         for role, volume in record['volumes'].items():
+-            current = self.l.volume_identity(role, volume['loop'])
++            current = self.l.volume_identity(role, volume['loop'], deadline=deadline)
+             volumes[role] = volume_record(current, self.host)
+         paths = record['paths']
+         # Independently bind daemon invocation, private socket and all configured
+@@ -175,7 +179,7 @@
+         require(len(runtime) == 1 and runtime[0]['filesystem'] == 'tmpfs', 'runtime mount')
+         runtime_stats = self.host.filesystem(self.l.runtime)
+         require(runtime_stats['capacity_bytes'] <= 64 * 1024**2, 'runtime capacity')
+-        watchdog = self.services.inspect('pv2-' + self.l.token + '-watchdog.service')
++        watchdog = self.services.inspect('pv2-' + self.l.token + '-watchdog.service', deadline=deadline)
+         control = self.l.cgmount + watchdog['cgroup']
+         require(int(self.host.text(control + '/memory.max')) <= 256 * 1024**2 and
+                 self.host.text(control + '/memory.swap.max').strip() == '0' and
+@@ -190,6 +194,8 @@
+         fs = self.host.filesystem(self.l.root + '/data')
+         events = dict(line.split() for line in self.host.text(self.l.cg + '/cgroup.events').splitlines())
+         listeners = [p for p in (paths['docker_socket'], paths['containerd_socket']) if p in self.host.text('/proc/net/unix')]
++        if deadline is not None:
++            self.l.manager.check_return(deadline, 'snapshot completion')
+         return {'identity': {'boot_id': identity['boot_id'], 'cgroup_inode': identity['inode'], 'token': self.l.token},
+                 'paths': deepcopy(paths), 'volumes': volumes, 'policy': policy, 'processes': normalized,
+                 'external_owned_processes': escaped, 'all_storage_confined': True,
+@@ -199,8 +205,9 @@
+     def request(self, action, record, timeout):
+         require(0 < timeout <= 10, 'control timeout')
+         require(record == self.record, 'backend record binding')
++        deadline = self.host.now() + timeout
+         if action == 'snapshot':
+-            return self.snapshot(record)
++            return self.snapshot(record, deadline=deadline)
+         if action == 'begin_operation':
+             require(self.l.admission and self.handle is None, 'operation admission')
+             # systemd-run service stays below the parent; killing its client is
+@@ -215,15 +222,19 @@
+         if action == 'close_admission':
+             self.l.admission = False
+             return {}
+-        if action == 'term_service':
+-            self.l.manager.kill_members(self.l.manager.work_unit, self.l.work_path, 'TERM')
++        if action in ('term_service', 'kill_subtree'):
++            identity = {'path': self.l.cg, 'inode': record['cgroup_inode'], 'boot_id': record['boot_id']}
++            try:
++                self.l.signal_phase(identity, 'TERM' if action == 'term_service' else 'KILL', timeout=timeout)
++            except BaseException as exc:
++                self.cleanup_phase_errors.append(action + ': ' + repr(exc))
++                raise
+             return {}
+-        if action in ('kill_subtree', 'wait_empty'):
+-            self.terminated = self.l.terminate(self.l.cgroup_identity())
+-            if action == 'wait_empty':
+-                self.l.require_termination(self.terminated)
+-                return self.snapshot(record)
+-            return self.terminated
++        if action == 'wait_empty':
++            identity = {'path': self.l.cg, 'inode': record['cgroup_inode'], 'boot_id': record['boot_id']}
++            self.terminated = self.l.read_termination(identity, self.cleanup_phase_errors, deadline=deadline)
++            self.l.require_termination(self.terminated, deadline=deadline)
++            return self.snapshot(record, deadline=deadline)
+         if action == 'unmount_data':
+             self.l.require_termination(self.terminated)
+             self.l.detach_volume('data', self.l.volume_identity('data', record['volumes']['data']['loop']), self.terminated)
+--- a/linux_lifecycle.py
++++ b/linux_lifecycle.py
+@@ -59,14 +59,16 @@
+     def verify_entry(self, identity):
+         require(self.entry_identity(identity['path']) == identity, 'filesystem-bound entry changed')
+ 
+-    def cgroup_identity(self):
+-        path = self.manager.show(self.manager.work_unit)['ControlGroup']
++    def cgroup_identity(self, deadline=None):
++        path = self.manager.show(self.manager.work_unit, deadline=deadline)['ControlGroup']
+         require(self.work_path is None or self.work_path == path, 'reported workload path changed')
+         self.work_path, self.cg = path, self.cgmount + path
+         observed = {'path': self.cg, 'inode': self.host.stat(self.cg).st_ino,
+                     'boot_id': self.host.text('/proc/sys/kernel/random/boot_id').strip()}
+         expected = self.owned_slices.get(self.manager.work_unit)
+         require(expected is None or expected == observed, 'owned workload slice replaced')
++        if deadline is not None:
++            self.manager.check_return(deadline, 'cgroup identity read-back')
+         return observed
+ 
+     def provision_cgroup(self):
+@@ -102,8 +104,8 @@
+         self.owned_slices[self.manager.guard_unit] = deepcopy(guard)
+         return identity
+ 
+-    def assert_cgroup(self, identity):
+-        require(self.cgroup_identity() == identity, 'cgroup identity changed')
++    def assert_cgroup(self, identity, deadline=None):
++        require(self.cgroup_identity(deadline=deadline) == identity, 'cgroup identity changed')
+ 
+     def census(self, path=None):
+         path = path or self.cg
+@@ -118,31 +120,28 @@
+                 result.extend(self.census(str(child)))
+         return result
+ 
+-    def terminate(self, identity):
+-        errors = []
++    def signal_phase(self, identity, signal, timeout=10):
++        deadline = self.host.now() + timeout
+         self.admission = False
+-        for action in ('term', 'kill'):
+-            try:
+-                self.assert_cgroup(identity)
+-                if action == 'term':
+-                    self.manager.kill_members(self.manager.work_unit, self.work_path, 'TERM')
+-                else:
+-                    self.manager.kill_members(self.manager.work_unit, self.work_path, 'KILL')
+-            except BaseException as exc:
+-                errors.append(action + ': ' + repr(exc))
+-        deadline = self.host.now() + 10
++        self.assert_cgroup(identity, deadline=deadline)
++        self.manager.kill_members(self.manager.work_unit, self.work_path, signal, timeout=timeout, deadline=deadline)
++
++    def read_termination(self, identity, errors=None, timeout=10, deadline=None):
++        errors = list(errors or [])
++        deadline = self.host.now() + timeout if deadline is None else deadline
+         empty = False
+         try:
+             while self.host.now() < deadline:
+-                self.assert_cgroup(identity)
++                self.assert_cgroup(identity, deadline=deadline)
+                 events = dict(x.split() for x in self.host.text(self.cg + '/cgroup.events').splitlines())
+                 if events.get('populated') == '0' and not self.census():
+                     listeners = self.host.text('/proc/net/unix')
+                     require(self.runtime + '/docker.sock' not in listeners and self.runtime + '/containerd.sock' not in listeners,
+                             'private listener survives')
++                    self.manager.check_return(deadline, 'termination read-back')
+                     empty = True
+                     break
+-                self.host.pause(.05)
++                self.host.pause(min(.05, self.manager.remaining(deadline, 'termination poll')))
+             require(empty, 'subtree termination unconfirmed')
+         except BaseException as exc:
+             errors.append('readback: ' + repr(exc))
+@@ -152,7 +151,18 @@
+         self.latest_termination = deepcopy(result)
+         return result
+ 
+-    def require_termination(self, result):
++    def terminate(self, identity):
++        # Independent safe cleanup phases: TERM <=10s, KILL <=10s, read-back
++        # <=10s. Failure/timeout in one does not consume or skip the next phase.
++        errors = []
++        for signal in ('TERM', 'KILL'):
++            try:
++                self.signal_phase(identity, signal, 10)
++            except BaseException as exc:
++                errors.append(signal.lower() + ': ' + repr(exc))
++        return self.read_termination(identity, errors, timeout=10)
++
++    def require_termination(self, result, deadline=None):
+         """A truthy object is never permission; reobserve at each boundary.
+ 
+         Receipts are valid only in the issuing lifecycle instance, for <=10s.
+@@ -167,7 +177,7 @@
+         require(result['token'] == self.token and result == self.latest_termination, 'unrelated or superseded termination')
+         require(type(result['observed_at']) in (int, float) and math.isfinite(result['observed_at']), 'termination timestamp')
+         require(0 <= self.host.now() - result['observed_at'] <= 10, 'stale termination result')
+-        self.assert_cgroup(result['ownership'])
++        self.assert_cgroup(result['ownership'], deadline=deadline)
+         events = dict(x.split() for x in self.host.text(self.cg + '/cgroup.events').splitlines())
+         require(events.get('populated') == '0' and not self.census(), 'termination no longer holds')
+         listeners = self.host.text('/proc/net/unix')
+@@ -183,16 +193,21 @@
+             if self.token in argv or within(p['cgroup'], self.work_path):
+                 require((self.guard_path and within(p['cgroup'], self.guard_path)) or within(p['cgroup'], self.parent),
+                         'owned process survives outside empty subtree')
++        if deadline is not None:
++            self.manager.check_return(deadline, 'termination authorization')
+         return True
+ 
+-    def volume_identity(self, role, loop):
++    def volume_identity(self, role, loop, deadline=None):
+         backing, target = self.root + '/' + role + '.ext4', self.root + '/' + role
+         mounts = [m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == target]
+         require(len(mounts) == 1 and mounts[0]['filesystem'] == 'ext4' and mounts[0]['source'] == loop, 'mount identity')
+-        observed = json.loads(self.host.command(['losetup', '--json', '--output', 'NAME,BACK-FILE', loop], 10))['loopdevices']
++        def command(argv, stage):
++            end = self.host.now() + 10 if deadline is None else deadline
++            return self.manager.command_until(argv, end, stage)
++        observed = json.loads(command(['losetup', '--json', '--output', 'NAME,BACK-FILE', loop], 'volume loop identity'))['loopdevices']
+         require(len(observed) == 1 and observed[0]['name'] == loop and observed[0]['back-file'] == backing, 'loop backing mismatch')
+         st = self.host.stat(backing)
+-        uuid = self.host.command(['blkid', '-s', 'UUID', '-o', 'value', loop], 10).decode().strip()
++        uuid = command(['blkid', '-s', 'UUID', '-o', 'value', loop], 'volume UUID').decode().strip()
+         require(uuid, 'filesystem UUID missing')
+         return {'mount': mounts[0], 'loop': loop, 'backing': backing, 'inode': st.st_ino,
+                 'size': st.st_size, 'allocated': st.st_blocks * 512, 'uuid': uuid}
+@@ -328,6 +343,9 @@
+                     break
+                 host.pause(.1)
+             result = self.lifecycle.terminate(self.identity)
++            # An empty read-back does not erase a preceding cleanup timeout.
++            if result.get('errors'):
++                result['termination_confirmed'] = False
+         except BaseException as exc:
+             result = {'termination_confirmed': False, 'errors': [repr(exc)]}
+         try:
+--- /dev/null
++++ b/package_deadline.py
+@@ -0,0 +1,69 @@
++"""Explicit local packaging and mocked testing. No native Linux operations."""
++import argparse
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++
++BASE = '194e103548a0fe4167e377a85e4c7a9d2af045fe8038429054fb34fced8b1d99'
++EDITED = {'systemd_ownership.py', 'linux_lifecycle.py', 'linux_integration.py', 'file-hashes.json'}
++
++def digest(raw): return hashlib.sha256(raw).hexdigest()
++
++def write(path, obj): path.write_text(json.dumps(obj, sort_keys=True, indent=2) + '\n', encoding='utf-8')
++
++def main():
++    parser = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): parser.add_argument('--' + name, required=True, type=Path)
++    args = parser.parse_args(); root = args.root.resolve()
++    if digest(args.base.read_bytes()) != BASE: raise ValueError('base SHA mismatch')
++    with zipfile.ZipFile(args.base) as base:
++        previous = json.loads(base.read('file-hashes.json'))
++        if set(base.namelist()) != set(previous) | {'file-hashes.json'}: raise ValueError('parent coverage')
++        for name, record in previous.items():
++            raw = base.read(name)
++            if len(raw) != record['size_bytes'] or digest(raw) != record['sha256']: raise ValueError(name)
++            if name not in EDITED and (root / name).read_bytes() != raw: raise ValueError('unexpected edit ' + name)
++        (root / 'history' / 'hierarchy-file-hashes.json').write_bytes(base.read('file-hashes.json'))
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        command = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        tested = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True, timeout=120)
++        (root / 'deadline-tests.log').write_text(tested.stdout + tested.stderr, encoding='utf-8')
++        if tested.returncode: raise RuntimeError('tests failed; see deadline-tests.log')
++        summary = re.search(r'Ran \d+ tests in [^\n]+', tested.stderr).group()
++        for path in root.glob('*.py'): compile(path.read_text(encoding='utf-8'), str(path), 'exec')
++        files, diff = [], []
++        for path in sorted(root.iterdir()):
++            if path.suffix not in ('.py', '.md'): continue
++            before = base.read(path.name).decode().splitlines(True) if path.name in base.namelist() else []
++            after = path.read_text(encoding='utf-8').splitlines(True)
++            if before == after: continue
++            if any(s.rstrip('\r\n').rstrip() != s.rstrip('\r\n') for s in after): raise ValueError('whitespace ' + path.name)
++            files.append(path.name)
++            diff.extend(difflib.unified_diff(before, after, fromfile='a/' + path.name if before else '/dev/null', tofile='b/' + path.name))
++        (root / 'deadline-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root / 'DEADLINE_VALIDATION.json', {'parent_sha256': BASE, 'parent_entries_verified': len(previous),
++              'command': command, 'test_summary': summary, 'exit_code': tested.returncode,
++              'python': sys.version, 'platform': platform.platform(), 'changed_source_documents': files,
++              'all_parent_tests_unchanged': True, 'new_focused_tests': 12, 'production_pins_unchanged': True,
++              'execution_approved': False, 'linux_acceptance_executed': False, 'stage_b': 'paused',
++              'scope': 'invented clocks and mocked OS boundaries; no Linux execution',
++              'warning': 'Unchanged acceptance_driver.py return-in-finally SyntaxWarning'})
++    ledger = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path != root / 'file-hashes.json':
++            raw = path.read_bytes(); ledger[path.relative_to(root).as_posix()] = {'sha256': digest(raw), 'size_bytes': len(raw)}
++    write(root / 'file-hashes.json', ledger)
++    with zipfile.ZipFile(args.output, 'x', zipfile.ZIP_DEFLATED) as out:
++        for name in [*sorted(ledger), 'file-hashes.json']: out.write(root / name, name)
++    print(json.dumps({'path': str(args.output.resolve()), 'sha256': digest(args.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': summary}, indent=2))
++
++if __name__ == '__main__': main()
+--- a/systemd_ownership.py
++++ b/systemd_ownership.py
+@@ -1,5 +1,6 @@
+ """Manager-owned transient slices. Never mkdir/write/rmdir systemd cgroups."""
+ import json
++import math
+ from supervisor_v2 import require, within
+ 
+ 
+@@ -10,9 +11,31 @@
+         self.work_unit = 'pv2work' + token + '.slice'
+         self.guard_unit = 'pv2guard' + token + '.slice'
+ 
+-    def show(self, unit, active=True):
+-        text = self.host.command(['systemctl', 'show', unit,
+-                                  '--property=Id,ActiveState,ControlGroup'], 10).decode()
++    def remaining(self, deadline, stage):
++        remaining = deadline - self.host.now()
++        if remaining <= 0:
++            raise TimeoutError(f'{stage}: aggregate deadline exhausted (deadline={deadline}, now={self.host.now()})')
++        return remaining
++
++    def check_return(self, deadline, stage):
++        if self.host.now() > deadline:
++            raise TimeoutError(f'{stage}: backend deadline overrun (deadline={deadline}, now={self.host.now()})')
++
++    def command_until(self, argv, deadline, stage):
++        budget = self.remaining(deadline, stage)
++        try:
++            result = self.host.command(argv, budget)
++        except BaseException as exc:
++            if self.host.now() > deadline:
++                raise TimeoutError(f'{stage}: backend deadline overrun; original error={exc!r}') from exc
++            raise
++        self.check_return(deadline, stage)
++        return result
++
++    def show(self, unit, active=True, deadline=None):
++        deadline = self.host.now() + 10 if deadline is None else deadline
++        text = self.command_until(['systemctl', 'show', unit,
++                                   '--property=Id,ActiveState,ControlGroup'], deadline, 'show ' + unit).decode()
+         row = dict(line.split('=', 1) for line in text.splitlines() if '=' in line)
+         require(row.get('Id') == unit, 'systemd unit identity')
+         if active:
+@@ -31,25 +54,26 @@
+                            'CPUQuotaPerSecUSec', 't', str(quota), 'TasksMax', 't', str(pids), '0'], 10)
+         return self.show(unit)
+ 
+-    def kill_members(self, unit, expected_path, signal):
+-        require(self.show(unit)['ControlGroup'] == expected_path, 'slice path changed')
++    def kill_members(self, unit, expected_path, signal, timeout=10, deadline=None):
++        require(type(timeout) in (float, int) and math.isfinite(timeout) and 0 < timeout <= 10, 'kill budget')
++        deadline = self.host.now() + timeout if deadline is None else min(deadline, self.host.now() + timeout)
++        require(self.show(unit, deadline=deadline)['ControlGroup'] == expected_path, 'slice path changed')
+         require(signal in ('TERM', 'KILL'), 'signal')
+-        deadline = self.host.now() + 10
+-        rows = json.loads(self.host.command(['systemctl', 'list-units', '--all', '--output=json',
+-                                            '--type=service,scope', '--no-pager'], 10))
++        rows = json.loads(self.command_until(['systemctl', 'list-units', '--all', '--output=json',
++                                             '--type=service,scope', '--no-pager'], deadline, 'unit inventory'))
+         require(type(rows) is list and len(rows) <= 4096, 'unit inventory bound')
+         for row in rows:
+             name = row['unit']
+             require(name.endswith(('.service', '.scope')) and '/' not in name, 'unit inventory name')
+-            observed = self.show(name, active=False)
++            observed = self.show(name, active=False, deadline=deadline)
+             path = observed.get('ControlGroup', '')
+             if path and within(path, expected_path):
+-                require(self.host.now() < deadline, 'unit kill deadline')
+                 # Re-read immediately before signalling; never signal a name
+                 # that has moved outside the owned manager-reported branch.
+-                require(self.show(name, active=False).get('ControlGroup') == path, 'unit moved before signal')
+-                self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=' + signal, name],
+-                                  min(10, deadline - self.host.now()))
++                require(self.show(name, active=False, deadline=deadline).get('ControlGroup') == path, 'unit moved before signal')
++                self.command_until(['systemctl', 'kill', '--kill-whom=all', '--signal=' + signal, name],
++                                   deadline, 'signal ' + signal + ' ' + name)
++        self.check_return(deadline, 'kill_members completion')
+ 
+     def stop(self, unit, expected_path, inode):
+         require(self.show(unit)['ControlGroup'] == expected_path, 'slice changed before stop')
+--- /dev/null
++++ b/test_aggregate_deadline.py
+@@ -0,0 +1,148 @@
++"""Invented monotonic time and command results; no sleeps or subprocesses."""
++import json
++import unittest
++from unittest.mock import patch
++
++from systemd_ownership import SystemdOwnership
++from linux_lifecycle import IndependentWatchdog
++from test_linux_integration import Kernel
++from linux_integration import Coordinator
++from test_supervisor_v2 import FakeEvidence
++
++
++class TimedHost:
++    is_fake = True
++    def __init__(self, names, costs=None, hostile=False, error=None):
++        self.time = 0.; self.calls = []; self.names = names
++        self.costs = iter(costs or []); self.hostile = hostile; self.error = error
++    def now(self): return self.time
++    def command(self, argv, timeout):
++        started = self.time
++        cost = next(self.costs, 1.)
++        self.calls.append((list(argv), timeout, started))
++        if not self.hostile and cost > timeout:
++            self.time += timeout
++            raise TimeoutError('invented cooperative command timeout')
++        self.time += cost
++        if self.error: raise self.error
++        if argv[1] == 'list-units': return json.dumps([{'unit': n} for n in self.names]).encode()
++        if argv[1] == 'show':
++            unit = argv[2]
++            path = '/owned.slice' if unit.endswith('.slice') else ('/owned.slice/work.service' if unit == 'work.service' else '/system.slice/' + unit)
++            return f'Id={unit}\nActiveState=active\nControlGroup={path}\n'.encode()
++        return b''
++
++
++class AggregateTests(unittest.TestCase):
++    def manager(self, h): return SystemdOwnership(h, 'a' * 32, '/sys/fs/cgroup')
++    def kill(self, h, **kwargs):
++        m = self.manager(h)
++        return m.kill_members(m.work_unit, '/owned.slice', 'KILL', **kwargs)
++    def no_signal(self, h): self.assertFalse(any(a[1] == 'kill' for a, _, _ in h.calls))
++
++    def test_twenty_unrelated_services_cannot_return_after_22_seconds(self):
++        h = TimedHost(['unrelated' + str(i) + '.service' for i in range(20)])
++        with self.assertRaisesRegex(TimeoutError, 'aggregate deadline exhausted'): self.kill(h)
++        self.assertEqual(h.time, 10)
++        self.assertEqual(len(h.calls), 10)
++        self.assertEqual([budget for _, budget, _ in h.calls], list(range(10, 0, -1)))
++        self.no_signal(h)
++
++    def test_exhaustion_before_workload_is_reached(self):
++        h = TimedHost(['other' + str(i) + '.service' for i in range(8)] + ['work.service'])
++        with self.assertRaises(TimeoutError): self.kill(h)
++        self.assertFalse(any('work.service' in a for a, _, _ in h.calls))
++        self.no_signal(h)
++
++    def test_slow_inventory_stops_before_inspection(self):
++        h = TimedHost(['work.service'], [2, 9])
++        with self.assertRaises(TimeoutError): self.kill(h)
++        self.assertEqual(h.time, 10)
++        self.assertEqual([b for _, b, _ in h.calls], [10, 8])
++        self.no_signal(h)
++
++    def test_recheck_uses_remaining_not_fresh_timeout(self):
++        h = TimedHost(['work.service'], [1, 1, 1, 8])
++        with self.assertRaises(TimeoutError): self.kill(h)
++        self.assertEqual([b for _, b, _ in h.calls], [10, 9, 8, 7])
++        self.no_signal(h)
++
++    def test_backend_overrun_at_each_boundary_is_failure(self):
++        for costs in ([11], [1, 10], [1, 1, 9], [1, 1, 1, 8], [1, 1, 1, 1, 7]):
++            h = TimedHost(['work.service'], costs, hostile=True)
++            with self.subTest(costs=costs), self.assertRaisesRegex(TimeoutError, 'backend deadline overrun'):
++                self.kill(h)
++            self.assertEqual(len(h.calls), len(costs))
++
++    def test_original_backend_exception_is_preserved_on_overrun(self):
++        original = OSError('invented I/O error')
++        h = TimedHost([], [11], hostile=True, error=original)
++        with self.assertRaises(TimeoutError) as caught: self.kill(h)
++        self.assertIs(caught.exception.__cause__, original)
++        self.assertIn('I/O error', str(caught.exception))
++
++    def test_success_and_exact_deadline_completion(self):
++        h = TimedHost(['work.service'], [1, 1, 1, 1, 6])
++        self.kill(h)
++        self.assertEqual(h.time, 10)
++        self.assertEqual([b for _, b, _ in h.calls], [10, 9, 8, 7, 6])
++
++    def test_inherited_deadline_is_not_reset(self):
++        h = TimedHost(['work.service'])
++        with self.assertRaises(TimeoutError): self.kill(h, timeout=10, deadline=2)
++        self.assertEqual([b for _, b, _ in h.calls], [2, 1])
++
++
++class CallerTests(unittest.TestCase):
++    def make(self):
++        h = Kernel(); c = Coordinator(h, FakeEvidence(), 'a' * 32)
++        inventory = {p: 'a' * 64 for p in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc')}
++        b, r = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        return h, c, b, r
++
++    def test_backend_short_timeout_propagates_to_initial_identity(self):
++        h, c, b, r = self.make(); original = h.command; calls = []
++        def slow(argv, timeout):
++            calls.append((list(argv), timeout)); h.time += min(1, timeout)
++            return original(argv, timeout)
++        with patch.object(h, 'command', side_effect=slow), self.assertRaises(TimeoutError):
++            b.request('term_service', r, 2)
++        self.assertEqual(h.time, 2)
++        self.assertEqual([budget for _, budget in calls], [2, 1])
++        self.assertTrue(b.cleanup_phase_errors)
++
++    def test_backend_phases_do_not_nest_three_phase_cleanup(self):
++        h, c, b, r = self.make()
++        with patch.object(c.l, 'terminate', side_effect=AssertionError('nested cleanup')), patch.object(c.l.manager, 'kill_members', wraps=c.l.manager.kill_members) as signal:
++            b.request('term_service', r, 10)
++            b.request('kill_subtree', r, 10)
++            b.request('wait_empty', r, 10)
++        self.assertEqual([call.args[2] for call in signal.call_args_list], ['TERM', 'KILL'])
++
++    def test_watchdog_keeps_timeout_even_when_independent_kill_succeeds(self):
++        h, c, b, r = self.make(); e = FakeEvidence()
++        original = c.l.manager.kill_members; seen = []
++        def first_timeout(unit, path, signal, **kw):
++            seen.append(signal)
++            if signal == 'TERM':
++                h.time = kw['deadline']
++                raise TimeoutError('invented aggregate TERM timeout')
++            return original(unit, path, signal, **kw)
++        with patch.object(c.l.manager, 'kill_members', side_effect=first_timeout):
++            result = IndependentWatchdog(c.l, c.l.cgroup_identity(), h.time, e).supervise(lambda: False, lambda: False)
++        self.assertEqual(seen, ['TERM', 'KILL'])
++        self.assertFalse(result['termination_confirmed'])
++        self.assertIn('TERM timeout', str(result['errors']))
++        self.assertFalse(e.ledger[-1][1]['termination_confirmed'])
++        self.assertFalse(any(p['cgroup'].startswith(c.l.work_path + '/') for p in h.processes.values()))
++
++    def test_wait_snapshot_commands_share_remaining_budget(self):
++        h, c, b, r = self.make(); b.request('kill_subtree', r, 10)
++        original = h.command; budgets = []
++        def slow(argv, timeout):
++            budgets.append(timeout); h.time += min(1, timeout)
++            return original(argv, timeout)
++        with patch.object(h, 'command', side_effect=slow), self.assertRaises(TimeoutError):
++            b.request('wait_empty', r, 3)
++        self.assertEqual(h.time, 3)
++        self.assertEqual(budgets, [3, 2, 1])

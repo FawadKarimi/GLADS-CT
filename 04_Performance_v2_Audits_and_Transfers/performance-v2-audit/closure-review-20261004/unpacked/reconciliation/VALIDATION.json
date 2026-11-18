@@ -1,0 +1,24 @@
+{
+  "artifact_bytes_verified": false,
+  "base_content_unchanged": true,
+  "base_entries_verified": 135,
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_reconciliation"
+  ],
+  "execution_approved": false,
+  "exit_code": 0,
+  "linux_acceptance": false,
+  "live_network_receipts_reverified": false,
+  "metadata_files_verified": 11,
+  "metadata_receipts_verified": 15,
+  "prior_176_tests": "historical result retained; not rerun because native/runtime source unchanged",
+  "runtime": "CPython 3.14.6 Windows",
+  "scope": "offline supplied metadata integrity and synthetic mutations only",
+  "security_approved": false,
+  "tests_passed": 7
+}

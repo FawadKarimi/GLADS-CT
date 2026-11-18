@@ -1,0 +1,385 @@
+diff --git a/scripts/performance_v2_native_acceptance.py b/scripts/performance_v2_native_acceptance.py
+--- a/scripts/performance_v2_native_acceptance.py
++++ b/scripts/performance_v2_native_acceptance.py
+@@ -3,11 +3,13 @@
+ import contextvars
+ from contextlib import ExitStack
+ import hashlib
+-import importlib.metadata as metadata
++from email.parser import BytesParser
++from email.policy import default as email_policy
+ import json
+ import os
+ from pathlib import Path
+ import platform
++import re
+ import shutil
+ import site
+ import sqlite3
+@@ -78,20 +80,123 @@
+     return max(matches, key=lambda x: x[0])[1] if matches else {'verified': False}
+ 
+ 
++INVENTORY_DEPENDENCIES = {'torch', 'torchvision', 'numpy', 'pytest',
++                        'opencv-python', 'opencv-python-headless', 'packaging'}
++
++
++def dependency_metadata():
++    """Inspect explicit prefixes, never execute site initialization or .pth files.
++
++    Python 3.10 -S leaves sys.prefix pointing at the base interpreter. Preserve
++    the invocation path (not its executable symlink target) to find pyvenv.cfg.
++    Scope records are evidence, not an emulation of arbitrary import hooks.
++    """
++    invocation = Path(sys.executable).absolute()
++    config_candidates = [invocation.parent/'pyvenv.cfg', invocation.parent.parent/'pyvenv.cfg']
++    config = next((p for p in config_candidates if p.is_file()), None)
++    errors = []
++    venv_root, include_base, config_record = None, False, None
++    if config:
++        raw = config.read_bytes()
++        settings = {}
++        for line in raw.decode('utf-8').splitlines():
++            if '=' in line:
++                key, value = line.split('=', 1)
++                key = key.strip().lower()
++                if key in settings:
++                    errors.append({'path': str(config), 'reason': 'duplicate pyvenv.cfg key: ' + key})
++                settings[key] = value.strip()
++        venv_root = config.parent
++        setting = settings.get('include-system-site-packages', '').lower()
++        if setting not in ('true', 'false'):
++            errors.append({'path': str(config), 'reason': 'missing/invalid include-system-site-packages'})
++        include_base = setting == 'true'
++        config_record = {'path': str(config), 'sha256': hashlib.sha256(raw).hexdigest(),
++                         'include_system_site_packages': setting, 'home': settings.get('home')}
++    elif sys.prefix != sys.base_prefix:
++        errors.append({'path': str(invocation), 'reason': 'virtual prefix without pyvenv.cfg binding'})
++
++    def paths(prefixes):
++        return list(dict.fromkeys(str(Path(p).absolute()) for p in site.getsitepackages(prefixes)))
++
++    roots = {'virtual_environment': paths([str(venv_root)]) if venv_root else [],
++             'base_interpreter': paths(list(dict.fromkeys([sys.base_prefix, sys.base_exec_prefix])))}
++    scopes = {}
++    for scope, search_paths in roots.items():
++        records, seen = [], set()
++        for search_path in search_paths:
++            parent = Path(search_path)
++            if not parent.is_dir():
++                continue
++            for descriptor in sorted(parent.iterdir()):
++                if descriptor.suffix.lower() not in ('.dist-info', '.egg-info'):
++                    continue
++                identity = str(descriptor.resolve())
++                if identity in seen:
++                    continue  # aliases of the same search root are not duplicate installs
++                seen.add(identity)
++                filename = 'METADATA' if descriptor.suffix.lower() == '.dist-info' else 'PKG-INFO'
++                member = descriptor/filename if descriptor.is_dir() else descriptor
++                if descriptor.suffix.lower() == '.dist-info' and not descriptor.is_dir():
++                    errors.append({'scope': scope, 'path': str(descriptor), 'reason': 'invalid dist-info descriptor'})
++                    continue
++                try:
++                    raw = member.read_bytes()
++                    parsed = BytesParser(policy=email_policy).parsebytes(raw)
++                    names, versions = parsed.get_all('Name', []), parsed.get_all('Version', [])
++                    if (not raw.strip() or parsed.defects or len(names) != 1 or len(versions) != 1
++                            or not str(names[0]).strip() or not str(versions[0]).strip()):
++                        raise ValueError('empty/malformed metadata or missing/duplicate Name/Version')
++                    name = re.sub(r'[-_.]+', '-', str(names[0]).strip()).lower()
++                    if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', name):
++                        raise ValueError('invalid distribution Name')
++                except (OSError, ValueError) as error:
++                    errors.append({'scope': scope, 'path': str(member), 'reason': str(error)})
++                    continue
++                if name in INVENTORY_DEPENDENCIES:
++                    records.append({'name': name, 'version': str(versions[0]).strip(),
++                                    'descriptor': str(descriptor), 'metadata_path': str(member),
++                                    'metadata_sha256': hashlib.sha256(raw).hexdigest(),
++                                    'metadata_bytes': len(raw), 'search_path': search_path})
++        scopes[scope] = {'prefix': str(venv_root) if scope == 'virtual_environment' and venv_root
++                        else sys.base_prefix if scope == 'base_interpreter' else None,
++                        'search_paths': search_paths, 'distributions': records,
++                        'missing_selected_names': sorted(INVENTORY_DEPENDENCIES - {r['name'] for r in records})}
++    by_name = {}
++    for scope, data in scopes.items():
++        for record in data['distributions']:
++            by_name.setdefault(record['name'], []).append({'scope': scope, **record})
++    duplicates = {name: records for name, records in by_name.items() if len(records) > 1}
++    active_scopes = ['virtual_environment'] if venv_root else ['base_interpreter']
++    if venv_root and include_base:
++        active_scopes.append('base_interpreter')
++    active = {}
++    for scope in active_scopes:
++        for record in scopes[scope]['distributions']:
++            if record['name'] in active:
++                errors.append({'scope': scope, 'path': record['descriptor'],
++                               'reason': 'ambiguous active distribution: ' + record['name']})
++            else:
++                active[record['name']] = {'scope': scope, **record}
++    return {'schema': 'performance_v2_dependency_metadata_v2', 'invocation': str(invocation),
++            'resolved_executable': str(invocation.resolve()), 'pyvenv_config': config_record,
++            'prefix_under_no_site': sys.prefix, 'base_prefix': sys.base_prefix,
++            'base_exec_prefix': sys.base_exec_prefix, 'scopes': scopes, 'duplicates': duplicates,
++            'active_scopes': active_scopes, 'active_distributions': active,
++            'errors': errors, 'valid': not errors,
++            'import_resolution_verified': False, 'site_initialization_executed': False}
++
++
+ def inventory(scratch=None):
+     # Metadata inspection only. No import of Torch/cv2, device probe, package
+     # installation, subprocess or persistent SQLite database is needed.
+-    distributions = {}
+-    for dist in metadata.distributions(path=site.getsitepackages()):
+-        name = dist.metadata.get('Name', '').lower().replace('_', '-')
+-        if name in ('torch', 'torchvision', 'numpy', 'pytest', 'opencv-python', 'opencv-python-headless', 'packaging'):
+-            distributions[name] = {'version': dist.version,
+-                'metadata_sha256': hashlib.sha256((dist.read_text('METADATA') or '').encode()).hexdigest()}
++    dependencies = dependency_metadata()
+     git = shutil.which('git')
+     result = {'python': sys.version, 'executable': sys.executable, 'executable_sha256': sha(sys.executable),
+               'os': sys.platform, 'machine': platform.machine(), 'sqlite': sqlite3.sqlite_version,
+               'sqlite_extension_sha256': sha(_sqlite3.__file__), 'target_image_digest': None,
+-              'distributions': distributions, 'git': {'path': git, 'sha256': sha(git)} if git else None,
++              'distributions': dependencies['active_distributions'], 'dependency_metadata': dependencies,
++              'git': {'path': git, 'sha256': sha(git)} if git else None,
+               'pilot_execution_authorized': False, 'read_only': True,
+               'weights_devices_and_research_data_inspected': False}
+     connection = sqlite3.connect(':memory:')
+@@ -237,7 +342,7 @@
+     observed['source_lock_sha256'] = args.expected_lock_sha256
+     if args.command == 'inventory':
+         print(json.dumps(observed, indent=2, sort_keys=True))
+-        return 0
++        return 0 if observed['dependency_metadata']['valid'] else 2
+     output = Path(args.output).absolute()
+     if inside(output, ROOT) or inside(ROOT, output):
+         raise ValueError('review output must not overlap source')
+@@ -247,6 +352,8 @@
+               'power_loss_tested': False, 'status': 'blocked', 'required_tests': CORE + LEGACY}
+     write_json(output/'inventory.json', observed)
+     try:
++        if not observed['dependency_metadata']['valid']:
++            raise RuntimeError('invalid/ambiguous installed dependency metadata; see retained inventory errors')
+         missing = [x for x in ('torch', 'torchvision', 'numpy') if x not in observed['distributions']]
+         if args.suite == 'full':
+             missing += [x for x in ('pytest',) if x not in observed['distributions']]
+diff --git a/tests/test_performance_v2_acceptance_entry.py b/tests/test_performance_v2_acceptance_entry.py
+--- a/tests/test_performance_v2_acceptance_entry.py
++++ b/tests/test_performance_v2_acceptance_entry.py
+@@ -9,11 +9,155 @@
+ import sys
+ import tempfile
+ import unittest
++from contextlib import ExitStack
++from io import StringIO
+ from unittest.mock import patch
+ 
+ spec = importlib.util.spec_from_file_location('acceptance_entry', Path(__file__).resolve().parents[1]/'scripts/performance_v2_native_acceptance.py')
+ entry = importlib.util.module_from_spec(spec)
+ spec.loader.exec_module(entry)
++
++
++class MetadataBindingTests(unittest.TestCase):
++    """Invented metadata only; no scientific imports or actual environment scan."""
++
++    def setUp(self):
++        self.stack = ExitStack()
++        self.addCleanup(self.stack.close)
++        self.root = Path(self.stack.enter_context(tempfile.TemporaryDirectory()))
++        self.base, self.venv = self.root/'base', self.root/'venv'
++        for p in (self.base/'site', self.venv/'site', self.venv/'bin'):
++            p.mkdir(parents=True)
++        self.config = self.venv/'pyvenv.cfg'
++        self.config.write_text('home = synthetic-base\ninclude-system-site-packages = false\n')
++        self.stack.enter_context(patch.multiple(entry.sys, executable=str(self.venv/'bin/python'),
++            prefix=str(self.base), base_prefix=str(self.base), base_exec_prefix=str(self.base)))
++        self.stack.enter_context(patch.object(entry.site, 'getsitepackages',
++            side_effect=lambda prefixes: [str(Path(p)/'site') for p in prefixes]))
++
++    def distribution(self, root, descriptor, raw=b'Name: torch\r\nVersion: 2.3.0\r\n\r\n', member='METADATA'):
++        path = root/'site'/descriptor
++        path.mkdir()
++        if raw is not None:
++            (path/member).write_bytes(raw)
++        return path
++
++    def test_python310_no_site_binds_venv_and_base_separately(self):
++        self.distribution(self.venv, 'torch-2.3.dist-info')
++        self.distribution(self.base, 'torch-9.dist-info', b'Name: torch\nVersion: 9\n')
++        observed = entry.dependency_metadata()
++        self.assertTrue(observed['valid'])
++        self.assertEqual(observed['active_distributions']['torch']['version'], '2.3.0')
++        self.assertEqual(observed['scopes']['base_interpreter']['distributions'][0]['version'], '9')
++        self.assertEqual(len(observed['duplicates']['torch']), 2)
++        self.assertEqual(observed['active_scopes'], ['virtual_environment'])
++        self.assertEqual(observed['pyvenv_config']['sha256'], entry.sha(self.config))
++
++    def test_missing_environment_package_not_filled_from_base(self):
++        self.distribution(self.base, 'torch-2.dist-info')
++        observed = entry.dependency_metadata()
++        self.assertNotIn('torch', observed['active_distributions'])
++        self.assertIn('torch', observed['scopes']['virtual_environment']['missing_selected_names'])
++
++    def test_same_scope_duplicate_is_rejected_without_overwriting(self):
++        self.distribution(self.venv, 'torch-a.dist-info')
++        self.distribution(self.venv, 'torch-b.dist-info', b'Name: Torch\nVersion: 9\n')
++        observed = entry.dependency_metadata()
++        self.assertFalse(observed['valid'])
++        self.assertEqual(len(observed['duplicates']['torch']), 2)
++        self.assertTrue(any('ambiguous active' in e['reason'] for e in observed['errors']))
++
++    def test_normalized_names_identify_duplicates(self):
++        for name, version in [('opencv_python', '1'), ('OpenCV.Python', '2')]:
++            self.distribution(self.venv, name+'.dist-info', ('Name: '+name+'\nVersion: '+version+'\n').encode())
++        observed = entry.dependency_metadata()
++        self.assertFalse(observed['valid'])
++        self.assertIn('opencv-python', observed['duplicates'])
++
++    def test_missing_empty_and_malformed_metadata_rejected(self):
++        for number, raw in enumerate((None, b'', b'Name: torch\n',
++                                     b'Name: torch\nName: numpy\nVersion: 1\n')):
++            self.distribution(self.venv, 'invalid%d.dist-info' % number, raw)
++        observed = entry.dependency_metadata()
++        self.assertFalse(observed['valid'])
++        self.assertEqual(len(observed['errors']), 4)
++        self.assertEqual(observed['active_distributions'], {})
++        self.assertNotIn(hashlib.sha256(b'').hexdigest(), json.dumps(observed))
++
++    def test_exact_bytes_and_standard_egg_metadata(self):
++        raw = b'Name: packaging\r\nVersion: 20.3\r\n\r\n'
++        self.distribution(self.base, 'packaging.egg-info', raw, 'PKG-INFO')
++        observed = entry.dependency_metadata()
++        record = observed['scopes']['base_interpreter']['distributions'][0]
++        self.assertEqual(record['metadata_sha256'], hashlib.sha256(raw).hexdigest())
++        self.assertTrue(record['metadata_path'].endswith('PKG-INFO'))
++        self.assertTrue(observed['valid'])
++
++    def test_base_missing_metadata_is_not_an_empty_success(self):
++        self.distribution(self.base, 'packaging.egg-info', None)
++        observed = entry.dependency_metadata()
++        self.assertFalse(observed['valid'])
++        self.assertEqual(observed['errors'][0]['scope'], 'base_interpreter')
++
++    def test_nonvirtual_interpreter_uses_base(self):
++        self.config.unlink()
++        self.distribution(self.base, 'torch.dist-info')
++        observed = entry.dependency_metadata()
++        self.assertTrue(observed['valid'])
++        self.assertEqual(observed['active_scopes'], ['base_interpreter'])
++        self.assertEqual(observed['active_distributions']['torch']['scope'], 'base_interpreter')
++
++    def test_system_site_enabled_is_explicit_and_conflicts_rejected(self):
++        self.config.write_text('include-system-site-packages = true\n')
++        self.distribution(self.base, 'torch.dist-info')
++        observed = entry.dependency_metadata()
++        self.assertEqual(observed['active_scopes'], ['virtual_environment', 'base_interpreter'])
++        self.assertTrue(observed['valid'])
++        self.distribution(self.venv, 'torch.dist-info')
++        self.assertFalse(entry.dependency_metadata()['valid'])
++
++    def test_unknown_configuration_and_unbound_prefix_rejected(self):
++        self.config.write_text('home = synthetic\n')
++        self.assertFalse(entry.dependency_metadata()['valid'])
++        self.config.unlink()
++        with patch.object(entry.sys, 'prefix', str(self.venv)):
++            self.assertFalse(entry.dependency_metadata()['valid'])
++
++    def test_no_site_hooks_or_package_imports(self):
++        (self.venv/'site/evil.pth').write_text('import forbidden_inventory_probe\n')
++        (self.venv/'site/sitecustomize.py').write_text('raise AssertionError("executed")\n')
++        self.distribution(self.venv, 'torch.dist-info')
++        before = set(sys.modules)
++        observed = entry.dependency_metadata()
++        self.assertTrue(observed['valid'])
++        self.assertFalse(observed['site_initialization_executed'])
++        self.assertFalse(observed['import_resolution_verified'])
++        self.assertFalse({'torch', 'torchvision', 'numpy', 'cv2', 'forbidden_inventory_probe'} & (set(sys.modules)-before))
++
++    def test_invalid_inventory_prints_evidence_and_returns_two(self):
++        self.distribution(self.venv, 'torch.dist-info', None)
++        observed = {'dependency_metadata': entry.dependency_metadata()}
++        with patch.object(entry, 'verify_lock'), patch.object(entry, 'inventory', return_value=observed), \
++                patch.object(entry.sys, 'argv', ['entry', 'inventory', '--expected-lock-sha256', '0'*64]), \
++                patch('sys.stdout', new_callable=StringIO) as output:
++            self.assertEqual(entry.main(), 2)
++            self.assertFalse(json.loads(output.getvalue())['dependency_metadata']['valid'])
++
++    def test_invalid_metadata_blocks_before_scientific_imports(self):
++        observed = {'dependency_metadata': {'valid': False, 'errors': [{'reason': 'invented missing metadata'}]}}
++        destination = self.root/'retained-failure'
++        with patch.object(entry, 'verify_lock'), patch.object(entry, 'inventory', return_value=observed), \
++                patch.object(entry, 'torch_guards', side_effect=AssertionError('must not import')) as imports, \
++                patch.object(entry.sys, 'argv', ['entry', 'test', '--scratch-parent', str(self.root),
++                    '--output', str(destination), '--expected-lock-sha256', '0'*64]), \
++                patch('sys.stdout', new_callable=StringIO):
++            self.assertEqual(entry.main(), 2)
++            imports.assert_not_called()
++        result = json.loads((destination/'result.json').read_bytes())
++        self.assertEqual(result['status'], 'blocked')
++        self.assertFalse(result['pilot_execution_authorized'])
++        self.assertFalse(result['native_acceptance'])
++        self.assertTrue((destination/'inventory.json').is_file())
+ 
+ 
+ class AcceptanceEntryTests(unittest.TestCase):
+diff --git a/docs/performance_v2_native_acceptance_checklist.md b/docs/performance_v2_native_acceptance_checklist.md
+--- a/docs/performance_v2_native_acceptance_checklist.md
++++ b/docs/performance_v2_native_acceptance_checklist.md
+@@ -20,6 +20,25 @@
+ redirection may separately retain its stdout. `test` verifies the lock before
+ imports, rejects missing dependencies without installation, creates a new
+ exclusive output directory and uses synthetic temporary directories.
++
++2026-10-08 inventory correction: Python 3.10 `-S` does not reliably set the
++virtual-environment prefix. The inventory binds `pyvenv.cfg` beside/above the
++invoked executable without resolving its executable symlink first. It records
++virtual-environment and base-interpreter search paths and selected dependency
++records separately, including cross-scope duplicates. Only explicitly enabled
++system site packages enter the active dependency set; ambiguous active records
++block admission. No `.pth`, site customization or scientific package is executed.
++This is standard installed-metadata evidence, not proof of runtime import paths.
++
++The inventory hashes actual METADATA bytes for dist-info and actual PKG-INFO
++bytes for standard egg-info, including their exact paths. Missing, empty or
++malformed metadata in any discovered descriptor rejects the inventory; there is
++no empty-string digest fallback. Errors and valid records remain visible in
++stdout with exit code 2. Active duplicates are not silently overwritten. The
++test entry retains invalid metadata in its blocked report before package imports.
++The 13 added invented-record regressions bring the expected unittest inventory
++to 143; they do not constitute Linux or full-suite acceptance. Historical
++130-case evidence and its old source lock remain unchanged in the prior package.
+ 
+ The default `--suite full` runs the entire frozen Performance-v2 synthetic test
+ inventory: implementation/contract/training-mode/checkpoint/lifecycle tests,
+diff --git a/configs/performance_v2/native_acceptance_source_lock.json b/configs/performance_v2/native_acceptance_source_lock.json
+--- a/configs/performance_v2/native_acceptance_source_lock.json
++++ b/configs/performance_v2/native_acceptance_source_lock.json
+@@ -12,7 +12,7 @@
+     "docs/performance_v2_input_audit_plan.md": "a55c14e15825fed868a143c634194eb9dad4b26c80823dc779485ffbcbdadbf5",
+     "docs/performance_v2_lifecycle_preparation.md": "28ec4c969f446efc74a51f6554eb353a0a67e86b3f06fb0b24ef6a49f58488aa",
+     "docs/performance_v2_model_topology_v2.md": "3ff5823cd5fa653fcbff44e4a1acf4102f01dd66d85fa7bfa1211079af4aa4f0",
+-    "docs/performance_v2_native_acceptance_checklist.md": "ead2e774d9ae7197dab76ea6e7682c19971d61c95106c84befabc2fc012e4e7f",
++    "docs/performance_v2_native_acceptance_checklist.md": "20297f90c7bf1a4314776d320716450593dab5285df1ce1e57eb059dbb969e79",
+     "docs/performance_v2_phase1_implementation_proposal.md": "bfc108b4845e188d4cdd69b5dd726af6d55995b600c640e4d6bb3d981ce6720c",
+     "docs/performance_v2_pretraining_acquisition_plan.md": "70be706389a6f559d1d5bfbd542288e45c950bb0d0458e5a29523a03715142f5",
+     "docs/performance_v2_protocol.md": "cbd3067cce8c0d97c52c6fbd0dbf195be60d7d1c7e0cb09563530a3e727d47ff",
+@@ -30,7 +30,7 @@
+     "scripts/53_extract_performance_v2_diagnostics.py": "1b3ad98fbe8acd572f1427586c31f755d6457b49640ce8a95eebb8b74e09b01d",
+     "scripts/54_probe_performance_v2_transforms.py": "3203c0d99072e2bc03574b67e1ad47a8ea61bf5dbef3ee8572594274897efab6",
+     "scripts/55_audit_performance_v2_inputs.py": "84090d157959a2b4c525484504c1fc14f398d36fb20b58f34a5a6097321d6bed",
+-    "scripts/performance_v2_native_acceptance.py": "ca6ac84fd6c70824534fa88984517e302eb094aa0f1d659dc7b74844a6d4334c",
++    "scripts/performance_v2_native_acceptance.py": "57448da2b905e40716564349db03b3390b2034cd682bff7c53c4c6fe777a4ebd",
+     "src/consendxformer/__init__.py": "a6d2c6b3e7465ede14d3652075739606b92fb476c19fbd4435ed8a513aad6090",
+     "src/consendxformer/performance_v2/__init__.py": "ec9d2065bddd417c24560387facef2ed234d84af138e1f630b1107e78f8c1620",
+     "src/consendxformer/performance_v2/bindings.py": "98e0b0ea5ec006462d3c587c9b980d1d80d65cbd06ac6d0cdec031d88b013996",
+@@ -47,7 +47,7 @@
+     "src/consendxformer/performance_v2/selection.py": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585",
+     "src/consendxformer/performance_v2/streams.py": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14",
+     "src/consendxformer/phase4_model.py": "06fef01fffdb2b4ae9ec2c1b611547a4768bd9b9f548072def1c455394e1ed89",
+-    "tests/test_performance_v2_acceptance_entry.py": "c4925da045cf142d880fe87ce18cb83418d1180f2cd86ca911c92aca24059b97",
++    "tests/test_performance_v2_acceptance_entry.py": "bae7f5e7283333fc606151b98ed840d1070f71248ddc1d8341a0d7ec410027d6",
+     "tests/test_performance_v2_checkpoint_inventory.py": "9b060c8aba2db2b7ed70563e58ca763800da2aed85f7b6df23d44cbebda473ca",
+     "tests/test_performance_v2_contracts.py": "9453910900dcc60f1ee67b0838a869d0f8ac9c0eaf12aa1dcef2901fcc456685",
+     "tests/test_performance_v2_diagnostics.py": "b387bd65fb41068070d1c78355f7abb983a0dc599220d514f7ff8a0b740bfe16",

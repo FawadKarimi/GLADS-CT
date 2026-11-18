@@ -1,0 +1,93 @@
+{
+  "imagenet_activation": {
+    "authorization": {
+      "authorized": true,
+      "decision_sha256": "71b0a3784cb2b6ad2663879cc180a26ebf922d81552a5fca3e34349d62e5b8b4",
+      "expires": "2026-10-12T11:01:32Z",
+      "not_before": "2026-10-12T10:46:32Z",
+      "schema": "pv2_training_single_attempt_v1",
+      "scope": "TRAIN_VAL",
+      "spec_sha256": "8d80d33eb17640c23aacbfed1777138956e070b9897b0f953af0c35f0861abaf"
+    },
+    "budget_consumed": 0,
+    "condition": "IMAGENET",
+    "folder": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012",
+    "fresh_gpu_row": "GPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, NVIDIA GeForce RTX 2080 Ti, 11264, 10452, 535.230.02",
+    "launch_command": "REVIEWED_EXECUTION_BINDING_SHA256=e95fa22158c1a3585a0b9f944c373ede940d594371876a244ca236dc83c97b58 /experiment-storage/chaidir/env/env-310-fawad/bin/python -I -B /home/chaidir/.performance-v2-r50-matched-training-20261012/candidate/src/consendxformer/performance_v2/supervisor_bootstrap.py /home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012/launch.ACTIVE.json",
+    "record_sha256": "e95fa22158c1a3585a0b9f944c373ede940d594371876a244ca236dc83c97b58"
+  },
+  "random_completion": {
+    "budget_rows": [
+      [
+        1,
+        "R50-RANDOM-42-HARD-FULL-001",
+        "complete",
+        1,
+        "cf2e91a601cb7ef8b188bbbf978aa13154bebb78c646b8a9afdb4a47a97bbbed"
+      ]
+    ],
+    "exits": {
+      "child_status": 0,
+      "reason": null,
+      "status": 0
+    },
+    "ledger_sha256": "7455764374a7393d1313c55c0ac2cf30c2da6160797676b3209efe284b4d079f",
+    "observer_scope_discrepancy": "preserved first review; production receipt matches frozen spec and TRAIN_VAL authorization",
+    "output_manifest_sha256": "825d20d168aadcfae9004426d6184499da0f28444635516fc4bb3f1ce4809429",
+    "processes": [],
+    "progress": {
+      "elapsed_seconds": 3358.682105017826,
+      "epoch": 68,
+      "updates": 3468
+    },
+    "receipt": {
+      "contract_sha256": "571c71a2da18ff9bc7bdf6c3ec108f0d529d89a73392ad427fd9e6054fa17dca",
+      "output_manifest_sha256": "825d20d168aadcfae9004426d6184499da0f28444635516fc4bb3f1ce4809429",
+      "persistent_budget": {
+        "attempt": 1,
+        "identity": "9d8ea8b8fd8c44d48ad276b963ecd7ca",
+        "plan_sha256": "b2a21c1683d5735368ccf0c08b2e3e6e98cafc0ec64c53fe2992094c26b85808",
+        "token": "b65869b2db974b779e7b1e67332a9ddb"
+      },
+      "pilot_execution_authorized": false,
+      "run_id": "R50-RANDOM-42-HARD-FULL-001",
+      "schema": "performance_v2_completion_v1",
+      "scope": "production",
+      "spec_sha256": "5f7db4cb2d16d58b90f67039dcd57354d13cba07da5146b9be7d8e282d0f9732",
+      "status": "complete"
+    },
+    "receipt_sha256": "cf2e91a601cb7ef8b188bbbf978aa13154bebb78c646b8a9afdb4a47a97bbbed",
+    "report": "/home/chaidir/.performance-v2-reports/r50-random-42-hard-full-001",
+    "selected_validation": {
+      "diagnostic_ce": 0.7584720940876205,
+      "epoch": 53,
+      "macro_f1": 0.6645360170451969,
+      "split": "validation"
+    },
+    "selection": {
+      "best_epoch": 53,
+      "last_epoch": 68,
+      "raw_best": 0.6645360170451969,
+      "rules": {
+        "max_epochs": 100,
+        "min_epochs": 20,
+        "patience": 15,
+        "primary": "validation_macro_f1",
+        "strict_delta": 0.0001,
+        "tie": [
+          "unweighted_validation_diagnostic_ce",
+          "earliest_epoch"
+        ],
+        "tolerance": 1e-12
+      },
+      "stopped": true,
+      "without_improvement": 15
+    },
+    "source": {
+      "bindings": 158,
+      "matching": true
+    },
+    "worker_wall_seconds_from_file_timestamps": 4309.03621840477
+  },
+  "schema": "pv2_first_pair_observed_records_v1"
+}

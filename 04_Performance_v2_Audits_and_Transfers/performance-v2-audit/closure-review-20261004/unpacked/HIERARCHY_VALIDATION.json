@@ -1,0 +1,39 @@
+{
+  "changed_source_documents": [
+    "HIERARCHY_MOUNT_REVIEW.md",
+    "linux_integration.py",
+    "linux_lifecycle.py",
+    "package_hierarchy.py",
+    "supervisor_v2.py",
+    "systemd_ownership.py",
+    "test_hierarchy_mounts.py",
+    "test_linux_integration.py",
+    "test_linux_lifecycle.py",
+    "watchdog_worker.py"
+  ],
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-hierarchy-review-20260928",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "execution_approved": false,
+  "exit_code": 0,
+  "linux_acceptance": false,
+  "original_15_regressions_unchanged": true,
+  "parent_entries_verified": 79,
+  "parent_sha256": "c56f961ce6103877607f5608ddb6535bba800dd34d972b3e20c885b298ef0610",
+  "platform": "Windows-11-10.0.22621-SP0",
+  "production_pins_unchanged": true,
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "scope": "fake systemd and mount namespace only",
+  "stage_b": "paused",
+  "summary": "Ran 115 tests in 1.191s",
+  "warning": "Unchanged acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14"
+}

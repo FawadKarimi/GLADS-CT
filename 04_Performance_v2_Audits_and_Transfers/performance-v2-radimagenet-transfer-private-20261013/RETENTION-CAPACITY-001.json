@@ -1,0 +1,63 @@
+{
+  "UTC": "2026-10-13T07:37:38Z",
+  "available_bytes": 32967184384,
+  "available_inodes": 27845597,
+  "filesystem": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n",
+  "paths": [
+    {
+      "ACL": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "mode": "0o755",
+      "path": "/",
+      "symlink": false,
+      "uid": 0
+    },
+    {
+      "ACL": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "mode": "0o755",
+      "path": "/home",
+      "symlink": false,
+      "uid": 0
+    },
+    {
+      "ACL": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "mode": "0o755",
+      "path": "/home/chaidir",
+      "symlink": false,
+      "uid": 1009
+    },
+    {
+      "ACL": "user::rwx\ngroup::---\nother::---\n\n",
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-scratch",
+      "symlink": false,
+      "uid": 1009
+    },
+    {
+      "ACL": "user::rwx\ngroup::---\nother::---\n\n",
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-reports",
+      "symlink": false,
+      "uid": 1009
+    }
+  ],
+  "production_budget_initialized": false,
+  "quota_formats": {
+    "group": {
+      "errno": 3,
+      "format": 0,
+      "return": -1
+    },
+    "project": {
+      "errno": 3,
+      "format": 0,
+      "return": -1
+    },
+    "user": {
+      "errno": 3,
+      "format": 0,
+      "return": -1
+    }
+  },
+  "training_launched": false,
+  "uid": 1009
+}

@@ -1,0 +1,1141 @@
+--- /dev/null
++++ b/evidence_export.py
+@@ -0,0 +1,90 @@
++"""Bounded local evidence copy/read-back; no upload or automatic deletion.
++
++Destination is a newly created directory outside the retained evidence mount.
++An acknowledgement proves byte identity locally, not GitHub artifact delivery.
++"""
++import hashlib
++import json
++import os
++from pathlib import Path
++import time
++
++
++class LocalEvidenceExport:
++    def __init__(self, source, destination, clock=time.monotonic):
++        self.source, self.destination = Path(source), Path(destination)
++        self.clock = clock
++
++    def export(self, raw_manifest, manifest, maximum_bytes, timeout):
++        if raw_manifest != json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode():
++            raise ValueError('noncanonical manifest')
++        if not 0 < maximum_bytes <= 512 * 1024**2 or not 0 < timeout <= 60:
++            raise ValueError('export bounds')
++        source = self.source.resolve(strict=True)
++        target = self.destination.resolve()
++        if source == target or source in target.parents or target in source.parents:
++            raise ValueError('export must be independent of evidence source')
++        entries = manifest.get('files')
++        if not isinstance(entries, dict) or not entries or len(entries) > 1024:
++            raise ValueError('export manifest entries')
++        if set(entries) != {p.name for p in source.iterdir()}:
++            raise ValueError('incomplete export manifest')
++        total = len(raw_manifest)
++        for name, entry in entries.items():
++            if Path(name).name != name or name in ('manifest.json', '', '.', '..') or '/' in name or '\\' in name:
++                raise ValueError('unsafe export name')
++            if type(entry.get('size_bytes')) is not int or entry['size_bytes'] < 0:
++                raise ValueError('export size')
++            total += entry['size_bytes']
++        if total > maximum_bytes:
++            raise ValueError('export aggregate size')
++        self.destination.mkdir(exist_ok=False)
++        deadline = self.clock() + timeout
++
++        def digest_copy(src, expected_size, dst=None):
++            if src.is_symlink() or not src.is_file():
++                raise ValueError('unsafe export member')
++            h, count = hashlib.sha256(), 0
++            with src.open('rb') as inp:
++                before = os.fstat(inp.fileno())
++                output = dst.open('xb') if dst else None
++                try:
++                    while True:
++                        if self.clock() >= deadline:
++                            raise TimeoutError('evidence export deadline')
++                        block = inp.read(65536)
++                        if not block:
++                            break
++                        count += len(block)
++                        if count > expected_size:
++                            raise ValueError('source grew beyond export limit')
++                        h.update(block)
++                        if output:
++                            output.write(block)
++                    after = os.fstat(inp.fileno())
++                    if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
++                        raise ValueError('source changed during export')
++                    if output:
++                        output.flush()
++                        os.fsync(output.fileno())
++                finally:
++                    if output:
++                        output.close()
++            return {'size_bytes': count, 'sha256': h.hexdigest()}
++
++        for name, expected in sorted(entries.items()):
++            # Separate copy and destination read-back, not just buffered checksum.
++            if digest_copy(source / name, expected['size_bytes'], self.destination / name) != expected:
++                raise ValueError('source/manifest mismatch; partial destination retained')
++            if digest_copy(self.destination / name, expected['size_bytes']) != expected:
++                raise ValueError('exported bytes mismatch; partial destination retained')
++        with (self.destination / 'manifest.json').open('xb') as f:
++            f.write(raw_manifest)
++            f.flush()
++            os.fsync(f.fileno())
++        digest = hashlib.sha256(raw_manifest).hexdigest()
++        if hashlib.sha256((self.destination / 'manifest.json').read_bytes()).hexdigest() != digest:
++            raise ValueError('manifest read-back mismatch')
++        return {'manifest_sha256': digest, 'readback_verified': True,
++                'destination': str(self.destination.resolve()), 'bytes': total,
++                'scope': 'local_copy_not_remote_upload', 'execution_approved': False}
+--- /dev/null
++++ b/linux_host.py
+@@ -0,0 +1,168 @@
++"""Linux host primitives, inert on import; no live construction is enabled.
++
++Source for review only. Tests patch OS/subprocess boundaries. Native entry-point
++approval, executable inventory and Linux acceptance remain separate gates.
++"""
++import hashlib
++import os
++from pathlib import Path
++import selectors
++import subprocess
++import time
++import shutil
++
++
++class LinuxHost:
++    is_fake = False
++
++    def __init__(self):
++        raise RuntimeError('live Linux backend disabled pending review and acceptance')
++
++    def now(self):
++        return time.monotonic()
++
++    def text(self, path):
++        with open(path, 'rb') as f:
++            raw = f.read(1024 * 1024 + 1)
++        if len(raw) > 1024 * 1024:
++            raise ValueError('observation too large')
++        return raw.decode()
++
++    def put(self, path, value):
++        # cgroup pseudo-files only; caller must verify parent identity first.
++        with open(path, 'w', encoding='ascii') as f:
++            f.write(value)
++
++    def stat(self, path):
++        return os.stat(path, follow_symlinks=False)
++
++    def children(self, path):
++        return sorted(Path(path).iterdir())
++
++    def mkdir(self, path):
++        Path(path).mkdir(mode=0o700, exist_ok=False)
++
++    def pause(self, seconds):
++        if not 0 < seconds <= 1:
++            raise ValueError('bounded pause required')
++        time.sleep(seconds)
++
++    def free_bytes(self, path):
++        return shutil.disk_usage(path).free
++
++    def allocate_exclusive(self, path, capacity):
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
++        try:
++            os.posix_fallocate(fd, 0, capacity)
++            os.fsync(fd)
++        finally:
++            os.close(fd)
++
++    def digest(self, path):
++        h = hashlib.sha256()
++        with open(path, 'rb') as f:
++            while block := f.read(65536):
++                h.update(block)
++        return h.hexdigest()
++
++    def process(self, pid):
++        prefix = '/proc/' + str(int(pid))
++        stat = self.text(prefix + '/stat')
++        fields = stat[stat.rindex(')') + 2:].split()
++        groups = self.text(prefix + '/cgroup').splitlines()
++        group = [x[3:] for x in groups if x.startswith('0::')]
++        if len(group) != 1:
++            raise ValueError('requires unambiguous unified cgroup')
++        exe = os.readlink(prefix + '/exe')
++        return {'pid': int(pid), 'start_ticks': int(fields[19]),
++                'executable_sha256': self.digest(prefix + '/exe'),
++                'cgroup': group[0], 'executable': exe}
++
++    def start(self, argv):
++        if not isinstance(argv, list) or not argv or not all(isinstance(x, str) for x in argv):
++            raise ValueError('explicit argv required')
++        p = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
++                             stderr=subprocess.STDOUT, close_fds=True, start_new_session=True,
++                             env={'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C'})
++        os.set_blocking(p.stdout.fileno(), False)
++        return p
++
++    def read(self, process, maximum, timeout):
++        if not 0 < maximum <= 65536 or not 0 < timeout <= 1:
++            raise ValueError('bounded read required')
++        with selectors.DefaultSelector() as selector:
++            selector.register(process.stdout, selectors.EVENT_READ)
++            if not selector.select(timeout):
++                return None
++            return os.read(process.stdout.fileno(), maximum)
++
++    def command(self, argv, timeout=10):
++        if not 0 < timeout <= 60:
++            raise ValueError('command deadline')
++        p = self.start(argv)
++        deadline, output = self.now() + timeout, bytearray()
++        primary = None
++        try:
++            while True:
++                remaining = deadline - self.now()
++                if remaining <= 0:
++                    raise TimeoutError('command deadline')
++                block = self.read(p, 65536, min(1, remaining))
++                if block is None:
++                    continue
++                if len(output) + len(block) > 1024 * 1024:
++                    raise ValueError('command output overflow')
++                if not block:
++                    code = p.wait(timeout=max(.001, deadline - self.now()))
++                    if code:
++                        raise RuntimeError('command exit ' + str(code))
++                    return bytes(output)
++                output.extend(block)
++        except BaseException as exc:
++            primary = exc
++            raise
++        finally:
++            # Reaping this helper is NOT daemon/subtree termination evidence.
++            if p.poll() is None:
++                try:
++                    p.kill()
++                except BaseException as exc:
++                    if primary is not None:
++                        primary.add_note('helper kill failed: ' + repr(exc))
++                    else:
++                        raise
++                try:
++                    p.wait(timeout=1)
++                except BaseException as exc:
++                    if primary is not None:
++                        primary.add_note('helper reap failed: ' + repr(exc))
++                    else:
++                        raise
++
++
++def mount_records(text):
++    """Decode mountinfo, including namespace root and octal escapes."""
++    def unescape(s):
++        for old, new in ((r'\040', ' '), (r'\011', '\t'), (r'\012', '\n'), (r'\134', '\\')):
++            s = s.replace(old, new)
++        return s
++    rows = []
++    for line in text.splitlines():
++        left, right = line.split(' - ', 1)
++        a, b = left.split(), right.split()
++        rows.append({'id': int(a[0]), 'device': a[2], 'root': unescape(a[3]),
++                     'mount': unescape(a[4]), 'filesystem': b[0], 'source': unescape(b[1])})
++    return rows
++
++
++def resolve_cgroup(mountinfo, membership):
++    groups = [x[3:] for x in membership.splitlines() if x.startswith('0::')]
++    mounts = [x for x in mount_records(mountinfo) if x['filesystem'] == 'cgroup2']
++    if len(groups) != 1 or len(mounts) != 1:
++        raise ValueError('ambiguous/missing cgroup v2')
++    m, group = mounts[0], groups[0]
++    if m['root'] != '/':
++        raise ValueError('host root cgroup view required; namespace-relative view refused')
++    if not group.startswith('/') or '..' in group.split('/'):
++        raise ValueError('invalid membership')
++    return m['mount'], group
+--- /dev/null
++++ b/linux_lifecycle.py
+@@ -0,0 +1,251 @@
++"""Review-only Linux lifecycle implementation, all effects through injected host.
++
++No CLI and no live host accepted. Incremental journals preserve intent before
++mutation, then independent observed identities. Incomplete intent is not proof
++of ownership and blocks destructive recovery rather than guessing.
++"""
++from copy import deepcopy
++import hashlib
++import json
++import re
++
++from supervisor_v2 import POLICY, require, within
++from linux_host import mount_records, resolve_cgroup
++
++
++class LinuxLifecycle:
++    def __init__(self, host, journal, token):
++        require(host.is_fake is True, 'live lifecycle disabled')
++        require(re.fullmatch('[0-9a-f]{32}', token), 'token')
++        self.host, self.journal, self.token = host, journal, token
++        self.root = '/var/tmp/pv2-' + token
++        self.runtime = '/run/pv2-' + token
++        self.resources, self.errors = [], []
++        self.admission = False
++        self.reserve_checked = False
++        self.cgmount, self.parent = resolve_cgroup(host.text('/proc/self/mountinfo'), host.text('/proc/self/cgroup'))
++        self.cg = self.cgmount + '/pv2-' + token + '.slice'
++        self.boot = host.text('/proc/sys/kernel/random/boot_id').strip()
++
++    def acquire(self, kind, identity, mutate, observe):
++        intent = {'kind': kind, 'requested': identity, 'boot_id': self.boot, 'phase': 'intent'}
++        self.journal.append('provision-intent', intent)
++        self.journal.seal()
++        mutate()
++        observed = observe()
++        owned = dict(intent, phase='observed', identity=observed)
++        # Retain in memory even if persistence fails, for independently checked cleanup.
++        self.resources.append(owned)
++        self.journal.append('provision-observed', owned)
++        self.journal.seal()
++        return observed
++
++    def cgroup_identity(self):
++        return {'path': self.cg, 'inode': self.host.stat(self.cg).st_ino,
++                'boot_id': self.host.text('/proc/sys/kernel/random/boot_id').strip()}
++
++    def provision_cgroup(self):
++        controllers = set(self.host.text(self.cgmount + '/cgroup.controllers').split())
++        enabled = set(self.host.text(self.cgmount + '/cgroup.subtree_control').split())
++        require({'memory', 'cpu', 'pids'} <= controllers & enabled, 'required delegated controllers unavailable')
++        identity = self.acquire('cgroup', self.cg, lambda: self.host.mkdir(self.cg), self.cgroup_identity)
++        for filename, value in (('memory.max', str(POLICY['memory_max'])), ('memory.swap.max', '0'),
++                                ('cpu.max', '150000 100000'), ('pids.max', '256')):
++            self.assert_cgroup(identity)
++            self.host.put(self.cg + '/' + filename, value)
++            require(self.host.text(self.cg + '/' + filename).strip() == value, 'limit read-back ' + filename)
++        self.host.put(self.cg + '/cgroup.subtree_control', '+memory +cpu +pids')
++        return identity
++
++    def assert_cgroup(self, identity):
++        require(self.cgroup_identity() == identity, 'cgroup identity changed')
++
++    def census(self, path=None):
++        path = path or self.cg
++        require(within(path, self.cg), 'census escape')
++        result = []
++        for pid in self.host.text(path + '/cgroup.procs').split():
++            p = self.host.process(int(pid))
++            require(within(p['cgroup'], '/pv2-' + self.token + '.slice'), 'process escape')
++            result.append(p)
++        for child in self.host.children(path):
++            if child.is_dir() and not child.is_symlink():
++                result.extend(self.census(str(child)))
++        return result
++
++    def terminate(self, identity):
++        errors = []
++        self.admission = False
++        for action in ('term', 'kill'):
++            try:
++                self.assert_cgroup(identity)
++                if action == 'term':
++                    self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=TERM',
++                                       'pv2-' + self.token + '.service'], 10)
++                else:
++                    self.host.put(self.cg + '/cgroup.kill', '1')
++            except BaseException as exc:
++                errors.append(action + ': ' + repr(exc))
++        deadline = self.host.now() + 10
++        empty = False
++        try:
++            while self.host.now() < deadline:
++                self.assert_cgroup(identity)
++                events = dict(x.split() for x in self.host.text(self.cg + '/cgroup.events').splitlines())
++                if events.get('populated') == '0' and not self.census():
++                    listeners = self.host.text('/proc/net/unix')
++                    require(self.runtime + '/docker.sock' not in listeners and self.runtime + '/containerd.sock' not in listeners,
++                            'private listener survives')
++                    empty = True
++                    break
++                self.host.pause(.05)
++            require(empty, 'subtree termination unconfirmed')
++        except BaseException as exc:
++            errors.append('readback: ' + repr(exc))
++        return {'termination_confirmed': empty, 'errors': errors}
++
++    def volume_identity(self, role, loop):
++        backing, target = self.root + '/' + role + '.ext4', self.root + '/' + role
++        mounts = [m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == target]
++        require(len(mounts) == 1 and mounts[0]['filesystem'] == 'ext4' and mounts[0]['source'] == loop, 'mount identity')
++        observed = json.loads(self.host.command(['losetup', '--json', '--output', 'NAME,BACK-FILE', loop], 10))['loopdevices']
++        require(len(observed) == 1 and observed[0]['name'] == loop and observed[0]['back-file'] == backing, 'loop backing mismatch')
++        st = self.host.stat(backing)
++        uuid = self.host.command(['blkid', '-s', 'UUID', '-o', 'value', loop], 10).decode().strip()
++        require(uuid, 'filesystem UUID missing')
++        return {'mount': mounts[0], 'loop': loop, 'backing': backing, 'inode': st.st_ino,
++                'size': st.st_size, 'allocated': st.st_blocks * 512, 'uuid': uuid}
++
++    def provision_volume(self, role):
++        require(role in ('data', 'evidence'), 'volume role')
++        capacity = 8 * 1024**3 if role == 'data' else 512 * 1024**2
++        backing, target = self.root + '/' + role + '.ext4', self.root + '/' + role
++        # Parent creation/free-space checks are prerequisites, never reclaim disk.
++        if not self.reserve_checked:
++            require(self.host.free_bytes(self.root) >= 10 * 1024**3, 'host disk reserve')
++            self.reserve_checked = True
++        self.acquire('backing', backing, lambda: self.host.allocate_exclusive(backing, capacity),
++                     lambda: {'path': backing, 'inode': self.host.stat(backing).st_ino})
++        st = self.host.stat(backing)
++        require(st.st_size == capacity and st.st_blocks * 512 >= capacity, 'sparse backing refused')
++        loop = self.acquire('loop', backing,
++                            lambda: self.host.command(['losetup', '--find', '--show', backing], 10),
++                            lambda: self.find_loop(backing))['loop']
++        self.host.command(['mkfs.ext4', '-F', '-m', '0', backing], 60)
++        self.acquire('mount-directory', target, lambda: self.host.mkdir(target),
++                     lambda: {'path': target, 'inode': self.host.stat(target).st_ino})
++        return self.acquire('mount', target,
++                            lambda: self.host.command(['mount', '-t', 'ext4', '-o', 'nodev,nosuid', loop, target], 10),
++                            lambda: self.volume_identity(role, loop))
++
++    def find_loop(self, backing):
++        rows = json.loads(self.host.command(['losetup', '--json', '--associated', backing,
++                                            '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++        require(len(rows) == 1 and rows[0]['back-file'] == backing, 'ambiguous loop association')
++        require(re.fullmatch('/dev/loop[0-9]+', rows[0]['name']), 'loop identity')
++        return {'loop': rows[0]['name'], 'backing': backing}
++
++    def daemon_arguments(self, executable_hashes):
++        """No shell, shared daemon or external containerd endpoint allowed."""
++        for exe in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc'):
++            require(executable_hashes.get(exe) == self.host.digest(exe), 'executable inventory mismatch: ' + exe)
++        docker = ['/usr/bin/dockerd', '--host=unix://' + self.runtime + '/docker.sock',
++                  '--pidfile=' + self.runtime + '/dockerd.pid', '--exec-root=' + self.runtime + '/exec',
++                  '--data-root=' + self.root + '/data/docker', '--containerd=' + self.runtime + '/containerd.sock',
++                  '--bridge=none', '--iptables=false', '--ip-forward=false', '--ip-masq=false',
++                  '--exec-opt=native.cgroupdriver=cgroupfs', '--cgroup-parent=/pv2-' + self.token + '.slice',
++                  '--log-driver=none']
++        containerd = ['/usr/bin/containerd', '--root', self.root + '/data/containerd',
++                      '--state', self.runtime + '/containerd', '--address', self.runtime + '/containerd.sock']
++        return {'dockerd': docker, 'containerd': containerd}
++
++    def partial_cleanup(self, termination):
++        """Recover only observed owned resources; unresolved intents stay flagged.
++
++        Reverse-order independent attempts, no guessed paths or recursive delete.
++        Backings/directories intentionally retained as diagnostic evidence.
++        """
++        results = []
++        for item in reversed(self.resources):
++            try:
++                require(item['boot_id'] == self.host.text('/proc/sys/kernel/random/boot_id').strip(), 'boot changed')
++                identity = item['identity']
++                if item['kind'] == 'mount':
++                    role = 'evidence' if identity['mount']['mount'].endswith('/evidence') else 'data'
++                    if role == 'evidence':
++                        results.append({'kind': 'mount', 'retained_for_export': True})
++                        continue
++                    self.detach_volume(role, identity, termination)
++                elif item['kind'] == 'loop':
++                    require(termination, 'partial cleanup requires termination readback')
++                    mounts = mount_records(self.host.text('/proc/self/mountinfo'))
++                    require(not any(m['source'] == identity['loop'] for m in mounts), 'loop still mounted')
++                    # Absence is not identity mismatch, but must be observed.
++                    rows = json.loads(self.host.command(['losetup', '--json', '--associated', identity['backing'],
++                                                        '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++                    if rows:
++                        require(rows == [{'name': identity['loop'], 'back-file': identity['backing']}], 'partial loop mismatch')
++                        self.host.command(['losetup', '--detach', identity['loop']], 10)
++                        rows = json.loads(self.host.command(['losetup', '--json', '--associated', identity['backing'],
++                                                            '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++                        require(not rows, 'partial loop detach unconfirmed')
++                else:
++                    results.append({'kind': item['kind'], 'retained': True})
++                    continue
++                results.append({'kind': item['kind'], 'detached': True})
++            except BaseException as exc:
++                results.append({'kind': item['kind'], 'error': repr(exc)})
++        return results
++
++    def detach_volume(self, role, identity, terminated):
++        require(terminated, 'termination must be observed before unmount')
++        require(self.volume_identity(role, identity['loop']) == identity, 'volume changed')
++        self.host.command(['umount', identity['mount']['mount']], 10)
++        require(not any(m['mount'] == identity['mount']['mount'] for m in mount_records(self.host.text('/proc/self/mountinfo'))), 'mount survives')
++        require(self.find_loop(identity['backing'])['loop'] == identity['loop'], 'loop changed')
++        self.host.command(['losetup', '--detach', identity['loop']], 10)
++        rows = json.loads(self.host.command(['losetup', '--json', '--associated', identity['backing'], '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++        require(rows == [], 'loop survives')
++        return True
++
++    def export_and_ack(self, exporter, manifest, evidence_identity, termination):
++        # Receiver must independently read its exported bytes and return the
++        # exact manifest digest. No archive deletion before acknowledgement.
++        raw = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode()
++        digest = hashlib.sha256(raw).hexdigest()
++        receipt = exporter.export(raw, manifest, maximum_bytes=512 * 1024**2, timeout=60)
++        require(receipt.get('manifest_sha256') == digest and receipt.get('readback_verified') is True,
++                'export acknowledgement absent or mismatched')
++        self.journal.append('export-ack', receipt)
++        self.journal.seal()
++        self.detach_volume('evidence', evidence_identity, termination)
++        # Retain backing bytes; deletion needs final exported teardown receipt.
++        return {'export_acknowledged': True, 'evidence_detached': True, 'backing_retained': True}
++
++
++class IndependentWatchdog:
++    """Separate worker algorithm; no CLI or live spawn is enabled."""
++    def __init__(self, lifecycle, identity, deadline, report):
++        self.lifecycle, self.identity, self.deadline, self.report = lifecycle, deepcopy(identity), deadline, report
++
++    def supervise(self, owner_alive, acknowledged):
++        host = self.lifecycle.host
++        try:
++            while host.now() < self.deadline and owner_alive():
++                if acknowledged():
++                    # Never trust owner's success: independently observe cleanup.
++                    break
++                host.pause(.1)
++            result = self.lifecycle.terminate(self.identity)
++        except BaseException as exc:
++            result = {'termination_confirmed': False, 'errors': [repr(exc)]}
++        try:
++            self.report.append('watchdog-result', result)
++            self.report.seal()
++        except BaseException as exc:
++            result['persistence_error'] = repr(exc)
++            try:
++                self.report.fallback(result)
++            except BaseException:
++                pass
++        return result
+--- /dev/null
++++ b/package_revision.py
+@@ -0,0 +1,85 @@
++"""Explicit review generation, no host operations, network or dependency install."""
++import argparse
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++
++BASE = '28872953c4abbadaeaef4c6c40ebcc713817c266d735136a27da725ab59b591b'
++
++def sha(raw):
++    return hashlib.sha256(raw).hexdigest()
++
++def write(p, obj):
++    p.write_text(json.dumps(obj, indent=2, sort_keys=True) + '\n', encoding='utf-8')
++
++def main():
++    parser = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'):
++        parser.add_argument('--' + name, type=Path, required=True)
++    args = parser.parse_args()
++    if sha(args.base.read_bytes()) != BASE:
++        raise ValueError('parent archive mismatch')
++    root = args.root.resolve()
++    with zipfile.ZipFile(args.base) as base:
++        old = json.loads(base.read('file-hashes.json'))
++        if set(base.namelist()) != set(old) | {'file-hashes.json'}:
++            raise ValueError('parent member coverage')
++        for name, item in old.items():
++            raw = base.read(name)
++            if sha(raw) != item['sha256'] or len(raw) != item['size_bytes']:
++                raise ValueError('parent ledger mismatch: ' + name)
++        changed = {'supervisor_v2.py', 'supervisor_evidence.py', 'test_supervisor_v2.py', 'file-hashes.json'}
++        for name in base.namelist():
++            if name not in changed and (root / name).read_bytes() != base.read(name):
++                raise ValueError('unexpected historical change: ' + name)
++        (root / 'history' / 'supervisor-parent-file-hashes.json').write_bytes(base.read('file-hashes.json'))
++        environment = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        command = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        tested = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True, timeout=120)
++        (root / 'revision-tests.log').write_text(tested.stdout + tested.stderr, encoding='utf-8')
++        if tested.returncode:
++            raise RuntimeError('test failure; no package')
++        summary = re.search(r'Ran \d+ tests in [^\n]+', tested.stderr).group()
++        for p in root.glob('*.py'):
++            compile(p.read_text(encoding='utf-8'), str(p), 'exec')
++        diff, files = [], []
++        for p in sorted(root.iterdir()):
++            if p.suffix not in ('.py', '.md'):
++                continue
++            before = base.read(p.name).decode().splitlines(True) if p.name in base.namelist() else []
++            after = p.read_text(encoding='utf-8').splitlines(True)
++            if before != after:
++                if any(x.rstrip('\r\n').rstrip() != x.rstrip('\r\n') for x in after):
++                    raise ValueError('whitespace: ' + p.name)
++                files.append(p.name)
++                diff.extend(difflib.unified_diff(before, after, fromfile='a/' + p.name if before else '/dev/null', tofile='b/' + p.name))
++        (root / 'revision-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root / 'REVISION_VALIDATION.json', {'status': 'mocked_tests_passed_partial_implementation',
++              'summary': summary, 'command': command, 'python': sys.version, 'platform': platform.platform(),
++              'parent_sha256': BASE, 'parent_ledger_entries_verified': len(old), 'changed_source_documents': files,
++              'original_15_tests_unchanged': True, 'production_pins_unchanged': True,
++              'linux_acceptance': False, 'complete_linux_integration': False,
++              'execution_approved': False, 'stage_b': 'paused', 'no_host_operations': True})
++    ledger = {}
++    for p in sorted(root.rglob('*')):
++        if p.is_symlink():
++            raise ValueError('symlink')
++        if p.is_file() and p.name != 'file-hashes.json':
++            raw = p.read_bytes()
++            ledger[p.relative_to(root).as_posix()] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    write(root / 'file-hashes.json', ledger)
++    with zipfile.ZipFile(args.output, 'x', zipfile.ZIP_DEFLATED) as out:
++        for name in [*sorted(ledger), 'file-hashes.json']:
++            out.write(root / name, name)
++    print(json.dumps({'archive': str(args.output.resolve()), 'sha256': sha(args.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': summary}, indent=2))
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ b/REVISION_STATUS.md
+@@ -0,0 +1,97 @@
++# Supervisor persistence correction and Linux lifecycle source revision
++
++Date: 2026-09-28. Preparation/mock testing only. All execution approvals remain
++false. Stage A untouched; Stage B paused. This is **not a deployment-ready or
++complete Linux backend integration**. Item 1 is corrected; item 2 has substantial
++reviewable source and mocked coverage but the integration work below remains.
++
++## Inputs and preservation
++
++Parent ZIP SHA-256:
++`28872953c4abbadaeaef4c6c40ebcc713817c266d735136a27da725ab59b591b`.
++All 57 parent ledger entries are verified before packaging. The original
++15 regression tests, historical workflow, production dependency pins, embedded
++inspector, proposal and metadata resolver remain byte-identical. Prior review
++and validation documents are historical; this document and REVISION_VALIDATION.json
++describe this revision. The parent package generator is historical, not the
++generator for this delta. No research checkout was changed.
++
++## Persistence correction
++
++Both Supervisor.run and independent_cleanup use the same corrected finalizer.
++The operation/cleanup outcome is separate from evidence finalization. On-disk
++reports and successful stdout output say EVIDENCE_PENDING, never VERIFIED_FAKE.
++A completion receipt, written last, binds the final ledger SHA-256 and outcome.
++The return value is finalized only after that succeeds. Consumers must use
++validate_complete: a report, stdout line, or ledger alone is insufficient.
++
++Report, seal, stdout or completion-write failures mark FAILED before subsequent
++report/fallback attempts. A failure record and ledger refresh are attempted
++independently of the original operational error. No completion is written when
++an earlier persistence step fails. Primary and persistence errors remain separate.
++Old provisional reports cannot become success evidence after seal failure.
++
++If every persistence channel fails, only the in-process return may survive.
++There is no guarantee of durable diagnostics after total disk/stdout failure,
++SIGKILL or host loss. A receipt write/fsync failure followed by total inability
++to persist failure can leave uncertain bytes: do not interpret file presence as
++proof of crash durability. No success is printed on stdout. The protocol does
++not promise impossible atomic delivery across disk, stdout and caller memory.
++
++## Linux source added, not Linux acceptance
++
++- linux_host.py: review-only native filesystem/proc identity and bounded
++  subprocess streaming primitives. Constructor refuses live use. Mocked tests
++  invoke selected methods without constructing a live host.
++- linux_lifecycle.py: durable intent-before-mutation/observed-after-mutation
++  ownership, cgroup-v2 controls/read-back, recursive census, TERM then cgroup.kill,
++  populated/process/listener read-back, fixed backing/loop/mount observations,
++  reverse partial cleanup, private daemon argv and executable hash checks.
++- IndependentWatchdog: owner-loss/expiry/acknowledgement algorithm performs fresh
++  termination checks rather than trusting the owner. It is not yet installed
++  as a separately bounded Linux service.
++- evidence_export.py: new-directory, bounded local copy with independent
++  destination hash read-back. Acknowledgement is required before evidence-volume
++  detach. This is local export, not remote artifact upload. Backing bytes are
++  deliberately retained, never automatically deleted.
++
++No live entry point is enabled. No Docker, privileged host operation, binary
++download, package installation, weight/research access, publication or dispatch
++was performed. All new host-effect tests use fakes/mocks; report export tests
++use invented bytes in local temporary directories.
++
++## Exact outstanding implementation and acceptance work
++
++1. A complete Backend.request/read adapter and provisioning coordinator are
++   still needed: root/runtime directory and bounded tmpfs setup, private
++   containerd/dockerd transient services, small separately bounded supervisor
++   and watchdog services, admission barrier, and operation helper placement.
++   The new lifecycle routines are not wired into the old fake-only supervisor.
++2. Incremental recovery needs a persisted-journal loader and safe reconciliation
++   of intent-without-observation crash windows. Current source retains observed
++   resources and fails closed; it does not claim to recover every partially
++   created resource. All task-owned helpers and allocation/formatting operations
++   must be enclosed in the verified resource subtree by that coordinator.
++3. Complete fresh snapshots need global escaped-process/shim census, socket
++   inode ownership, storage-path/no-spill attestation, inode/free-capacity checks,
++   and boot/PID-start/executable identity binding to the supervisor schema.
++   A local subtree census alone does not establish absence of escaped siblings.
++4. Watchdog service arming before any daemon activity, independent lifetime and
++   resources, restart-free behavior and crash/cancellation testing remain.
++   LinuxHost's native blocking filesystem calls are not proof of hard deadlines
++   under uninterruptible kernel I/O; an external watchdog/VM boundary is required.
++5. Local evidence copy/acknowledgement is implemented. Remote upload receipt,
++   fresh zero-paid storage gate, export of the final teardown record, runtime
++   tmpfs/cgroup removal, and backing-file disposal remain deliberately absent.
++   Do not claim complete host teardown. No destructive cleanup of unknown paths.
++6. Actual Linux enforcement, quota exhaustion and lifecycle acceptance are
++   unexecuted. Mock tests do not prove syscall, systemd, Docker, namespace, loop,
++   mount or native filesystem behavior. Namespace-relative cgroup views are
++   explicitly refused rather than guessed by this host-side implementation.
++7. Metadata resolution, candidate artifact bytes/full hashes, immutable lock,
++   native/Python/Actions security dispositions and compatibility clearance are
++   outstanding. Candidates are unapproved; production pins are unchanged.
++
++The next code-review step is the persistence fix and this explicitly partial
++Linux source. Complete items 1-5 using mocked boundaries before requesting any
++live Linux acceptance. Do not publish the historical workflow or dispatch.
+--- a/supervisor_evidence.py
++++ b/supervisor_evidence.py
+@@ -47,3 +47,46 @@
+         if len(raw.encode()) > 128 * 1024:
+             raw = json.dumps({'state': 'FAILED', 'fallback_truncated': True, 'primary_error': str(report.get('primary_error'))[:4096]})
+         print(raw, flush=True)
++
++    def complete(self, outcome):
++        raw = (self.root / 'report-hashes.json').read_bytes()
++        receipt = {'schema': 'pv2_evidence_completion_v1', 'outcome': outcome,
++                   'ledger_sha256': hashlib.sha256(raw).hexdigest()}
++        with (self.root / 'completion.json').open('xb') as f:
++            f.write(json.dumps(receipt, sort_keys=True).encode() + b'\n')
++            f.flush()
++            os.fsync(f.fileno())
++
++
++def validate_complete(root):
++    """Read-only, fail closed: provisional report alone is never completion."""
++    root = Path(root)
++    receipt = json.loads((root / 'completion.json').read_bytes())
++    raw = (root / 'report-hashes.json').read_bytes()
++    if receipt.get('schema') != 'pv2_evidence_completion_v1' or receipt.get('ledger_sha256') != hashlib.sha256(raw).hexdigest():
++        raise ValueError('incomplete evidence: completion/ledger mismatch')
++    ledger = json.loads(raw)
++    actual = {p.name for p in root.iterdir()}
++    if actual != set(ledger) | {'completion.json', 'report-hashes.json'}:
++        raise ValueError('incomplete evidence: unbound records')
++    reports = []
++    for name, entry in ledger.items():
++        if Path(name).name != name or '/' in name or '\\' in name:
++            raise ValueError('unsafe ledger path')
++        p = root / name
++        if p.is_symlink() or not p.is_file():
++            raise ValueError('unsafe evidence member')
++        data = p.read_bytes()
++        if len(data) != entry['size_bytes'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
++            raise ValueError('evidence hash mismatch')
++        if 'persistence-failure' in name:
++            raise ValueError('persistence failed')
++        if name.endswith('-supervisor-report.json'):
++            reports.append(json.loads(data))
++    if len(reports) != 1 or reports[0].get('persistence_errors'):
++        raise ValueError('missing/ambiguous report')
++    if receipt.get('outcome') not in ('VERIFIED_FAKE', 'CLEANUP_VERIFIED_FAKE'):
++        raise ValueError('operation or cleanup failed')
++    if reports[0].get('operation_cleanup_outcome') != receipt['outcome'] or reports[0].get('state') != 'EVIDENCE_PENDING':
++        raise ValueError('outcome mismatch')
++    return receipt
+--- a/supervisor_v2.py
++++ b/supervisor_v2.py
+@@ -159,17 +159,39 @@
+         return value
+ 
+     def persist(self):
+-        # Persistence failures are independent; primary diagnostics never replaced.
+-        for name, fn in (('final-report', lambda: self.evidence.append('supervisor-report', deepcopy(self.report))),
+-                         ('final-ledger', self.evidence.seal)):
+-            try:
+-                fn()
+-            except BaseException as exc:
+-                self.report['persistence_errors'].append(name + ': ' + repr(exc))
+-        try:
++        # A report cannot certify its own subsequent write or ledger commit.
++        # Saved reports are provisional. Only a hash-bound completion receipt
++        # can establish evidence success; stale reports never authorize it.
++        outcome = self.report['state']
++        self.report['operation_cleanup_outcome'] = outcome
++        self.report['evidence_finalized'] = False
++        self.report['state'] = 'EVIDENCE_PENDING' if outcome != 'FAILED' else 'FAILED'
++
++        def failed(channel, exc):
++            self.report['persistence_errors'].append(channel + ': ' + repr(exc))
++            self.report['state'] = 'FAILED'
++            self.report['evidence_finalized'] = False
++
++        try:
++            self.evidence.append('supervisor-report', deepcopy(self.report))
++            self.evidence.seal()
++            # Stdout is provisional too; never print finalized success before
++            # the last durable write. A broken stdout prevents completion.
+             self.evidence.fallback(deepcopy(self.report))
+-        except BaseException as exc:
+-            self.report['persistence_errors'].append('fallback: ' + repr(exc))
++            self.evidence.complete(outcome)
++            self.report['evidence_finalized'] = True
++            self.report['state'] = outcome
++        except BaseException as exc:
++            failed('evidence-finalization', exc)
++            try:
++                self.evidence.append('persistence-failure', deepcopy(self.report))
++                self.evidence.seal()
++            except BaseException as recovery:
++                failed('failure-record', recovery)
++            try:
++                self.evidence.fallback(deepcopy(self.report))
++            except BaseException as fallback_error:
++                failed('fallback', fallback_error)
+ 
+     def cleanup(self):
+         self.event('CLEANUP')
+--- /dev/null
++++ b/test_evidence_export.py
+@@ -0,0 +1,43 @@
++import hashlib
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from evidence_export import LocalEvidenceExport
++
++
++class ExportTests(unittest.TestCase):
++    def fixture(self, root):
++        src = Path(root) / 'source'; src.mkdir(); (src / 'record.json').write_bytes(b'{}')
++        m = {'files': {'record.json': {'size_bytes': 2, 'sha256': hashlib.sha256(b'{}').hexdigest()}}}
++        return src, m
++    def test_round_trip_and_no_overwrite(self):
++        with tempfile.TemporaryDirectory() as t:
++            src, m = self.fixture(t); dst = Path(t) / 'destination'
++            raw = json.dumps(m, sort_keys=True, separators=(',', ':')).encode()
++            e = LocalEvidenceExport(src, dst)
++            self.assertTrue(e.export(raw, m, 4096, 1)['readback_verified'])
++            self.assertEqual((dst / 'record.json').read_bytes(), b'{}')
++            with self.assertRaises(FileExistsError):
++                e.export(raw, m, 4096, 1)
++    def test_corruption_retains_partial_destination(self):
++        with tempfile.TemporaryDirectory() as t:
++            src, m = self.fixture(t); dst = Path(t) / 'destination'
++            (src / 'record.json').write_bytes(b'XX')
++            with self.assertRaisesRegex(ValueError, 'mismatch'):
++                LocalEvidenceExport(src, dst).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
++            self.assertTrue(dst.exists())
++            self.assertTrue(src.exists())
++    def test_aggregate_bound_prevents_destination(self):
++        with tempfile.TemporaryDirectory() as t:
++            src, m = self.fixture(t); dst = Path(t) / 'destination'
++            with self.assertRaises(ValueError):
++                LocalEvidenceExport(src, dst).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 1, 1)
++            self.assertFalse(dst.exists())
++    def test_timeout_preserves_source(self):
++        with tempfile.TemporaryDirectory() as t:
++            src, m = self.fixture(t); dst = Path(t) / 'destination'
++            ticks = iter([0, 2])
++            with self.assertRaises(TimeoutError):
++                LocalEvidenceExport(src, dst, lambda: next(ticks)).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
++            self.assertEqual((src / 'record.json').read_bytes(), b'{}')
+--- /dev/null
++++ b/test_linux_lifecycle.py
+@@ -0,0 +1,174 @@
++"""Invented Linux files, fake monotonic clock and mocked subprocesses ONLY."""
++from types import SimpleNamespace
++import unittest
++from unittest.mock import Mock, patch
++
++from linux_host import LinuxHost, mount_records, resolve_cgroup
++from linux_lifecycle import LinuxLifecycle, IndependentWatchdog
++from test_supervisor_v2 import FakeEvidence
++
++MOUNTS = '29 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup rw\n'
++
++
++class FakeHost:
++    is_fake = True
++    def __init__(self):
++        self.time = 0
++        self.files = {'/proc/self/mountinfo': MOUNTS, '/proc/self/cgroup': '0::/supervisor\n',
++                      '/proc/sys/kernel/random/boot_id': 'boot', '/proc/net/unix': '',
++                      '/sys/fs/cgroup/cgroup.controllers': 'cpu memory pids',
++                      '/sys/fs/cgroup/cgroup.subtree_control': 'cpu memory pids'}
++        self.calls = []; self.inode = 111; self.fail_term = False; self.busy = False
++    def text(self, path):
++        if path.endswith('/cgroup.events'):
++            return 'populated ' + ('1' if self.busy else '0')
++        if path.endswith('/cgroup.procs'):
++            return ''
++        return self.files[path]
++    def now(self):
++        return self.time
++    def pause(self, sec):
++        self.time += sec
++    def stat(self, path):
++        return SimpleNamespace(st_ino=self.inode)
++    def put(self, path, value):
++        self.calls.append(('put', path, value)); self.files[path] = value
++    def mkdir(self, path):
++        self.calls.append(('mkdir', path))
++    def children(self, path):
++        return []
++    def digest(self, path):
++        return 'a' * 64
++    def command(self, argv, timeout):
++        self.calls.append(('command', argv, timeout))
++        if self.fail_term and argv[0] == 'systemctl':
++            raise TimeoutError('TERM deadline')
++        return b''
++
++
++class LifecycleTests(unittest.TestCase):
++    def make(self):
++        h, e = FakeHost(), FakeEvidence()
++        return LinuxLifecycle(h, e, 'a' * 32), h, e
++
++    def test_live_disabled(self):
++        with self.assertRaisesRegex(RuntimeError, 'disabled'):
++            LinuxHost()
++        h = FakeHost(); h.is_fake = False
++        with self.assertRaisesRegex(ValueError, 'disabled'):
++            LinuxLifecycle(h, FakeEvidence(), 'a' * 32)
++
++    def test_mount_parser_and_namespace_refusal(self):
++        self.assertEqual(resolve_cgroup(MOUNTS, '0::/outside'), ('/sys/fs/cgroup', '/outside'))
++        with self.assertRaises(ValueError):
++            resolve_cgroup(MOUNTS.replace(' / /sys', ' /restricted /sys'), '0::/')
++        with self.assertRaises(ValueError):
++            resolve_cgroup(MOUNTS + MOUNTS, '0::/')
++
++    def test_intent_precedes_mutation_and_observation(self):
++        l, h, e = self.make()
++        def mutate():
++            self.assertEqual(e.ledger[-1][1]['phase'], 'intent')
++        l.acquire('invented', '/owned', mutate, lambda: {'inode': 1})
++        self.assertEqual(e.ledger[-1][1]['phase'], 'observed')
++
++    def test_intent_write_failure_prevents_effect(self):
++        l, h, e = self.make(); e.fail = 'provision-intent'; effect = Mock()
++        with self.assertRaises(OSError):
++            l.acquire('invented', '/owned', effect, lambda: {})
++        effect.assert_not_called()
++
++    def test_observed_write_failure_retains_cleanup_identity(self):
++        l, h, e = self.make(); e.fail = 'provision-observed'
++        with self.assertRaises(OSError):
++            l.acquire('invented', '/owned', lambda: None, lambda: {'inode': 12})
++        self.assertEqual(l.resources[0]['identity']['inode'], 12)
++
++    def test_resource_controls_written_and_read_back(self):
++        l, h, e = self.make(); identity = l.provision_cgroup()
++        self.assertEqual(identity['inode'], 111)
++        self.assertEqual(h.files[l.cg + '/memory.max'], str(6 * 1024**3))
++        self.assertEqual(h.files[l.cg + '/memory.swap.max'], '0')
++        self.assertEqual(h.files[l.cg + '/pids.max'], '256')
++
++    def test_missing_controller_refused_before_creation(self):
++        l, h, e = self.make(); h.files['/sys/fs/cgroup/cgroup.controllers'] = 'cpu'
++        with self.assertRaises(ValueError):
++            l.provision_cgroup()
++        self.assertEqual(h.calls, [])
++
++    def test_failed_term_does_not_skip_subtree_kill(self):
++        l, h, e = self.make(); h.fail_term = True
++        result = l.terminate(l.cgroup_identity())
++        self.assertTrue(result['termination_confirmed'])
++        self.assertTrue(result['errors'])
++        self.assertIn(('put', l.cg + '/cgroup.kill', '1'), h.calls)
++
++    def test_changed_identity_never_killed(self):
++        l, h, e = self.make(); identity = l.cgroup_identity(); h.inode += 1
++        result = l.terminate(identity)
++        self.assertFalse(result['termination_confirmed'])
++        self.assertEqual(h.calls, [])
++
++    def test_nonempty_times_out(self):
++        l, h, e = self.make(); h.busy = True
++        result = l.terminate(l.cgroup_identity())
++        self.assertFalse(result['termination_confirmed'])
++        self.assertLess(h.time, 10.1)
++
++    def test_private_listener_blocks_success(self):
++        l, h, e = self.make(); h.files['/proc/net/unix'] = l.runtime + '/docker.sock'
++        self.assertFalse(l.terminate(l.cgroup_identity())['termination_confirmed'])
++
++    def test_watchdog_owner_loss_and_stale_ack_do_readback(self):
++        for alive, ack in ((False, False), (True, True)):
++            l, h, e = self.make(); h.busy = True
++            result = IndependentWatchdog(l, l.cgroup_identity(), 1200, e).supervise(lambda: alive, lambda: ack)
++            self.assertFalse(result['termination_confirmed'])
++            self.assertTrue(e.ledger)
++
++    def test_watchdog_expiry(self):
++        l, h, e = self.make()
++        result = IndependentWatchdog(l, l.cgroup_identity(), .2, e).supervise(lambda: True, lambda: False)
++        self.assertTrue(result['termination_confirmed'])
++        self.assertGreaterEqual(h.time, .2)
++
++    def test_export_wrong_ack_preserves_volume(self):
++        l, h, e = self.make(); exporter = Mock()
++        exporter.export.return_value = {'manifest_sha256': 'wrong', 'readback_verified': True}
++        with patch.object(l, 'detach_volume') as detach, self.assertRaises(ValueError):
++            l.export_and_ack(exporter, {'files': []}, {}, True)
++        detach.assert_not_called()
++
++    def test_export_ack_precedes_teardown(self):
++        import hashlib
++        import json
++        l, h, e = self.make(); exporter = Mock(); manifest = {'files': []}
++        digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
++        exporter.export.return_value = {'manifest_sha256': digest, 'readback_verified': True}
++        def detach(*args):
++            self.assertEqual(e.ledger[-1][0], 'export-ack')
++        with patch.object(l, 'detach_volume', side_effect=detach):
++            self.assertTrue(l.export_and_ack(exporter, manifest, {}, True)['backing_retained'])
++
++    def test_daemon_arguments_private_and_inventory_bound(self):
++        l, h, e = self.make()
++        with self.assertRaises(ValueError):
++            l.daemon_arguments({})
++        args = l.daemon_arguments({p: 'a' * 64 for p in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc')})
++        self.assertIn('--bridge=none', args['dockerd'])
++        self.assertIn('--containerd=' + l.runtime + '/containerd.sock', args['dockerd'])
++
++    def test_native_command_timeout_preserves_primary_when_kill_fails(self):
++        host = object.__new__(LinuxHost)
++        process = Mock(); process.poll.return_value = None; process.kill.side_effect = OSError('cleanup')
++        with patch.object(host, 'start', return_value=process), patch.object(host, 'now', side_effect=[0, 11]):
++            with self.assertRaises(TimeoutError) as caught:
++                host.command(['invented'], 10)
++        self.assertIn('cleanup', str(caught.exception.__notes__))
++
++    def test_native_output_overflow(self):
++        host = object.__new__(LinuxHost); process = Mock(); process.poll.return_value = 0
++        with patch.object(host, 'start', return_value=process), patch.object(host, 'now', return_value=0), patch.object(host, 'read', return_value=b'x' * 65536):
++            with self.assertRaisesRegex(ValueError, 'overflow'):
++                host.command(['invented'], 10)
+--- /dev/null
++++ b/test_persistence_finalization.py
+@@ -0,0 +1,97 @@
++"""Persistence matrix covers returned, saved, ledger and stdout channels."""
++from copy import deepcopy
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import patch
++
++from supervisor_v2 import Supervisor
++from supervisor_evidence import FileEvidence, validate_complete
++from test_supervisor_v2 import FakeBackend, FakeEvidence
++
++
++class PersistenceTests(unittest.TestCase):
++    def test_both_paths_and_both_review_failures(self):
++        for method in ('run', 'independent_cleanup'):
++            for fail in ('supervisor-report', 'seal'):
++                with self.subTest(method=method, fail=fail):
++                    e, b = FakeEvidence(fail), FakeBackend()
++                    result = getattr(Supervisor(b, e), method)(b.r)
++                    self.assertEqual(result['state'], 'FAILED')
++                    self.assertEqual(e.stdout['state'], 'FAILED')
++                    self.assertFalse(result['evidence_finalized'])
++                    self.assertTrue(e.stdout['persistence_errors'])
++                    self.assertFalse(hasattr(e, 'completion'))
++                    for _, row in e.rows:
++                        self.assertNotIn(row.get('state'), ('VERIFIED_FAKE', 'CLEANUP_VERIFIED_FAKE'))
++                    if e.ledger:
++                        self.assertEqual(e.ledger[-1][1]['state'], 'FAILED')
++
++    def test_success_saved_provisional_receipt_final(self):
++        for method in ('run', 'independent_cleanup'):
++            b, e = FakeBackend(), FakeEvidence()
++            result = getattr(Supervisor(b, e), method)(b.r)
++            self.assertTrue(result['evidence_finalized'])
++            self.assertEqual(e.rows[-1][1]['state'], 'EVIDENCE_PENDING')
++            self.assertEqual(e.completion['outcome'], result['state'])
++            self.assertEqual(e.stdout['state'], 'EVIDENCE_PENDING')
++            self.assertFalse(e.stdout['evidence_finalized'])
++
++    def test_original_error_survives_all_channels_failed(self):
++        b = FakeBackend(); b.streaming_timeout = True
++        e = FakeEvidence()
++        with patch.object(e, 'append', side_effect=OSError('disk')), patch.object(e, 'fallback', side_effect=OSError('stdout')):
++            result = Supervisor(b, e).run(b.r)
++        self.assertIn('disk', result['primary_error'])
++        self.assertEqual(result['state'], 'FAILED')
++        self.assertTrue(result['persistence_errors'])
++        self.assertIsNone(e.ledger)
++        self.assertIsNone(e.stdout)
++
++    def test_operational_error_not_replaced_by_ledger_error(self):
++        b = FakeBackend(); b.streaming_timeout = True
++        e = FakeEvidence('seal')
++        result = Supervisor(b, e).run(b.r)
++        self.assertIn('timeout', result['primary_error'])
++        self.assertEqual(e.stdout['primary_error'], result['primary_error'])
++
++    def test_disk_consumer_accepts_only_complete_binding(self):
++        with tempfile.TemporaryDirectory() as t:
++            e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++            with patch('builtins.print'):
++                result = Supervisor(b, e).run(b.r)
++            self.assertEqual(validate_complete(e.root)['outcome'], result['state'])
++            (e.root / 'completion.json').unlink()
++            with self.assertRaises(FileNotFoundError):
++                validate_complete(e.root)
++
++    def test_disk_seal_failure_leaves_no_success_claim(self):
++        for method in ('run', 'independent_cleanup'):
++            with tempfile.TemporaryDirectory() as t:
++                e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++                with patch.object(e, 'seal', side_effect=OSError('ledger')), patch('builtins.print') as stdout:
++                    result = getattr(Supervisor(b, e), method)(b.r)
++                self.assertEqual(json.loads(stdout.call_args.args[0])['state'], 'FAILED')
++                self.assertEqual(result['state'], 'FAILED')
++                with self.assertRaises(FileNotFoundError):
++                    validate_complete(e.root)
++                for p in e.root.glob('*supervisor-report.json'):
++                    self.assertEqual(json.loads(p.read_text())['state'], 'EVIDENCE_PENDING')
++
++    def test_fallback_failure_invalidates_old_receipt(self):
++        with tempfile.TemporaryDirectory() as t:
++            e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++            with patch.object(e, 'fallback', side_effect=OSError('stdout')):
++                result = Supervisor(b, e).run(b.r)
++            self.assertEqual(result['state'], 'FAILED')
++            with self.assertRaises((ValueError, FileNotFoundError)):
++                validate_complete(e.root)
++
++    def test_complete_failure_saved_failure_and_stdout(self):
++        b, e = FakeBackend(), FakeEvidence()
++        with patch.object(e, 'complete', side_effect=OSError('receipt')):
++            result = Supervisor(b, e).run(b.r)
++        self.assertEqual(result['state'], 'FAILED')
++        self.assertEqual(e.ledger[-1][1]['state'], 'FAILED')
++        self.assertEqual(e.stdout['state'], 'FAILED')
+--- a/test_supervisor_v2.py
++++ b/test_supervisor_v2.py
+@@ -46,6 +46,8 @@
+         self.ledger = deepcopy(self.rows)
+     def fallback(self, value):
+         self.stdout = deepcopy(value)
++    def complete(self, outcome):
++        self.completion = {'outcome': outcome, 'ledger': deepcopy(self.ledger)}
+ 
+ class FakeBackend:
+     is_fake = True

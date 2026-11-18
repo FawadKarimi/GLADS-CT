@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.44710421562195,
+  "epoch": 3,
+  "learning_rates": {
+    "encoder_bias_normalization": 5.500000000000001e-05,
+    "encoder_weights": 5.500000000000001e-05,
+    "head_bias_normalization": 0.00055,
+    "head_weights": 0.00055
+  },
+  "objective": "LEGACY",
+  "patience": {
+    "best": 0.5985449735449736,
+    "last_epoch": 3,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 1
+  },
+  "run_id": "LEGACY-43",
+  "seed": 43,
+  "selected_so_far": {
+    "diagnostic_ce": 0.8276848063993079,
+    "epoch": 2,
+    "macro_f1": 0.5985449735449736
+  },
+  "train": {
+    "accuracy": 0.5566692367000771,
+    "confusion_matrix": [
+      [
+        305,
+        193,
+        84
+      ],
+      [
+        131,
+        225,
+        86
+      ],
+      [
+        27,
+        54,
+        192
+      ]
+    ],
+    "diagnostic_ce": 0.9075382376978649,
+    "epoch_objective_loss": 0.9248824379968146,
+    "exposed_views_sha256": "f0658f805ee391074aecb5d10634acd8e87a21cea89f60d069e6bae1895b4d2a",
+    "loss_totals": {
+      "hard": 0.8860714045714825,
+      "legacy": 0.9248824379968146,
+      "reader": 0.0
+    },
+    "macro_f1": 0.5602659411796825,
+    "max_grad_norm": 5.342783451080322,
+    "mean_batch_objective_loss": 0.9250102224873333,
+    "mean_grad_norm": 3.0725717544555664,
+    "per_class": {
+      "0": {
+        "f1": 0.583732057416268,
+        "precision": 0.6587473002159827,
+        "recall": 0.5240549828178694,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.4923413566739606,
+        "precision": 0.4766949152542373,
+        "recall": 0.5090497737556561,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.6047244094488189,
+        "precision": 0.5303867403314917,
+        "recall": 0.7032967032967034,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.583732057416268,
+        "precision": 0.6587473002159827,
+        "recall": 0.5240549828178694,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.4923413566739606,
+        "precision": 0.4766949152542373,
+        "recall": 0.5090497737556561,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.6047244094488189,
+        "precision": 0.5303867403314917,
+        "recall": 0.7032967032967034,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8860714067053568
+  },
+  "validation": {
+    "accuracy": 0.5594405594405595,
+    "confusion_matrix": [
+      [
+        26,
+        30,
+        9
+      ],
+      [
+        5,
+        18,
+        15
+      ],
+      [
+        1,
+        3,
+        36
+      ]
+    ],
+    "diagnostic_ce": 0.8441765621773429,
+    "macro_f1": 0.5535256187497587,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5594405594405595,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.5360824742268042,
+        "precision": 0.8125,
+        "recall": 0.4,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.40449438202247195,
+        "precision": 0.35294117647058826,
+        "recall": 0.47368421052631576,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7200000000000001,
+        "precision": 0.6,
+        "recall": 0.9,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.5360824742268042,
+        "precision": 0.8125,
+        "recall": 0.4,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.40449438202247195,
+        "precision": 0.35294117647058826,
+        "recall": 0.47368421052631576,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7200000000000001,
+        "precision": 0.6,
+        "recall": 0.9,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.7450859247776265
+  }
+}

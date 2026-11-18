@@ -1,0 +1,68 @@
+{
+  "attempts": 1,
+  "exit_status": 0,
+  "seconds": 2.6080382727086544,
+  "source_lock_sha256": "688f00138888142dfe0bc9a17fe4f682b7a6e7e679d3156034a6a7fcab7e93b4",
+  "bindings_verified": 1054,
+  "source_drift": [],
+  "settled_evidence_hash_mismatches": [],
+  "observed_sessions": [
+    528450,
+    528461,
+    528463,
+    528465,
+    528468,
+    528471,
+    528473
+  ],
+  "remaining_processes": [],
+  "process_observation_errors": [],
+  "production_execution_authorized": false,
+  "real_mapping_executed": false,
+  "research_images_read": 0,
+  "stage_b_authorized": false,
+  "criteria_met": true,
+  "cases": [
+    {
+      "case": "success",
+      "expected_exit": 0,
+      "observed_exit": 0,
+      "success": true
+    },
+    {
+      "case": "worker-failure",
+      "expected_exit": 7,
+      "observed_exit": 7,
+      "success": false
+    },
+    {
+      "case": "timeout",
+      "expected_exit": 124,
+      "observed_exit": 124,
+      "success": false
+    },
+    {
+      "case": "interruption",
+      "expected_exit": 130,
+      "observed_exit": 130,
+      "success": false
+    },
+    {
+      "case": "source-drift",
+      "expected_exit": 70,
+      "observed_exit": 70,
+      "success": false
+    },
+    {
+      "case": "evidence-write-failure",
+      "expected_exit": 70,
+      "observed_exit": 70,
+      "success": false
+    }
+  ],
+  "zip_name": "performance-v2-orchestration-dryrun-001-evidence.zip",
+  "zip_sha256": "711df6c0ff0491393dd9cb4a18226c5aac3c03e0c1089c1449cd98465d1a69f8",
+  "ledger_sha256": "ea7867bf48275e1b7f3b31aa428ffa330630d204281885b73790d3e7fb2b75fd",
+  "zip_members": 98,
+  "zip_bytes": 1596039
+}

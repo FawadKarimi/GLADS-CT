@@ -1,0 +1,8 @@
+{
+  "ZIP_sha256": "fb9400382643ffc5a3f4e4e3f21e13ade673371e2a864d4c870726acd8f1c92b",
+  "authority": "Direct user authorization of ONE bounded native CPU sealing operation using reviewed command and limits",
+  "budget_creation_authorized": false,
+  "recorded_utc": "2026-10-13T16:53:42Z",
+  "research_execution_authorized": false,
+  "wrapper_sha256": "5931bb0d5384d8914ce7adef65156effaf3736edc5d62aae5e965dbebcc72bae"
+}

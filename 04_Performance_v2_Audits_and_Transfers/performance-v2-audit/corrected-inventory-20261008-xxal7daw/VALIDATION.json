@@ -1,0 +1,38 @@
+{
+  "HEAD": "f8278c34d6145170345dce0a518276adf0bb4144",
+  "HEAD_index_tracked_diff_unchanged": true,
+  "Python_3_10_AST_passed": true,
+  "acceptance_suite_executed": false,
+  "both_diffs_reconstructed_exact_bytes": true,
+  "branch": "performance-v2",
+  "changed_files": [
+    "scripts/performance_v2_native_acceptance.py",
+    "tests/test_performance_v2_acceptance_entry.py",
+    "docs/performance_v2_native_acceptance_checklist.md",
+    "configs/performance_v2/native_acceptance_source_lock.json"
+  ],
+  "focused_tests": {
+    "acceptance_suite_executed": false,
+    "errors": 0,
+    "executable": "C:\\Python314\\python.exe",
+    "executable_sha256": "03168c01b7b7491423350e82c26fee71f35b43694d1319d3c668bda6903a0c38",
+    "failures": 0,
+    "native_linux_validation": false,
+    "network_and_subprocess_denied": true,
+    "passed": true,
+    "pilot_execution_authorized": false,
+    "platform": "win32",
+    "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+    "scope": "MetadataBindingTests only; invented records and temporary directories",
+    "skips": 0,
+    "source_hashes": {
+      "scripts/performance_v2_native_acceptance.py": "57448da2b905e40716564349db03b3390b2034cd682bff7c53c4c6fe777a4ebd",
+      "tests/test_performance_v2_acceptance_entry.py": "bae7f5e7283333fc606151b98ed840d1070f71248ddc1d8341a0d7ec410027d6"
+    },
+    "tests": 13
+  },
+  "frozen_files": 57,
+  "pilot_execution_authorized": false,
+  "source_lock_sha256": "939856a467b20da0e1bb9f5e9f4ff54c08fffc896dbf39a70e6c30b1bece2a5e",
+  "unchanged_files": 294
+}

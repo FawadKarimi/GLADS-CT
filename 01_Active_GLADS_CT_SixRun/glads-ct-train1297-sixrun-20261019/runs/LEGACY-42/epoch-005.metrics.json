@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.45295548439026,
+  "epoch": 5,
+  "learning_rates": {
+    "encoder_bias_normalization": 0.0001,
+    "encoder_weights": 0.0001,
+    "head_bias_normalization": 0.001,
+    "head_weights": 0.001
+  },
+  "objective": "LEGACY",
+  "patience": {
+    "best": 0.6257456931581159,
+    "last_epoch": 5,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 2
+  },
+  "run_id": "LEGACY-42",
+  "seed": 42,
+  "selected_so_far": {
+    "diagnostic_ce": 0.7205007524991577,
+    "epoch": 3,
+    "macro_f1": 0.6257456931581159
+  },
+  "train": {
+    "accuracy": 0.5705474171164225,
+    "confusion_matrix": [
+      [
+        310,
+        222,
+        50
+      ],
+      [
+        111,
+        241,
+        90
+      ],
+      [
+        25,
+        59,
+        189
+      ]
+    ],
+    "diagnostic_ce": 0.8417169863233198,
+    "epoch_objective_loss": 0.8835698970644951,
+    "exposed_views_sha256": "f9087cc0d2f777a421a087605b89b4d45f6e0320519b5e1bc1001e48d940c52f",
+    "loss_totals": {
+      "hard": 0.8374251987791969,
+      "legacy": 0.8835698970644951,
+      "reader": 0.0
+    },
+    "macro_f1": 0.5770066057370374,
+    "max_grad_norm": 4.833481788635254,
+    "mean_batch_objective_loss": 0.8864188652213026,
+    "mean_grad_norm": 2.7013778453919945,
+    "per_class": {
+      "0": {
+        "f1": 0.6031128404669261,
+        "precision": 0.695067264573991,
+        "recall": 0.5326460481099656,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.5,
+        "precision": 0.4616858237547893,
+        "recall": 0.5452488687782805,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.627906976744186,
+        "precision": 0.574468085106383,
+        "recall": 0.6923076923076923,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.6031128404669261,
+        "precision": 0.695067264573991,
+        "recall": 0.5326460481099656,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.5,
+        "precision": 0.4616858237547893,
+        "recall": 0.5452488687782805,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.627906976744186,
+        "precision": 0.574468085106383,
+        "recall": 0.6923076923076923,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8374252057046664
+  },
+  "validation": {
+    "accuracy": 0.5034965034965035,
+    "confusion_matrix": [
+      [
+        20,
+        25,
+        20
+      ],
+      [
+        4,
+        15,
+        19
+      ],
+      [
+        0,
+        3,
+        37
+      ]
+    ],
+    "diagnostic_ce": 0.9531591538978103,
+    "macro_f1": 0.4859132023667734,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5034965034965035,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.4494382022471911,
+        "precision": 0.8333333333333334,
+        "recall": 0.3076923076923077,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.3703703703703704,
+        "precision": 0.3488372093023256,
+        "recall": 0.39473684210526316,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.6379310344827587,
+        "precision": 0.4868421052631579,
+        "recall": 0.925,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.4494382022471911,
+        "precision": 0.8333333333333334,
+        "recall": 0.3076923076923077,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.3703703703703704,
+        "precision": 0.3488372093023256,
+        "recall": 0.39473684210526316,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.6379310344827587,
+        "precision": 0.4868421052631579,
+        "recall": 0.925,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.805564440390179
+  }
+}

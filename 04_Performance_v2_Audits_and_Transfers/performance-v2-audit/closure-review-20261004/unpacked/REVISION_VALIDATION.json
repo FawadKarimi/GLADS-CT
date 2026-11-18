@@ -1,0 +1,40 @@
+{
+  "changed_source_documents": [
+    "evidence_export.py",
+    "linux_host.py",
+    "linux_lifecycle.py",
+    "package_revision.py",
+    "REVISION_STATUS.md",
+    "supervisor_evidence.py",
+    "supervisor_v2.py",
+    "test_evidence_export.py",
+    "test_linux_lifecycle.py",
+    "test_persistence_finalization.py",
+    "test_supervisor_v2.py"
+  ],
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-supervisor-linux-review-20260928",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "complete_linux_integration": false,
+  "execution_approved": false,
+  "linux_acceptance": false,
+  "no_host_operations": true,
+  "original_15_tests_unchanged": true,
+  "parent_ledger_entries_verified": 57,
+  "parent_sha256": "28872953c4abbadaeaef4c6c40ebcc713817c266d735136a27da725ab59b591b",
+  "platform": "Windows-11-10.0.22621-SP0",
+  "production_pins_unchanged": true,
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "stage_b": "paused",
+  "status": "mocked_tests_passed_partial_implementation",
+  "summary": "Ran 81 tests in 0.591s"
+}

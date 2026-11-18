@@ -1,0 +1,105 @@
+{
+  "all_staged_directories_mode": "0700",
+  "all_staged_files_mode": "0600",
+  "ancestors": [
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 0,
+      "mode": "0o755",
+      "path": "/home",
+      "uid": 0
+    },
+    {
+      "acl": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+      "gid": 1009,
+      "mode": "0o755",
+      "path": "/home/chaidir",
+      "uid": 1009
+    },
+    {
+      "acl": "user::rwx\ngroup::---\nother::---\n\n",
+      "gid": 1009,
+      "mode": "0o700",
+      "path": "/home/chaidir/.performance-v2-reports",
+      "uid": 1009
+    }
+  ],
+  "available_bytes": 99154513920,
+  "available_inodes": 27858663,
+  "filesystem": "/      ext4   rw,relatime\n",
+  "limits_tools": {
+    "/bin/bash": true,
+    "/usr/bin/getfacl": true,
+    "/usr/bin/timeout": true
+  },
+  "metadata_scopes": {
+    "/experiment-storage/chaidir/env/env-310-fawad/lib/python3.10/site-packages": {
+      "numpy": [
+        {
+          "metadata_sha256": "22d648f53848429464ca643b40d73b49a920d47876fc77c395d4dca4e834904a",
+          "version": "2.2.6"
+        }
+      ],
+      "opencv-python": [
+        {
+          "metadata_sha256": "20749df4e7500c53075dee344cd02f63d4df0dce93526e49e7e1c90fbc094e3e",
+          "version": "5.0.0.93"
+        }
+      ],
+      "torch": [
+        {
+          "metadata_sha256": "0f98fa0775a884512e695c31bfab1c3f2ec16af17ff1b1ed521c1858bc25c41f",
+          "version": "2.3.0+cu121"
+        }
+      ],
+      "torchvision": [
+        {
+          "metadata_sha256": "a78c1dc21c6a0727a3ef77663e564f05bc3126dda903e44a5ad0b7ab3a7b13c0",
+          "version": "0.18.0+cu121"
+        }
+      ]
+    },
+    "/usr/lib/python3.10/site-packages": {},
+    "/usr/lib/python3/dist-packages": {},
+    "/usr/local/lib/python3.10/site-packages": {}
+  },
+  "pilot_execution_authorized": false,
+  "production_execution_authorized": false,
+  "recursive_acl_sha256": "ed38513de3ad01190763d5d9b8b9d6a2a69978ad642fc8fcc9e72090a1d90b07",
+  "report_destination_absent": true,
+  "runtime": {
+    "executable": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+    "resolved": "/usr/bin/python3.10",
+    "sha256": "f0b2ab0592687aa9a0674f7d5f04ec6e46777eceec63b04dec80ae4e7237f539",
+    "venv_config": "home = /usr/bin\ninclude-system-site-packages = false\nversion = 3.10.17\n",
+    "version": "3.10.17 (main, Apr  9 2025, 08:54:15) [GCC 9.4.0]"
+  },
+  "source_bindings": 1080,
+  "source_directory": {
+    "acl": "user::rwx\ngroup::---\nother::---\n\n",
+    "gid": 1009,
+    "mode": "0o700",
+    "path": "/home/chaidir/.performance-v2-imagenet-review-20261008/candidate",
+    "uid": 1009
+  },
+  "source_lock_sha256": "40739de9a02a2e015e646fb0d6ddbf769e145e96ff233c1077df0f7b476a38f7",
+  "staging_directory": {
+    "acl": "user::rwx\ngroup::---\nother::---\n\n",
+    "gid": 1009,
+    "mode": "0o700",
+    "path": "/home/chaidir/.performance-v2-imagenet-review-20261008",
+    "uid": 1009
+  },
+  "status": "staged_verified",
+  "tests_executed": false,
+  "uid": 1009,
+  "zip_members": 1087,
+  "zip_sha256": "056882351244ac93c156dd4709d3026f7b87d78809846e2e34fd72daf25fd568"
+}

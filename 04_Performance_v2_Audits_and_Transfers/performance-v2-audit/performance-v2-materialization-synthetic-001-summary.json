@@ -1,0 +1,38 @@
+{
+  "test_status": "passed",
+  "tests": 133,
+  "failures": 0,
+  "errors": 0,
+  "skipped": [],
+  "exit_status": 0,
+  "outer_exit_status": 0,
+  "runtime": {
+    "torch": "2.3.0+cu121",
+    "torchvision": "0.18.0+cu121",
+    "numpy": "2.2.6",
+    "opencv": "5.0.0",
+    "threads": 2,
+    "cuda_build": "12.1",
+    "distributions": {
+      "torch": "2.3.0+cu121",
+      "torchvision": "0.18.0+cu121",
+      "numpy": "2.2.6",
+      "opencv-python": "5.0.0.93"
+    }
+  },
+  "python": "3.10.17 (main, Apr  9 2025, 08:54:15) [GCC 9.4.0]",
+  "seconds": 12.302083583548665,
+  "source_bindings_verified_after": 75,
+  "source_lock_sha256": "114b2247eb0b3999ff032fc5e4a3c911cfbdfb5f030f152c02ed3d3239083ee7",
+  "remaining_processes": [],
+  "production_execution_authorized": false,
+  "stage_b_authorized": false,
+  "gpu_authorized": false,
+  "attempts": 1,
+  "acceptance_criteria_met": true,
+  "evidence_zip": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/performance-v2-materialization-synthetic-001-evidence.zip",
+  "zip_sha256": "d17108caba6454f9f7fa5d3c357e0bc5102a50356f9f2d8e67a0a7a48ca90f67",
+  "ledger_sha256": "8d4c732bfc5cd58a2d35d46fd801088f41d676d055dfc217baeb1c861f60b3fc",
+  "zip_members": 22,
+  "zip_bytes": 1685412
+}

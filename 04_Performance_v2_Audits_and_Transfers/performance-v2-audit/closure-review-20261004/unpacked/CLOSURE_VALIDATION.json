@@ -1,0 +1,20 @@
+{
+  "baseline_156_entries_verified": true,
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_closure_metadata"
+  ],
+  "execution_approved": false,
+  "existing_files_unchanged_except_outer_ledger": true,
+  "exit_code": 0,
+  "full_historical_tests_rerun": false,
+  "live_requests_executed": false,
+  "runtime": "CPython 3.14.6 Windows",
+  "scope": "synthetic fake HTTP and mocked parent timeout only",
+  "security_approved": false,
+  "tests_passed": 9
+}

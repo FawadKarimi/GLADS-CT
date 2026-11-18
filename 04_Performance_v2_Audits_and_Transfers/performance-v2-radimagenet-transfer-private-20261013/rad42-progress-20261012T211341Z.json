@@ -1,0 +1,62 @@
+{
+  "utc": "2026-10-12T21:13:41Z",
+  "outer_exit": null,
+  "completed_epochs": 14,
+  "latest_validation": {
+    "accuracy": 0.6433566433566433,
+    "confusion_matrix": [
+      [
+        37,
+        27,
+        1
+      ],
+      [
+        9,
+        23,
+        6
+      ],
+      [
+        0,
+        8,
+        32
+      ]
+    ],
+    "diagnostic_ce": 0.7875048613224188,
+    "input_lock_sha256": "863713e4c6c6ebb38cde494b851fc8e4756aa520531abc6e53527ae732a5b2e0",
+    "macro_f1": 0.6519866385372715,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.6433566433566433,
+    "n": 143,
+    "per_class": {
+      "benign": {
+        "f1": 0.6666666666666667,
+        "precision": 0.8043478260869565,
+        "recall": 0.5692307692307692,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.47916666666666674,
+        "precision": 0.39655172413793105,
+        "recall": 0.6052631578947368,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.810126582278481,
+        "precision": 0.8205128205128205,
+        "recall": 0.8,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val"
+  },
+  "wall_since_spawn_seconds": 582.6361989974976,
+  "attempts": [
+    [
+      1,
+      "reserved",
+      0,
+      null
+    ]
+  ]
+}

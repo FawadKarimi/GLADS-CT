@@ -1,0 +1,39 @@
+{
+  "candidate_versions": {
+    "pip": "26.2.1",
+    "python": "3.12.15",
+    "setuptools": "84.0.0",
+    "torch": "2.13.0+cpu",
+    "torchvision": "0.28.0+cpu",
+    "wheel": "0.46.2"
+  },
+  "errors": {
+    "advisory-pip": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "advisory-setuptools": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "advisory-torch": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "advisory-torchvision": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "advisory-wheel": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "base": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "checkout": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "pip": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "setuptools": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "torch_cpu": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "upload-artifact": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "vision_commit": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "vision_cpu": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))",
+    "wheel": "URLError(PermissionError(13, 'An attempt was made to access a socket in a way forbidden by its access permissions', None, 10013, None))"
+  },
+  "execution_approved": false,
+  "receipts": [],
+  "resolved": {},
+  "status": "partial",
+  "unresolved": [
+    "wheel/image bytes not acquired or verified",
+    "native source mapping and backport coverage",
+    "Python/base bootstrap provenance",
+    "CPU wheel dependency metadata and closure",
+    "bundled Actions dist and Node runtime review",
+    "topology/seeded-head compatibility",
+    "all execution approvals remain false"
+  ]
+}

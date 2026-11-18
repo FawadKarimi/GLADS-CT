@@ -1,0 +1,259 @@
+{
+  "uid": 1009,
+  "parents": [
+    {
+      "path": "/",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "free_bytes": 54398984192,
+      "free_inodes": 27849717,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/home",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false,
+      "free_bytes": 54398984192,
+      "free_inodes": 27849717,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/home/chaidir",
+      "uid": 1009,
+      "gid": 1009,
+      "mode": "0o755",
+      "symlink": false,
+      "free_bytes": 54398984192,
+      "free_inodes": 27849717,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/mapper/ubuntu--vg-ubuntu--lv ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/experiment-storage",
+      "uid": 0,
+      "gid": 1000,
+      "mode": "0o2775",
+      "symlink": false,
+      "free_bytes": 13149705781248,
+      "free_inodes": 290665598,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::rwx\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/sdd1 ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/experiment-storage/chaidir",
+      "uid": 1009,
+      "gid": 1000,
+      "mode": "0o2755",
+      "symlink": false,
+      "free_bytes": 13149705781248,
+      "free_inodes": 290665598,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::r-x\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/sdd1 ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/experiment-storage/chaidir/fawad-dsai",
+      "uid": 1009,
+      "gid": 1000,
+      "mode": "0o2775",
+      "symlink": false,
+      "free_bytes": 13149705781248,
+      "free_inodes": 290665598,
+      "acl": {
+        "exit": 0,
+        "stdout": "user::rwx\ngroup::rwx\nother::r-x\n\n",
+        "stderr": ""
+      },
+      "filesystem": {
+        "exit": 0,
+        "stdout": "/dev/sdd1 ext4   rw,relatime\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "project_roots": [
+    {
+      "path": "/home/chaidir/.performance-v2-imagenet-receiver-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "126099456\t/home/chaidir/.performance-v2-imagenet-receiver-20261012\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-imagenet-review-20261008",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "9035776\t/home/chaidir/.performance-v2-imagenet-review-20261008\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "7307264\t/home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-materialization-20261008",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "10248192\t/home/chaidir/.performance-v2-materialization-20261008\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-entry-checks-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "16384\t/home/chaidir/.performance-v2-r50-entry-checks-20261012\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-execution-next-20261011",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "1769472\t/home/chaidir/.performance-v2-r50-execution-next-20261011\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-full-activation-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "16384\t/home/chaidir/.performance-v2-r50-full-activation-20261012\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-full-preparation-20261011",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "2269184\t/home/chaidir/.performance-v2-r50-full-preparation-20261011\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-imagenet-integration-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "3383296\t/home/chaidir/.performance-v2-r50-imagenet-integration-20261012\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-matched-plan-20261011",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "335872\t/home/chaidir/.performance-v2-r50-matched-plan-20261011\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-matched-training-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "3121152\t/home/chaidir/.performance-v2-r50-matched-training-20261012\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-r50-preparation-20261011",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4669440\t/home/chaidir/.performance-v2-r50-preparation-20261011\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reader-correction-20261008",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "1159168\t/home/chaidir/.performance-v2-reader-correction-20261008\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-real-mapping-candidate-20261008",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "8441856\t/home/chaidir/.performance-v2-real-mapping-candidate-20261008\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "905609216\t/home/chaidir/.performance-v2-reports\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-scratch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "43779633152\t/home/chaidir/.performance-v2-scratch\n"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-source-20261008",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "880640\t/home/chaidir/.performance-v2-source-20261008\n"
+    }
+  ],
+  "deleted": [],
+  "research_files_opened": false
+}

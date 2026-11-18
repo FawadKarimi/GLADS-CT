@@ -1,0 +1,244 @@
+{
+  "best_checkpoint_file": "epoch-006.state.json",
+  "best_checkpoint_sha256": "37e3ea855743ccde6e37f017b705e41abd66f7a2d59b012c7a7f013a97b9245d",
+  "best_checkpoint_size_bytes": 400869505,
+  "class_weights_nodule_level": [
+    0.7428407669067383,
+    0.9781296849250793,
+    1.5836385488510132
+  ],
+  "initial_state": {
+    "backbone_state_sha256": "2538142397e1e3c390a0b80b537f698afe4c8928d618853e6a1f6e16cdc52e82",
+    "common_encoder_and_diagnostic_head_initial_state_sha256": "1ef89268cb14b1fb8a135abb45b034f26de8d49f8c390bc0dc69121feb119777",
+    "full_initial_state_sha256": "1ef89268cb14b1fb8a135abb45b034f26de8d49f8c390bc0dc69121feb119777",
+    "supplied_count": 318,
+    "verified_count": 318
+  },
+  "initialization": "RADIMAGENET",
+  "latest_checkpoint_file": "epoch-021.state.json",
+  "objective": "LEGACY",
+  "optimizer_group_counts": {
+    "encoder_bias_normalization": 138,
+    "encoder_weights": 71,
+    "head_bias_normalization": 1,
+    "head_weights": 1
+  },
+  "optimizer_parameter_total": 211,
+  "retained_checkpoint_count": 2,
+  "retained_checkpoints": {
+    "epoch-006.state.json": {
+      "sha256": "37e3ea855743ccde6e37f017b705e41abd66f7a2d59b012c7a7f013a97b9245d",
+      "size_bytes": 400869505
+    },
+    "epoch-021.state.json": {
+      "sha256": "c30e237f4aaeb5eec00fa144dadc3ad3e88324e5341d7298b51fd38eefa21321",
+      "size_bytes": 400871939
+    }
+  },
+  "run_id": "LEGACY-42",
+  "schedule_gz_sha256": "728ee3242a0abb368c190689d91aa5dfc1da81cf232e4294be1dd54616c0b559",
+  "schedule_jsonl_sha256": "b436277071d6d2e169a06ba95727411aa72506b59df1bd894701a663537f64e0",
+  "seed": 42,
+  "selected_epoch": 6,
+  "stopped_early": true,
+  "stopped_epoch": 21,
+  "total_elapsed_seconds": 1081.4334979057312,
+  "train_at_selected": {
+    "accuracy": 0.5828835774865073,
+    "confusion_matrix": [
+      [
+        294,
+        238,
+        50
+      ],
+      [
+        96,
+        268,
+        78
+      ],
+      [
+        22,
+        57,
+        194
+      ]
+    ],
+    "diagnostic_ce": 0.8421096620052972,
+    "macro_f1": 0.5923278231480386,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5828835774865073,
+    "n": 1297,
+    "per_class": {
+      "0": {
+        "f1": 0.5915492957746479,
+        "precision": 0.7135922330097088,
+        "recall": 0.5051546391752577,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.5333333333333333,
+        "precision": 0.47602131438721135,
+        "recall": 0.6063348416289592,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.6521008403361345,
+        "precision": 0.6024844720496895,
+        "recall": 0.7106227106227107,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.5915492957746479,
+        "precision": 0.7135922330097088,
+        "recall": 0.5051546391752577,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.5333333333333333,
+        "precision": 0.47602131438721135,
+        "recall": 0.6063348416289592,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.6521008403361345,
+        "precision": 0.6024844720496895,
+        "recall": 0.7106227106227107,
+        "support": 273
+      }
+    },
+    "prediction_identity_sha256": "dcca2e66242ae575a204244c46bc57ef0e6bd83fd930b1da95b15b578d5c3727",
+    "split": "train",
+    "weighted_diagnostic_ce": 0.8242807128848926
+  },
+  "validation_at_final": {
+    "accuracy": 0.5524475524475524,
+    "confusion_matrix": [
+      [
+        21,
+        39,
+        5
+      ],
+      [
+        2,
+        22,
+        14
+      ],
+      [
+        0,
+        4,
+        36
+      ]
+    ],
+    "diagnostic_ce": 0.787077829140805,
+    "macro_f1": 0.55411731004475,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.5524475524475524,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.47727272727272724,
+        "precision": 0.9130434782608695,
+        "recall": 0.3230769230769231,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.4271844660194175,
+        "precision": 0.3384615384615385,
+        "recall": 0.5789473684210527,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7578947368421052,
+        "precision": 0.6545454545454545,
+        "recall": 0.9,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.47727272727272724,
+        "precision": 0.9130434782608695,
+        "recall": 0.3230769230769231,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.4271844660194175,
+        "precision": 0.3384615384615385,
+        "recall": 0.5789473684210527,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7578947368421052,
+        "precision": 0.6545454545454545,
+        "recall": 0.9,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.6942215303440495
+  },
+  "validation_at_selected": {
+    "accuracy": 0.7202797202797203,
+    "confusion_matrix": [
+      [
+        55,
+        6,
+        4
+      ],
+      [
+        16,
+        13,
+        9
+      ],
+      [
+        2,
+        3,
+        35
+      ]
+    ],
+    "diagnostic_ce": 0.6945208747141792,
+    "macro_f1": 0.6752964426877469,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.7202797202797203,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.7971014492753623,
+        "precision": 0.7534246575342466,
+        "recall": 0.8461538461538461,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.43333333333333335,
+        "precision": 0.5909090909090909,
+        "recall": 0.34210526315789475,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7954545454545454,
+        "precision": 0.7291666666666666,
+        "recall": 0.875,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.7971014492753623,
+        "precision": 0.7534246575342466,
+        "recall": 0.8461538461538461,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.43333333333333335,
+        "precision": 0.5909090909090909,
+        "recall": 0.34210526315789475,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7954545454545454,
+        "precision": 0.7291666666666666,
+        "recall": 0.875,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.6565593283585813
+  }
+}

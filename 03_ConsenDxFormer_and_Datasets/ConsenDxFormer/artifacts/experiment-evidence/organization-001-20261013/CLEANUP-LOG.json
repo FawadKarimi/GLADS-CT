@@ -1,0 +1,8 @@
+{
+  "bytes_reclaimed": 0,
+  "deleted": [],
+  "deletion_allowlist": [],
+  "move_allowlist": [],
+  "moved": [],
+  "reason": "No candidate has demonstrated disposable, unreferenced identity; preserve ambiguous items."
+}

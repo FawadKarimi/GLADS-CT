@@ -1,0 +1,85 @@
+# ConsenDxFormer / Performance-v2 experiment evidence index
+
+Original records are preserved at their recorded locations. This index is navigation metadata, not private execution storage or scientific acceptance. No checkpoint, budget, source closure or unique evidence was relocated.
+
+- ConsenDxFormer: /experiment-storage/chaidir/fawad-dsai/ConsenDxFormer — source, artifact or historical binding preserved in place
+- performance-v2-audit: /experiment-storage/chaidir/fawad-dsai/performance-v2-audit — source, artifact or historical binding preserved in place
+- performance-v2-imagenet-source-delivery-001-20261012: /experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-source-delivery-001-20261012 — source, artifact or historical binding preserved in place
+- performance-v2-imagenet-transfer-private-20261012: /experiment-storage/chaidir/fawad-dsai/performance-v2-imagenet-transfer-private-20261012 — source, artifact or historical binding preserved in place
+- performance-v2-radimagenet-transfer-private-20261013: /experiment-storage/chaidir/fawad-dsai/performance-v2-radimagenet-transfer-private-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-final-evaluation-20261013: /home/chaidir/.performance-v2-final-evaluation-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-imagenet-receiver-20261012: /home/chaidir/.performance-v2-imagenet-receiver-20261012 — source, artifact or historical binding preserved in place
+- .performance-v2-imagenet-review-20261008: /home/chaidir/.performance-v2-imagenet-review-20261008 — source, artifact or historical binding preserved in place
+- .performance-v2-imagenet-review-20261008-historical-crlf-attempt001: /home/chaidir/.performance-v2-imagenet-review-20261008-historical-crlf-attempt001 — source, artifact or historical binding preserved in place
+- .performance-v2-materialization-20261008: /home/chaidir/.performance-v2-materialization-20261008 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-entry-checks-20261012: /home/chaidir/.performance-v2-r50-entry-checks-20261012 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-execution-next-20261011: /home/chaidir/.performance-v2-r50-execution-next-20261011 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-full-activation-20261012: /home/chaidir/.performance-v2-r50-full-activation-20261012 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-full-preparation-20261011: /home/chaidir/.performance-v2-r50-full-preparation-20261011 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-imagenet-integration-20261012: /home/chaidir/.performance-v2-r50-imagenet-integration-20261012 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-matched-plan-20261011: /home/chaidir/.performance-v2-r50-matched-plan-20261011 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-matched-training-20261012: /home/chaidir/.performance-v2-r50-matched-training-20261012 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-preparation-20261011: /home/chaidir/.performance-v2-r50-preparation-20261011 — source, artifact or historical binding preserved in place
+- .performance-v2-r50-radimagenet42-20261013: /home/chaidir/.performance-v2-r50-radimagenet42-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-radimagenet-receiver-20261013: /home/chaidir/.performance-v2-radimagenet-receiver-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-reader-correction-20261008: /home/chaidir/.performance-v2-reader-correction-20261008 — source, artifact or historical binding preserved in place
+- .performance-v2-real-mapping-candidate-20261008: /home/chaidir/.performance-v2-real-mapping-candidate-20261008 — source, artifact or historical binding preserved in place
+- imagenet-model-import-attempt-001-20261012: /home/chaidir/.performance-v2-reports/imagenet-model-import-attempt-001-20261012 — path-bound or unresolved; preserved in place
+- imagenet-receiver-attempt-001-20261012: /home/chaidir/.performance-v2-reports/imagenet-receiver-attempt-001-20261012 — path-bound or unresolved; preserved in place
+- imagenet-synthetic-review-001: /home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001 — path-bound or unresolved; preserved in place
+- imagenet-synthetic-review-001-launch: /home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001-launch — path-bound or unresolved; preserved in place
+- imagenet-synthetic-review-002-launch: /home/chaidir/.performance-v2-reports/imagenet-synthetic-review-002-launch — path-bound or unresolved; preserved in place
+- materialization-synthetic-001-envelope: /home/chaidir/.performance-v2-reports/materialization-synthetic-001-envelope — path-bound or unresolved; preserved in place
+- materialization-synthetic-001-launch: /home/chaidir/.performance-v2-reports/materialization-synthetic-001-launch — path-bound or unresolved; preserved in place
+- native-acceptance-001-envelope: /home/chaidir/.performance-v2-reports/native-acceptance-001-envelope — path-bound or unresolved; preserved in place
+- orchestration-dryrun-001: /home/chaidir/.performance-v2-reports/orchestration-dryrun-001 — path-bound or unresolved; preserved in place
+- orchestration-dryrun-001-launch: /home/chaidir/.performance-v2-reports/orchestration-dryrun-001-launch — path-bound or unresolved; preserved in place
+- r50-checkpoint-cpu-outer-001-20261012: /home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-outer-001-20261012 — path-bound or unresolved; preserved in place
+- r50-checkpoint-cpu-synthetic-001-20261012: /home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012 — path-bound or unresolved; preserved in place
+- r50-cpu-integration-001: /home/chaidir/.performance-v2-reports/r50-cpu-integration-001 — path-bound or unresolved; preserved in place
+- r50-cuda-synthetic-001: /home/chaidir/.performance-v2-reports/r50-cuda-synthetic-001 — path-bound or unresolved; preserved in place
+- r50-cuda-synthetic-002: /home/chaidir/.performance-v2-reports/r50-cuda-synthetic-002 — path-bound or unresolved; preserved in place
+- r50-cuda-synthetic-003: /home/chaidir/.performance-v2-reports/r50-cuda-synthetic-003 — path-bound or unresolved; preserved in place
+- r50-entry-six-cpu-synthetic-001-20261012: /home/chaidir/.performance-v2-reports/r50-entry-six-cpu-synthetic-001-20261012 — path-bound or unresolved; preserved in place
+- r50-full-delta-synthetic-001: /home/chaidir/.performance-v2-reports/r50-full-delta-synthetic-001 — path-bound or unresolved; preserved in place
+- r50-hard-seed42-test-evaluation-001-20261013: /home/chaidir/.performance-v2-reports/r50-hard-seed42-test-evaluation-001-20261013 — path-bound or unresolved; preserved in place
+- r50-hard-seed42-test-evaluation-outer-001-20261013: /home/chaidir/.performance-v2-reports/r50-hard-seed42-test-evaluation-outer-001-20261013 — path-bound or unresolved; preserved in place
+- r50-hard-seed42-test-launch-001-20261013: /home/chaidir/.performance-v2-reports/r50-hard-seed42-test-launch-001-20261013 — path-bound or unresolved; preserved in place
+- r50-hard-seed42-test-preflight-001-20261013: /home/chaidir/.performance-v2-reports/r50-hard-seed42-test-preflight-001-20261013 — path-bound or unresolved; preserved in place
+- r50-imagenet-42-activation-outer-001-20261012: /home/chaidir/.performance-v2-reports/r50-imagenet-42-activation-outer-001-20261012 — path-bound or unresolved; preserved in place
+- r50-imagenet-42-completion-review-001-20261012: /home/chaidir/.performance-v2-reports/r50-imagenet-42-completion-review-001-20261012 — path-bound or unresolved; preserved in place
+- r50-imagenet-42-full-activation-001-20261012: /home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012 — path-bound or unresolved; preserved in place
+- r50-imagenet-42-full-outer-001-20261012: /home/chaidir/.performance-v2-reports/r50-imagenet-42-full-outer-001-20261012 — path-bound or unresolved; preserved in place
+- r50-imagenet-42-hard-full-001: /home/chaidir/.performance-v2-reports/r50-imagenet-42-hard-full-001 — path-bound or unresolved; preserved in place
+- r50-matched-zero-budget-001-20261012: /home/chaidir/.performance-v2-reports/r50-matched-zero-budget-001-20261012 — path-bound or unresolved; preserved in place
+- r50-radimagenet-42-full-activation-001-20261013: /home/chaidir/.performance-v2-reports/r50-radimagenet-42-full-activation-001-20261013 — path-bound or unresolved; preserved in place
+- r50-radimagenet-42-full-outer-001-20261013: /home/chaidir/.performance-v2-reports/r50-radimagenet-42-full-outer-001-20261013 — path-bound or unresolved; preserved in place
+- r50-radimagenet-42-hard-full-001: /home/chaidir/.performance-v2-reports/r50-radimagenet-42-hard-full-001 — path-bound or unresolved; preserved in place
+- r50-radimagenet42-storage-focus-zero-budget-001-20261013: /home/chaidir/.performance-v2-reports/r50-radimagenet42-storage-focus-zero-budget-001-20261013 — path-bound or unresolved; preserved in place
+- r50-random-42-activation-outer-001-20261012: /home/chaidir/.performance-v2-reports/r50-random-42-activation-outer-001-20261012 — path-bound or unresolved; preserved in place
+- r50-random-42-completion-review-001-20261012: /home/chaidir/.performance-v2-reports/r50-random-42-completion-review-001-20261012 — path-bound or unresolved; preserved in place
+- r50-random-42-completion-review-002-20261012: /home/chaidir/.performance-v2-reports/r50-random-42-completion-review-002-20261012 — path-bound or unresolved; preserved in place
+- r50-random-42-full-activation-001-20261012: /home/chaidir/.performance-v2-reports/r50-random-42-full-activation-001-20261012 — path-bound or unresolved; preserved in place
+- r50-random-42-full-outer-001-20261012: /home/chaidir/.performance-v2-reports/r50-random-42-full-outer-001-20261012 — path-bound or unresolved; preserved in place
+- r50-random-42-hard-full-001: /home/chaidir/.performance-v2-reports/r50-random-42-hard-full-001 — path-bound or unresolved; preserved in place
+- r50-source-stage-001-20261012: /home/chaidir/.performance-v2-reports/r50-source-stage-001-20261012 — path-bound or unresolved; preserved in place
+- r50-timing-001: /home/chaidir/.performance-v2-reports/r50-timing-001 — path-bound or unresolved; preserved in place
+- r50-timing-001-outer: /home/chaidir/.performance-v2-reports/r50-timing-001-outer — path-bound or unresolved; preserved in place
+- rad42-completion-review-001-20261013: /home/chaidir/.performance-v2-reports/rad42-completion-review-001-20261013 — path-bound or unresolved; preserved in place
+- radimagenet-receiver-import-001-20261013: /home/chaidir/.performance-v2-reports/radimagenet-receiver-import-001-20261013 — path-bound or unresolved; preserved in place
+- reader-integration-001-envelope: /home/chaidir/.performance-v2-reports/reader-integration-001-envelope — path-bound or unresolved; preserved in place
+- reader-integration-001-launch: /home/chaidir/.performance-v2-reports/reader-integration-001-launch — path-bound or unresolved; preserved in place
+- supervision-native-synthetic-001-20261013: /home/chaidir/.performance-v2-reports/supervision-native-synthetic-001-20261013 — path-bound or unresolved; preserved in place
+- supervision-permission-native-001-20261013: /home/chaidir/.performance-v2-reports/supervision-permission-native-001-20261013 — path-bound or unresolved; preserved in place
+- supervision-retention-native-001-20261013: /home/chaidir/.performance-v2-reports/supervision-retention-native-001-20261013 — path-bound or unresolved; preserved in place
+- supervision-retention-storage-native-001-20261013: /home/chaidir/.performance-v2-reports/supervision-retention-storage-native-001-20261013 — path-bound or unresolved; preserved in place
+- train-val-mapping-001: /home/chaidir/.performance-v2-reports/train-val-mapping-001 — path-bound or unresolved; preserved in place
+- train-val-mapping-001-launch: /home/chaidir/.performance-v2-reports/train-val-mapping-001-launch — path-bound or unresolved; preserved in place
+- .performance-v2-scratch: /home/chaidir/.performance-v2-scratch — source, artifact or historical binding preserved in place
+- .performance-v2-source-20261008: /home/chaidir/.performance-v2-source-20261008 — source, artifact or historical binding preserved in place
+- .performance-v2-supervision-readiness-20261013: /home/chaidir/.performance-v2-supervision-readiness-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-supervision-readiness-r2-20261013: /home/chaidir/.performance-v2-supervision-readiness-r2-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-supervision-retention-v1-20261013: /home/chaidir/.performance-v2-supervision-retention-v1-20261013 — source, artifact or historical binding preserved in place
+- .performance-v2-supervision-retention-v1-r2-20261013: /home/chaidir/.performance-v2-supervision-retention-v1-r2-20261013 — source, artifact or historical binding preserved in place
+
+Cleanup: 0 files deleted, 0 moved; exact allowlists are empty. See INVENTORY.json, REFERENCE-REVIEW-002.json and FINAL-REVIEW.json for scoped observations and unresolved candidates.

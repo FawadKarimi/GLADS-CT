@@ -1,0 +1,1063 @@
+{
+  "actions": [
+    {
+      "advisories": [],
+      "bundled_npm_and_node_review": "unresolved",
+      "name": "actions/checkout"
+    },
+    {
+      "advisories": [],
+      "bundled_npm_and_node_review": "unresolved",
+      "name": "actions/upload-artifact"
+    }
+  ],
+  "date": "2026-09-28",
+  "decision": "not_cleared",
+  "native": [
+    {
+      "architecture": "all",
+      "depends": "passwd",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "adduser",
+      "version": "3.134"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "adduser, gpgv | gpgv2 | gpgv1, libapt-pkg6.0 (>= 2.6.1), debian-archive-keyring, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgnutls30 (>= 3.7.5), libseccomp2 (>= 2.4.2), libstdc++6 (>= 11), libsystemd0",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "apt",
+      "version": "2.6.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "base-files",
+      "version": "12.4+deb12u11"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libdebconfclient0 (>= 0.145), libselinux1 (>= 3.1~)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "base-passwd",
+      "version": "3.6.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "base-files (>= 2.1.12), debianutils (>= 5.6-0.1)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "bash",
+      "version": "5.2.15-2+b8"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "bsdutils",
+      "version": "1:2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "all",
+      "depends": "openssl (>= 1.1.1), debconf (>= 0.5) | debconf-2.0",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "ca-certificates",
+      "version": "20230311"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "coreutils",
+      "version": "9.1-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "debianutils (>= 5.6-0.1), dpkg (>= 1.19.1)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "dash",
+      "version": "0.5.12-2"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "debconf",
+      "version": "1.5.82"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "debian-archive-keyring",
+      "version": "2023.3+deb12u2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "debianutils",
+      "version": "5.7-0.5~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "diffutils",
+      "version": "1:3.8-4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "tar (>= 1.28-1)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "dpkg",
+      "version": "1.21.22"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "logsave",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "e2fsprogs",
+      "version": "1.47.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "findutils",
+      "version": "4.9.0-4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "gcc-12-base",
+      "version": "12.2.0-14+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libbz2-1.0, libc6 (>= 2.34), libgcrypt20 (>= 1.10.0), libgpg-error0 (>= 1.42), zlib1g (>= 1:1.1.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "gpgv",
+      "version": "2.2.40-1.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "dpkg (>= 1.15.4) | install-info",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "grep",
+      "version": "3.8-5"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "dpkg (>= 1.15.4) | install-info",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "gzip",
+      "version": "1.12-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "hostname",
+      "version": "3.23+nmu1"
+    },
+    {
+      "architecture": "all",
+      "depends": "usrmerge | usr-is-merged",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "init-system-helpers",
+      "version": "1.65.2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libacl1",
+      "version": "2.3.1-3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libbz2-1.0, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgcrypt20 (>= 1.10.0), liblz4-1 (>= 0.0~r127), liblzma5 (>= 5.1.1alpha+20120614), libstdc++6 (>= 11), libsystemd0 (>= 221), libudev1 (>= 183), libxxhash0 (>= 0.7.1), libzstd1 (>= 1.5.2), zlib1g (>= 1:1.2.2.3)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libapt-pkg6.0",
+      "version": "2.6.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libattr1",
+      "version": "1:2.5.1-4"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libaudit-common",
+      "version": "1:3.0.9-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libaudit-common (>= 1:3.0.9-1), libc6 (>= 2.33), libcap-ng0 (>= 0.7.9)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libaudit1",
+      "version": "1:3.0.9-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libblkid1",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libbz2-1.0",
+      "version": "1.0.8-5+b1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>> 2.36), libc6 (<< 2.37)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libc-bin",
+      "version": "2.36-9+deb12u10"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libgcc-s1",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "known_affected_example": {
+        "bookworm_fixed": "2.36-9+deb12u11",
+        "id": "CVE-2025-4802"
+      },
+      "name": "libc6",
+      "version": "2.36-9+deb12u10"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libcap-ng0",
+      "version": "0.8.3-1+b3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libcap2",
+      "version": "1:2.66-4+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.17)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libcom-err2",
+      "version": "1.47.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.36)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libcrypt1",
+      "version": "1:4.4.33-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libdb5.3",
+      "version": "5.3.28+dfsg2-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libdebconfclient0",
+      "version": "0.270"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libext2fs2",
+      "version": "1.47.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libffi8",
+      "version": "3.4.4-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "gcc-12-base (= 12.2.0-14+deb12u1), libc6 (>= 2.35)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgcc-s1",
+      "version": "12.2.0-14+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libgpg-error0 (>= 1.27)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgcrypt20",
+      "version": "1.10.1-3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgdbm6",
+      "version": "1.23-3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgmp10",
+      "version": "2:6.2.1+dfsg1-1.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libgmp10 (>= 2:6.2.1+dfsg1), libhogweed6 (>= 3.6), libidn2-0 (>= 2.0.0), libnettle8 (>= 3.7~), libp11-kit0 (>= 0.23.18.1), libtasn1-6 (>= 4.14), libunistring2 (>= 0.9.7)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgnutls30",
+      "version": "3.7.9-2+deb12u4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgpg-error0",
+      "version": "1.46-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33), libcom-err2 (>= 1.43.9), libk5crypto3 (>= 1.20), libkrb5-3 (= 1.20.1-2+deb12u3), libkrb5support0 (>= 1.15~beta1)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libgssapi-krb5-2",
+      "version": "1.20.1-2+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14), libgmp10 (>= 2:6.2.1+dfsg1), libnettle8",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libhogweed6",
+      "version": "3.8.1-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14), libunistring2 (>= 0.9.7)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libidn2-0",
+      "version": "2.3.3-1+b1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33), libkrb5support0 (>= 1.20)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libk5crypto3",
+      "version": "1.20.1-2+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libkeyutils1",
+      "version": "1.6.3-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libcom-err2 (>= 1.43.9), libk5crypto3 (>= 1.20), libkeyutils1 (>= 1.5.9), libkrb5support0 (= 1.20.1-2+deb12u3), libssl3 (>= 3.0.0)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libkrb5-3",
+      "version": "1.20.1-2+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libkrb5support0",
+      "version": "1.20.1-2+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "liblz4-1",
+      "version": "1.9.4-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "liblzma5",
+      "version": "5.4.1-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libmd0",
+      "version": "1.0.4-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libblkid1 (>= 2.17.2), libc6 (>= 2.34), libselinux1 (>= 3.1~)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libmount1",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libtinfo6 (= 6.4-4), libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libncursesw6",
+      "version": "6.4-4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.17)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libnettle8",
+      "version": "3.8.1-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14), libtirpc3 (>= 1.0.2)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libnsl2",
+      "version": "1.3.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libffi8 (>= 3.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libp11-kit0",
+      "version": "0.24.1-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libpam-modules",
+      "version": "1.5.2-6+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libaudit1 (>= 1:2.2.1), libc6 (>= 2.34), libcrypt1 (>= 1:4.3.0), libpam0g (>= 0.99.7.1), libselinux1 (>= 3.1~)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libpam-modules-bin",
+      "version": "1.5.2-6+deb12u1"
+    },
+    {
+      "architecture": "all",
+      "depends": "debconf (>= 0.5) | debconf-2.0, debconf (>= 1.5.19) | cdebconf, libpam-modules (>= 1.0.1-6)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libpam-runtime",
+      "version": "1.5.2-6+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libaudit1 (>= 1:2.2.1), libc6 (>= 2.34), debconf (>= 0.5) | debconf-2.0",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libpam0g",
+      "version": "1.5.2-6+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libpcre2-8-0",
+      "version": "10.42-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "readline-common, libc6 (>= 2.33), libtinfo6 (>= 6)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libreadline8",
+      "version": "8.2-1.3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libseccomp2",
+      "version": "2.5.4-1+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libpcre2-8-0 (>= 10.22)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libselinux1",
+      "version": "3.4-1+b6"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsemanage-common",
+      "version": "3.4-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libsemanage-common (>= 3.4-1), libaudit1 (>= 1:2.2.1), libbz2-1.0, libc6 (>= 2.34), libselinux1 (>= 3.4), libsepol2 (>= 3.4)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsemanage2",
+      "version": "3.4-1+b5"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsepol2",
+      "version": "3.4-2.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.33)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsmartcols1",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsqlite3-0",
+      "version": "3.40.1-2+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libcom-err2, libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libss2",
+      "version": "1.47.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "known_affected_example": {
+        "bookworm_fixed": "3.0.17-1~deb12u3",
+        "id": "CVE-2025-9230"
+      },
+      "name": "libssl3",
+      "version": "3.0.16-1~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "gcc-12-base (= 12.2.0-14+deb12u1), libc6 (>= 2.36), libgcc-s1 (>= 4.2)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libstdc++6",
+      "version": "12.2.0-14+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libcap2 (>= 1:2.10), libgcrypt20 (>= 1.10.0), liblz4-1 (>= 0.0~r122), liblzma5 (>= 5.1.1alpha+20120614), libzstd1 (>= 1.5.2)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libsystemd0",
+      "version": "252.36-1~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libtasn1-6",
+      "version": "4.19.0-2+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libtinfo6",
+      "version": "6.4-4"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libtirpc-common",
+      "version": "1.3.3+ds-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libgssapi-krb5-2 (>= 1.17), libtirpc-common (>= 1.3.3+ds-1)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libtirpc3",
+      "version": "1.3.3+ds-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libudev1",
+      "version": "252.36-1~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libunistring2",
+      "version": "1.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.25)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libuuid1",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libxxhash0",
+      "version": "0.8.1-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "libzstd1",
+      "version": "1.5.4+dfsg2-5"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "login",
+      "version": "1:4.13+dfsg1-1+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "logsave",
+      "version": "1.47.0-2"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.29)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "mawk",
+      "version": "1.3.4.20200120-3.1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "mount",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "ncurses-base",
+      "version": "6.4-4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "ncurses-bin",
+      "version": "6.4-4"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "netbase",
+      "version": "6.4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34), libssl3 (>= 3.0.9)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "known_affected_example": {
+        "bookworm_fixed": "3.0.17-1~deb12u3",
+        "id": "CVE-2025-9230"
+      },
+      "name": "openssl",
+      "version": "3.0.16-1~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libaudit1 (>= 1:2.2.1), libc6 (>= 2.36), libcrypt1 (>= 1:4.1.0), libpam0g (>= 0.99.7.1), libselinux1 (>= 3.1~), libsemanage2 (>= 2.0.32), libpam-modules",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "passwd",
+      "version": "1:4.13+dfsg1-1+deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "perl-base",
+      "version": "5.36.0-7+deb12u2"
+    },
+    {
+      "architecture": "all",
+      "depends": "dpkg (>= 1.15.4) | install-info",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "readline-common",
+      "version": "8.2-1.3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "sed",
+      "version": "4.9-1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.34)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "sysvinit-utils",
+      "version": "3.06-4"
+    },
+    {
+      "architecture": "amd64",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "tar",
+      "version": "1.34+dfsg-1.2+deb12u1"
+    },
+    {
+      "architecture": "all",
+      "depends": "debconf (>= 0.5) | debconf-2.0",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "tzdata",
+      "version": "2025b-0+deb12u1"
+    },
+    {
+      "architecture": "all",
+      "depends": null,
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "usr-is-merged",
+      "version": "37~deb12u1"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "util-linux-extra",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "util-linux",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libaudit1 (>= 1:2.2.1), libc6 (>= 2.34), libsmartcols1 (>= 2.38)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "util-linux-extra",
+      "version": "2.38.1-5+deb12u3"
+    },
+    {
+      "architecture": "amd64",
+      "depends": "libc6 (>= 2.14)",
+      "disposition": "unresolved source mapping and complete scoped advisory/backport review",
+      "name": "zlib1g",
+      "version": "1:1.2.13.dfsg-1"
+    }
+  ],
+  "python": [
+    {
+      "advisories": [
+        {
+          "id": "GHSA-rrmf-rvhw-rf47",
+          "summary": "PyTorch is vulnerable to memory corruption through its torch.jit.script function",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "2.13.0",
+              "package": {
+                "ecosystem": "pip",
+                "name": "torch"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "<= 2.12.1"
+            }
+          ]
+        }
+      ],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-0.json",
+      "name": "torch",
+      "version": "2.10.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-1.json",
+      "name": "torchvision",
+      "version": "0.25.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-2.json",
+      "name": "numpy",
+      "version": "2.2.6"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-3.json",
+      "name": "pillow",
+      "version": "12.3.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-4.json",
+      "name": "fsspec",
+      "version": "2026.9.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-5.json",
+      "name": "networkx",
+      "version": "3.4.2"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-6.json",
+      "name": "sympy",
+      "version": "1.14.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-7.json",
+      "name": "mpmath",
+      "version": "1.3.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-8.json",
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-9.json",
+      "name": "filelock",
+      "version": "4.0.4"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-10.json",
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-11.json",
+      "name": "MarkupSafe",
+      "version": "3.0.3"
+    },
+    {
+      "advisories": [],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-12.json",
+      "name": "setuptools",
+      "version": "84.0.0"
+    },
+    {
+      "advisories": [
+        {
+          "id": "GHSA-qwm4-qh6w-59xr",
+          "summary": "pip would incorrectly handle doubly-encoded package URLs from indexes",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "26.2.0",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 26.2.0"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-wf93-45jw-7689",
+          "summary": " pip: Path traversal in console_scripts/gui_scripts\u00a0entry point names allows installing scripts outside of target directory",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "26.1.2",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 26.1.2"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-jp4c-xjxw-mgf9",
+          "summary": "pip Vulnerable to Inclusion of Functionality from Untrusted Control Sphere",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "26.1",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 26.1"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-58qw-9mgm-455v",
+          "summary": "pip has an interpretation conflict due to handling both concatenated tar and ZIP files as ZIP files",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "26.1",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "<= 26.0.1"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-6vgw-5pg2-w6jp",
+          "summary": "pip Path Traversal vulnerability",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "26.0",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 26.0"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-4xh5-x5gv-qwph",
+          "summary": "pip's fallback tar extraction doesn't check symbolic links point to extraction directory",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "25.3",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "<= 25.2"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-mq26-g339-26xf",
+          "summary": "Command Injection in pip when used with Mercurial",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "23.3",
+              "package": {
+                "ecosystem": "pip",
+                "name": "pip"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 23.3"
+            }
+          ]
+        }
+      ],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-13.json",
+      "name": "pip",
+      "version": "23.0.1"
+    },
+    {
+      "advisories": [
+        {
+          "id": "GHSA-h35f-9h28-mq5c",
+          "summary": "setuptools: MANIFEST.in exclusion bypass in sdist via Unicode normalization collision (NFC/NFD) on macOS APFS/HFS+",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "83.0.0",
+              "package": {
+                "ecosystem": "pip",
+                "name": "setuptools"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 83.0.0"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-5rjg-fvgr-3xxf",
+          "summary": "setuptools has a path traversal vulnerability in PackageIndex.download that leads to Arbitrary File Write",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "78.1.1",
+              "package": {
+                "ecosystem": "pip",
+                "name": "setuptools"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 78.1.1"
+            }
+          ]
+        },
+        {
+          "id": "GHSA-cx63-2mw6-8hw5",
+          "summary": "setuptools vulnerable to Command Injection via package URL",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "70.0.0",
+              "package": {
+                "ecosystem": "pip",
+                "name": "setuptools"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": "< 70.0.0"
+            }
+          ]
+        }
+      ],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-14.json",
+      "name": "setuptools",
+      "version": "65.5.1"
+    },
+    {
+      "advisories": [
+        {
+          "id": "GHSA-8rrh-rw8j-w5fx",
+          "summary": "Wheel Affected by Arbitrary File Permission Modification via Path Traversal in wheel unpack",
+          "vulnerabilities": [
+            {
+              "first_patched_version": "0.46.2",
+              "package": {
+                "ecosystem": "pip",
+                "name": "wheel"
+              },
+              "vulnerable_functions": [],
+              "vulnerable_version_range": ">= 0.40.0, <= 0.46.1"
+            }
+          ]
+        }
+      ],
+      "disposition": "bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval",
+      "evidence": "security-sources-live/pip-15.json",
+      "name": "wheel",
+      "version": "0.45.1"
+    }
+  ]
+}

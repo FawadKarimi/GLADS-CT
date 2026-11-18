@@ -1,0 +1,60 @@
+{
+  "utc": "2026-10-20T10:49:09.909318+00:00",
+  "uid": 1009,
+  "interpreter": "/experiment-storage/chaidir/env/env-310-fawad/bin/python",
+  "source_files": {
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/model.py": {
+      "bytes": 8958,
+      "sha256": "5135a7f5556979f5f1ee1f152f5ca28457946f8c9acf53ad70dbb109180b2f7a"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/objectives.py": {
+      "bytes": 4482,
+      "sha256": "51f1cdd877a4235e3cf4d74a38649084bb9a62cc3baeca325143b0f2f0332f45"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/input_adapter.py": {
+      "bytes": 10788,
+      "sha256": "f47104b6bc140b9b829dd9e6dbf6cac3536a6f2d13bc572e965e1ab76f1717fa"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/optimization.py": {
+      "bytes": 3798,
+      "sha256": "22b07e932397fc2b068cd913559b475fdab2f90539a9985802434709f5960992"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/selection.py": {
+      "bytes": 5214,
+      "sha256": "437f81d0883b26bafa95b74f017cdda42cf49f370c335814f8636d3ed8f66585"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/streams.py": {
+      "bytes": 5290,
+      "sha256": "e735f6aa4672ae5a92d9b52258baef24c702348df14275eed07b2982636f8d14"
+    },
+    "/home/chaidir/.performance-v2-replication-20261013/candidate/src/consendxformer/performance_v2/rad_model_import.py": {
+      "bytes": 3441,
+      "sha256": "84e0f1bc1f2fe6aaa1e5735df40dcfbdf7ef14f96925bca12bb3e87df06834e2"
+    }
+  },
+  "commands": {
+    "disk": {
+      "exit": 0,
+      "stdout": "Filesystem                             1B-blocks          Used      Available Use% Mounted on\n/dev/mapper/ubuntu--vg-ubuntu--lv   470357942272  424251719680    24759828480  95% /\n/dev/sdd1                         19919927513088 5801103667200 13118777675776  31% /experiment-storage\n",
+      "stderr": ""
+    },
+    "inodes": {
+      "exit": 0,
+      "stdout": "Filesystem                           Inodes    IUsed     IFree IUse% Mounted on\n/dev/mapper/ubuntu--vg-ubuntu--lv  29237248  1439055  27798193    5% /\n/dev/sdd1                         305184768 14660218 290524550    5% /experiment-storage\n",
+      "stderr": ""
+    },
+    "quota": {
+      "error": "FileNotFoundError"
+    },
+    "gpu": {
+      "exit": 0,
+      "stdout": "2026/10/20 17:49:09.979, 0, GPU-8ab74ac7-bbd1-9b79-8d88-3d17cffcb6fa, 740 MiB, 10270 MiB, 0 %\n2026/10/20 17:49:09.981, 1, GPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, 10452 MiB, 558 MiB, 0 %\n2026/10/20 17:49:09.982, 2, GPU-113412ed-0d3a-cdc9-a77b-160c33465246, 420 MiB, 10590 MiB, 0 %\n2026/10/20 17:49:09.983, 3, GPU-533bd695-7397-3357-dd1e-bad540edce65, 9278 MiB, 1732 MiB, 0 %\n",
+      "stderr": ""
+    },
+    "gpu_processes": {
+      "exit": 0,
+      "stdout": "GPU-8ab74ac7-bbd1-9b79-8d88-3d17cffcb6fa, 378668, python3, 10262 MiB\nGPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, 3340885, /experiment-storage/chaidir/env/env-310-infest2/bin/python3.10, 242 MiB\nGPU-ca0a8f46-9b8e-e098-a97b-e0420b412e90, 3477966, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 308 MiB\nGPU-113412ed-0d3a-cdc9-a77b-160c33465246, 4130692, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 9164 MiB\nGPU-113412ed-0d3a-cdc9-a77b-160c33465246, 4145599, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 1418 MiB\nGPU-533bd695-7397-3357-dd1e-bad540edce65, 10191, /experiment-storage/chaidir/infest-2026/.venv/bin/python, 1724 MiB\n",
+      "stderr": ""
+    }
+  }
+}

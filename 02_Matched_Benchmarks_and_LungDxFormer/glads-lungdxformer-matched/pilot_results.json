@@ -1,0 +1,12 @@
+{
+  "LungDxFormer_B0": {
+    "avg_epoch_seconds": 2.941955804824829,
+    "peak_vram_mb": 261.75439453125,
+    "final_val_acc": 0.6146645865834633
+  },
+  "GLADS_CT_Slice": {
+    "avg_epoch_seconds": 2.681782325108846,
+    "peak_vram_mb": 255.63720703125,
+    "final_val_acc": 0.6302652106084243
+  }
+}

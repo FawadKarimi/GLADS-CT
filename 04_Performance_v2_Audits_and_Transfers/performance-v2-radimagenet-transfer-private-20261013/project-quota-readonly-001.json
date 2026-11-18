@@ -1,0 +1,26 @@
+{
+  "scope": "current private output project IDs only; Q_GETQUOTA, no changes",
+  "source": "/dev/mapper/ubuntu--vg-ubuntu--lv",
+  "observations": [
+    {
+      "path": "/home/chaidir/.performance-v2-reports",
+      "lsattr_exit": 0,
+      "lsattr_stdout": "    0 --------------e----- /home/chaidir/.performance-v2-reports\n",
+      "lsattr_stderr": "",
+      "project_id": 0,
+      "return_code": -1,
+      "errno": 1,
+      "error": "Operation not permitted"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-scratch",
+      "lsattr_exit": 0,
+      "lsattr_stdout": "    0 --------------e----- /home/chaidir/.performance-v2-scratch\n",
+      "lsattr_stderr": "",
+      "project_id": 0,
+      "return_code": -1,
+      "errno": 1,
+      "error": "Operation not permitted"
+    }
+  ]
+}

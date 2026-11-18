@@ -1,0 +1,611 @@
+--- a/REVIEW.md
++++ b/REVIEW.md
+@@ -1,4 +1,10 @@
+ # Linux synthetic acceptance workflow â€” proposal, not deployment approval
++
++## Correction disposition â€” 2026-09-28
++
++Read SECURITY_REVIEW.md and build_lifecycle.py for the current amendment. Historical legacy-builder paragraphs below are superseded: named offline installation-container compute now has inspected memory/swap/CPU/PID controls and bounded exact-resource cleanup. Docker daemon pull/copy/snapshot I/O termination and hard layer storage quotas remain unresolved, explicitly reported rather than inferred from a CLI timeout. Fresh security metadata identifies affected pins; full native and Actions-transitive coverage remains pending. All approval flags remain false. Inspector package bytes and dependency pins are unchanged.
++
++validate_review.py now requires --root --evidence --package --ledger and is strictly read-only, including on failure. generate_review.py is a separate, explicit artifact writer. Windows mocked tests do not establish Linux runtime acceptance. Complete report generation and ledger verification are separate operations.
+ 
+ ## Evidence review (2026-09-28)
+ 
+--- /dev/null
++++ b/SECURITY_REVIEW.md
+@@ -0,0 +1,35 @@
++# Dated security disposition â€” 2026-09-28
++
++Decision: NOT CLEARED. This assessment identifies affected pins and missing evidence; it is not a blanket waiver or a claim of exhaustive native-package clearance. No pins changed. No package downloaded/installed or container executed. Advisory JSON and upstream release HTML were retrieved as inert evidence. Stage A preserved; Stage B paused; pilots unauthorized.
++
++## Exact scope and evidence
++
++Base python@sha256:ac71103cf5137882806aad2d7ece409bbfe86c075e7478752d36ea073b0934d7, config sha256:e6d8b768c22ff169d0d5b7449ecede9ff35f2cf7f11f401df313e5d57e28c7a4; CPython3.10.17 Debian12 amd64. The reviewed inventory has 105 native binary-package records and embedded pip23.0.1/setuptools65.5.1/wheel0.45.1. All are enumerated in security-coverage.json; unresolved rows are not called safe. The 13 locked wheels and exact-version GitHub advisory query results are also enumerated there. Raw response URLs, UTC retrieval time and SHA-256 are in security-sources-live/receipt.json. No pagination may be ignored; this retrieval showed no next pages. Initial denied network attempts are retained separately, not mistaken for successful queries.
++
++## Affected versions and path applicability
++
++- torch2.10.0+cpu: GHSA-rrmf-rvhw-rf47 / CVE-2025-3000 affects <=2.12.1; fix2.13.0. The reviewed guard disables torch.jit.script before torchvision import, but imports/native paths still execute. No proof of non-reachability and no full-package mitigation claim. Separate risk decision required. https://github.com/advisories/GHSA-rrmf-rvhw-rf47
++- CVE-2025-32434 fixed at torch2.6 and CVE-2026-24747 fixed at2.10: pinned2.10 meets those specific historical fix floors, not all advisories.
++- pip23.0.1: seven exact-version matches retained in pip-13.json. GHSA-qwm4-qh6w-59xr (<26.2.0; double-encoded index URLs); GHSA-wf93-45jw-7689 (<26.1.2; wheel entrypoint traversal); GHSA-jp4c-xjxw-mgf9 (<26.1; untrusted functionality); GHSA-58qw-9mgm-455v (<=26.0.1; tar/ZIP ambiguity); GHSA-6vgw-5pg2-w6jp (<26.0; path traversal); GHSA-4xh5-x5gv-qwph (<=25.2; tar symlink extraction); GHSA-mq26-g339-26xf (<23.3; Mercurial command injection). Offline hash-bound wheels/no index/no VCS/no sdists reduce several paths; wheel installation IS exercised, so entrypoint/archive issues cannot be dismissed without inspecting the exact wheel metadata/member paths. That inspection remains a blocker. No pip upgrade is silently made.
++- Embedded setuptools65.5.1: GHSA-h35f-9h28-mq5c (<83; macOS normalization), GHSA-5rjg-fvgr-3xxf (<78.1.1; PackageIndex path traversal), GHSA-cx63-2mw6-8hw5 (<70; URL command injection). Linux/no sdist/no online PackageIndex avoids the intended workflows, and lock installs84.0.0. Old bytes nevertheless exist during installation; this is bounded exposure, not an assertion they never import.
++- wheel0.45.1: GHSA-8rrh-rw8j-w5fx affects0.40.0â€“0.46.1; fix0.46.2; wheel-unpack path traversal/permissions. Proposed command does not invoke wheel unpack, but pip's separate wheel handling still requires the above assessment.
++- Remaining twelve locked distributions: no match returned by the exact pip advisory queries on this date. This is database-limited evidence, not absence of vulnerabilities. Includes locked setuptools84.0.0. All versions are in security-coverage.json.
++- CPython3.10.17 predates3.10.18 fixes for CVE-2024-12718, CVE-2025-4138/4330/4435/4517 tar extraction bypasses, unicode-escape use-after-free and ipaddress resource exhaustion. This workflow does not intentionally extract tar with target Python; Docker handles OCI layers and pip consumes wheels. Exact Python runtime/module reachability is not fully proved. Later3.10.19/20/21 release records are preserved for review; being in the3.10 series does not make3.10.17 fully patched. https://www.python.org/downloads/release/python-31018/
++- openssl/libssl3 3.0.16-1~deb12u1 is below Debian's CVE-2025-9230 fix3.0.17-1~deb12u3. CMS password-recipient decryption is not an intended build/inspection operation; network disabled during those operations. This is a path-specific observation, not package clearance. https://security-tracker.debian.org/tracker/CVE-2025-9230
++- libc6 2.36-9+deb12u10 is below Debian's CVE-2025-4802 fix2.36-9+deb12u11. Exploit requires statically linked setuid executable performing dlopen with untrusted LD_LIBRARY_PATH. No-new-privileges and no injected LD_LIBRARY_PATH mitigate this scenario; exact native executable coverage remains unverified. https://security-tracker.debian.org/tracker/CVE-2025-4802
++
++## Native coverage limitation and exact outstanding evidence
++
++The supplied inventory lists binary package names/versions, not complete binary-to-source mappings. Debian's source-indexed bulk response exceeded the collector's40MiB safety bound, so it was rejected rather than treated as an empty vulnerability set. 105 native rows have explicit unresolved dispositions (including the two concrete affected families above). To complete full native review, obtain hash-bound source-package mappings for that exact base and scoped Debian advisory records (including backport/fixed versions) for all mapped packages; or explicitly review a replacement base as a separate pin change. No blanket accept-all is proposed. Host kernel/Docker vulnerabilities also require evaluation against the actual future runner version, not only the previous VM's metadata.
++
++## Actions dependencies
++
++actions/checkout v4.2.2 @11bd71901bbe5b1630ceea73d27597364c9af683; upload-artifact v4.6.2 @ea165f8d65b6e75b540449e92b4886f43607fa02. Fresh exact Actions-ecosystem advisory queries returned no entries. This does NOT clear embedded npm dependencies or runner-provided Node; those bundled dependency inventories were not audited here and are an explicit outstanding requirement. Manual trusted branch only, no pull_request_target/fork events, contents:read, persist-credentials:false, no secrets into containers, reports-only upload, one-day retention mitigate workflow attack paths. Upload runtime token remains a capability on the host. Pinning establishes identity, not safety. https://docs.github.com/en/actions/reference/security/secure-use
++
++## Build method amendment and residual lifecycle risk
++
++The unbounded anonymous legacy Docker build is replaced by a named, labeled ordinary container running ONLY offline pip install/check. It has one CPU,4GiB RAM/memsw,16 tasks, no network, no capabilities, no-new-privileges, default Docker seccomp; inspected HostConfig must match. Root/writable layer is restricted to the build container, necessary for installation; it is NOT the inspector runtime profile. No host bind or Docker socket enters the build container. Inspector runtime custom seccomp/read-only/nonroot guards are unchanged. Build log rotation,240/30s internal subprocess deadlines,300s external polling,10s control calls,60s copy/snapshot calls, exact-name kill/inspect/remove and an independent always cleanup step replace CLI-only termination. Signals preserve a primary error and attempt cleanup. No SIGKILL/VM-loss guarantee is asserted.
++
++IMPORTANT remaining blocker: Docker image pull/copy/commit are daemon operations. A CLI deadline does not prove those operations terminated; snapshot timeout is explicitly reported unconfirmed. Stopped installation-container termination is checked independently. To claim an end-to-end hard daemon-I/O bound requires a disposable daemon/VM teardown control with verifiable completion, or another reviewed snapshot/build transport. GitHub hosted VM teardown is provider-managed, not independently evidenced by this workflow. Image layer storage also lacks a per-build hard byte quota. Thus bounded installation COMPUTE is implemented/tested with mocks, but full build-I/O lifecycle clearance is still blocked. Do not dispatch on the strength of passing mocked tests.
++
++Approval fields remain false. The next decision must resolve the exact old pip/wheel/Python/native findings, Actions transitive review and daemon-I/O lifecycle control; changing versions or accepting residual risk requires explicit review. No research loading authorization is created.
+--- a/acceptance_driver.py
++++ b/acceptance_driver.py
+@@ -13,6 +13,8 @@
+ import urllib.parse
+ import urllib.request
+ import zipfile
++import signal
++import build_lifecycle
+ 
+ PACKAGE_SHA = '2f97fdaf4dd7e3dd5a04255aa62a7dd7b603fcda0fd82ffcb026b3957407d45e'
+ SCENARIOS = ('pipeline', 'deny-network', 'deny-fork', 'deny-root-write', 'forced-failure', 'overflow', 'timeout')
+@@ -32,6 +34,15 @@
+ def save(path, value):
+     with Path(path).open('x', encoding='utf-8') as stream:
+         json.dump(value, stream, sort_keys=True, indent=2)
++
++def validate_approval(approval):
++    require(approval.get('package_sha256') == PACKAGE_SHA, 'approval package binding')
++    root = Path(__file__).resolve().parent
++    for name in ('acceptance_driver.py', 'build_lifecycle.py'):
++        require(approval.get('orchestration_hashes', {}).get(name) == sha(root / name), 'approval implementation binding: ' + name)
++    require(approval.get('synthetic_execution_approved') is True and approval.get('native_build_execution_reviewed') is True, 'review approval missing')
++    require(approval.get('production_loading_approved') is False, 'production authorization forbidden')
++    require(bool(approval.get('review_reference')), 'missing security review reference')
+ 
+ def metadata(args):
+     result = subprocess.run(args, capture_output=True, text=True, timeout=15, check=True)
+@@ -89,6 +100,10 @@
+     return {'url': package['url'], 'resolved_url': resolved, 'size_bytes': size, 'sha256': sha(destination)}
+ 
+ def main():
++    def interrupted(signum, frame):
++        raise InterruptedError('orchestration interrupted by signal ' + str(signum))
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
+     parser = argparse.ArgumentParser()
+     parser.add_argument('--package', type=Path, required=True)
+     parser.add_argument('--approval', type=Path, required=True)
+@@ -100,11 +115,7 @@
+     report = {'status': 'partial', 'scope': 'linux_synthetic_acceptance_only', 'pilot_execution_authorized': False, 'stage_b': 'paused', 'security_clearance_passed': False, 'linux_acceptance_passed': False, 'package_sha256': PACKAGE_SHA, 'run_id': os.environ.get('GITHUB_RUN_ID'), 'workflow_commit': os.environ.get('GITHUB_SHA'), 'scenarios': []}
+     try:
+         approval = json.loads(args.approval.read_bytes())
+-        require(approval.get('package_sha256') == PACKAGE_SHA, 'approval package binding')
+-        require(approval.get('driver_sha256') == sha(Path(__file__)), 'approval driver binding')
+-        require(approval.get('synthetic_execution_approved') is True and approval.get('native_build_execution_reviewed') is True, 'review approval missing')
+-        require(approval.get('production_loading_approved') is False, 'production authorization forbidden')
+-        require(bool(approval.get('review_reference')), 'missing security review reference')
++        validate_approval(approval)
+         report['approval_sha256'] = sha(args.approval)
+         require(platform.machine() == 'x86_64' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted', 'host platform')
+         require('VERSION_ID="24.04"' in Path('/etc/os-release').read_text(), 'host OS')
+@@ -144,9 +155,7 @@
+         build_command(['docker', 'pull', '--platform=linux/amd64', lock['base_image']], 'pull', 180)
+         base = json.loads(metadata(['docker', 'image', 'inspect', lock['base_image']]))[0]
+         require(base['Id'] == lock['image_config_digest'] and base['Architecture'] == 'amd64', 'base config identity')
+-        imagefile = args.output / 'image-id'
+-        build_command(['docker', 'build', '--network=none', '--memory=4g', '--memory-swap=4g', '--cpu-period=100000', '--cpu-quota=100000', '--pull=false', '--no-cache', '--iidfile', str(imagefile), str(root)], 'build', 300)
+-        image = imagefile.read_text().strip()
++        image = build_lifecycle.build(root, lock['base_image'], reports)
+         receipt = {'image_id': image, 'synthetic_execution_approved': True, 'security_approved': False, 'implementation_hashes': {name: sha(root / name) for name in REQUIRED}, 'approval_sha256': sha(args.approval)}
+         save(reports / 'synthetic-build-receipt.json', receipt)
+         # Execute the unchanged CLI in a subprocess, sequentially, once per scenario.
+--- /dev/null
++++ b/build_lifecycle.py
+@@ -0,0 +1,140 @@
++"""Named offline installation container, not an unbounded Docker build job."""
++import json
++import os
++from pathlib import Path
++import signal
++import subprocess
++import time
++import traceback
++import uuid
++
++LIMIT = 16 * 1024**2
++
++def control(args, timeout=10):
++    result = subprocess.run(['docker', '--host', 'unix:///var/run/docker.sock', *args], capture_output=True, timeout=timeout)
++    if len(result.stdout) + len(result.stderr) > LIMIT:
++        raise RuntimeError('oversize Docker response')
++    if result.returncode:
++        raise RuntimeError(result.stderr.decode(errors='replace')[:4096])
++    return result.stdout.decode()
++
++def write(path, data):
++    with Path(path).open('x', encoding='utf-8') as stream:
++        json.dump(data, stream, indent=2, sort_keys=True)
++
++def cleanup(name, run=control):
++    """Never confuse a killed CLI or a missing response with stopped execution."""
++    result = {'termination_confirmed': False, 'removal_confirmed': False, 'errors': []}
++    try:
++        state = json.loads(run(['inspect', '--format', '{{json .State}}', name]))
++        if state.get('Running'):
++            run(['kill', '--signal=KILL', name])
++        state = json.loads(run(['inspect', '--format', '{{json .State}}', name]))
++        result['state'] = state
++        result['termination_confirmed'] = state.get('Running') is False and state.get('Status') in ('exited', 'dead', 'created')
++        if not result['termination_confirmed']:
++            raise RuntimeError('container termination not confirmed')
++        run(['rm', name])
++        remaining = run(['ps', '-a', '--filter', 'name=^/' + name + '$', '--format', '{{.Names}}']).strip()
++        result['removal_confirmed'] = not remaining
++        if remaining:
++            raise RuntimeError('container removal not confirmed')
++    except BaseException:
++        result['errors'].append(traceback.format_exc())
++    return result
++
++def build(root, base, reports, run=control, clock=time.monotonic, sleep=time.sleep):
++    """Bounded compute installation and stopped-state snapshot; production untested."""
++    name = 'pv2-build-' + uuid.uuid4().hex
++    tag = name + ':synthetic'
++    report = {'status': 'partial', 'container': name, 'image_tag': tag, 'method': 'offline_named_container_install_then_commit', 'cleanup': {}, 'snapshot_termination_confirmed': False}
++    write(reports / 'build-resource.json', {'container': name, 'image_tag': tag})
++    primary = None
++    image = None
++    try:
++        # No bind mounts, daemon socket or credentials. Writable image layer is
++        # necessary to install the locked wheels; runtime read-only guard unchanged.
++        install = ('import subprocess; '
++                   'subprocess.run(["python","-m","pip","install","--no-index","--find-links=/app/wheels","--require-hashes","--no-deps","-r","/app/requirements.lock"],check=True,timeout=240); '
++                   'subprocess.run(["python","-m","pip","check"],check=True,timeout=30)')
++        run(['create', '--name', name, '--label', 'performance-v2.build=' + name,
++             '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges',
++             '--cpus=1', '--memory=4g', '--memory-swap=4g', '--pids-limit=16',
++             '--ulimit=core=0', '--ulimit=fsize=536870912',
++             '--log-driver=local', '--log-opt=max-size=8m', '--log-opt=max-file=1',
++             '--log-opt=compress=false', '-e', 'PYTHONDONTWRITEBYTECODE=1',
++             '-e', 'CUDA_VISIBLE_DEVICES=', '--workdir=/app', base,
++             'python', '-B', '-c', install])
++        applied = json.loads(run(['inspect', '--format', '{{json .HostConfig}}', name]))
++        report['applied_host_config'] = applied
++        if not (applied.get('Memory') == 4 * 1024**3 and applied.get('MemorySwap') == 4 * 1024**3
++                and applied.get('NanoCpus') == 1000000000 and applied.get('PidsLimit') == 16
++                and applied.get('NetworkMode') == 'none' and applied.get('Privileged') is False
++                and 'ALL' in applied.get('CapDrop', [])
++                and any(v.startswith('no-new-privileges') for v in applied.get('SecurityOpt', []))):
++            raise RuntimeError('build resource/isolation configuration mismatch')
++        # Copy while stopped; only preverified files enter the container.
++        run(['cp', str(root) + '/.', name + ':/app'], timeout=60)
++        run(['start', name])
++        deadline = clock() + 300
++        while True:
++            state = json.loads(run(['inspect', '--format', '{{json .State}}', name]))
++            report['last_state'] = state
++            if not state.get('Running'):
++                if state.get('ExitCode') != 0 or state.get('OOMKilled'):
++                    raise RuntimeError('offline installation failed')
++                break
++            if clock() >= deadline:
++                raise TimeoutError('300-second build installation timeout')
++            sleep(1)
++        # This contains no executing build process: snapshot a confirmed-stopped container.
++        # A timed-out commit may still be doing daemon I/O; record uncertainty, never
++        # claim cancellation of that operation merely because its CLI ended.
++        image = run(['commit', '--change', 'USER 65534:65534', '--change', 'WORKDIR /app',
++                     '--change', 'ENV CPU_INSPECTION_CONTAINER=1', name, tag], timeout=60).strip()
++        report['snapshot_termination_confirmed'] = True
++        if not image.startswith('sha256:') or len(image) != 71:
++            raise RuntimeError('invalid immutable image identity')
++        report['image_id'] = image
++    except BaseException as exc:
++        primary = exc
++        report['primary_error'] = traceback.format_exc()
++    finally:
++        try:
++            raw = run(['logs', '--tail', '20000', name])
++            with (reports / 'build.log').open('x', encoding='utf-8') as stream:
++                stream.write(raw[-LIMIT:])
++            report['log_tail_only'] = True
++        except BaseException:
++            report['log_error'] = traceback.format_exc()
++        report['cleanup'] = cleanup(name, run)
++        if primary is None and report['cleanup']['termination_confirmed'] and report['cleanup']['removal_confirmed'] and not report.get('log_error'):
++            report['status'] = 'complete'
++        write(reports / 'build-report.json', report)
++    if primary is not None:
++        raise primary
++    if report['status'] != 'complete':
++        raise RuntimeError('build cleanup/log preservation failed')
++    return image
++
++def cleanup_record(output):
++    """Independent always-step fallback, scoped to the exact recorded resource."""
++    reports = Path(output) / 'reports'
++    record = reports / 'build-resource.json'
++    if not record.exists():
++        return
++    previous = reports / 'build-report.json'
++    if previous.exists() and json.loads(previous.read_text()).get('cleanup', {}).get('removal_confirmed') is True:
++        write(reports / 'final-cleanup.json', {'status': 'already_removed', 'evidence': 'build-report.json'})
++        return
++    name = json.loads(record.read_text())['container']
++    import re
++    if not re.fullmatch(r'pv2-build-[0-9a-f]{32}', name):
++        raise ValueError('unsafe build resource name')
++    write(reports / 'final-cleanup.json', cleanup(name))
++
++if __name__ == '__main__':
++    import argparse
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--cleanup-output', type=Path, required=True)
++    cleanup_record(parser.parse_args().cleanup_output)
+--- /dev/null
++++ b/collect_security_metadata.py
+@@ -0,0 +1,48 @@
++"""Explicit advisory/document retrieval only: no binaries, install or execution."""
++import argparse
++import datetime
++import hashlib
++import json
++from pathlib import Path
++import urllib.parse
++import urllib.request
++
++def main():
++    p = argparse.ArgumentParser()
++    p.add_argument('--inventory', type=Path, required=True)
++    p.add_argument('--lock', type=Path, required=True)
++    p.add_argument('--output', type=Path, required=True)
++    a = p.parse_args()
++    a.output.mkdir(exist_ok=False)
++    inventory = json.loads(a.inventory.read_bytes())
++    lock = json.loads(a.lock.read_bytes())
++    receipt = {'retrieved_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'sources': [], 'errors': [], 'inventory_sha256': hashlib.sha256(a.inventory.read_bytes()).hexdigest(), 'lock_sha256': hashlib.sha256(a.lock.read_bytes()).hexdigest()}
++    targets = [('debian-tracker.json', 'https://security-tracker.debian.org/tracker/data/json')]
++    packages = [(p['name'], p['version'].split('+')[0]) for p in lock['packages']]
++    packages += [(n, d['version']) for n, d in inventory['embedded_python_distributions'].items()]
++    for index, (name, version) in enumerate(packages):
++        targets.append((f'pip-{index}.json', 'https://api.github.com/advisories?ecosystem=pip&affects=' + urllib.parse.quote(name + '@' + version) + '&per_page=100'))
++    for name, version in [('actions/checkout', '4.2.2'), ('actions/upload-artifact', '4.6.2')]:
++        targets.append((name.split('/')[1] + '.json', 'https://api.github.com/advisories?ecosystem=actions&affects=' + urllib.parse.quote(name + '@' + version) + '&per_page=100'))
++    for suffix in ('18', '19', '20', '21'):
++        targets.append(('python-310' + suffix + '.html', 'https://www.python.org/downloads/release/python-310' + suffix + '/'))
++    for filename, url in targets:
++        try:
++            request = urllib.request.Request(url, headers={'User-Agent': 'Performance-v2-read-only-security-review'})
++            with urllib.request.urlopen(request, timeout=30) as response:
++                raw = response.read(40 * 1024**2 + 1)
++                if len(raw) > 40 * 1024**2:
++                    raise ValueError('oversize advisory metadata')
++                link = response.headers.get('Link', '')
++            with (a.output / filename).open('xb') as f:
++                f.write(raw)
++            receipt['sources'].append({'file': filename, 'url': url, 'sha256': hashlib.sha256(raw).hexdigest(), 'size_bytes': len(raw), 'pagination_incomplete': 'rel="next"' in link})
++        except Exception as exc:
++            receipt['errors'].append({'file': filename, 'url': url, 'error': str(exc)})
++    receipt['python_queries'] = packages
++    with (a.output / 'receipt.json').open('x') as f:
++        json.dump(receipt, f, indent=2)
++    print(json.dumps({'sources': len(receipt['sources']), 'errors': receipt['errors']}, indent=2))
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ b/generate_review.py
+@@ -0,0 +1,63 @@
++"""Explicit artifact writer; separate from the read-only verifier. No network/Docker."""
++import argparse
++import difflib
++import hashlib
++import json
++from pathlib import Path
++import shutil
++import zipfile
++
++def sha(p):
++    return hashlib.sha256(p.read_bytes()).hexdigest()
++
++def write(p, obj):
++    p.write_text(json.dumps(obj, indent=2, sort_keys=True) + '\n', encoding='utf-8')
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('root', 'baseline', 'package', 'inventory', 'lock', 'archive'):
++        p.add_argument('--' + name, type=Path, required=True)
++    a = p.parse_args()
++    r = a.root
++    (r / 'reviewed').mkdir(exist_ok=True)
++    shutil.copyfile(a.package, r / 'reviewed' / 'inspector.zip')
++    shutil.copyfile(a.inventory, r / 'reviewed' / 'base-inventory.json')
++    shutil.copyfile(a.lock, r / 'reviewed' / 'environment-lock.json')
++    receipt = json.loads((r / 'security-sources-live' / 'receipt.json').read_bytes())
++    inventory = json.loads(a.inventory.read_bytes())
++    coverage = {'date': '2026-09-28', 'decision': 'not_cleared', 'native': [], 'python': [], 'actions': []}
++    for item in inventory['os_packages']:
++        row = dict(item)
++        row['disposition'] = 'unresolved source mapping and complete scoped advisory/backport review'
++        if row['name'] in ('openssl', 'libssl3'):
++            row['known_affected_example'] = {'id': 'CVE-2025-9230', 'bookworm_fixed': '3.0.17-1~deb12u3'}
++        if row['name'] == 'libc6':
++            row['known_affected_example'] = {'id': 'CVE-2025-4802', 'bookworm_fixed': '2.36-9+deb12u11'}
++        coverage['native'].append(row)
++    for index, (name, version) in enumerate(receipt['python_queries']):
++        f = r / 'security-sources-live' / f'pip-{index}.json'
++        findings = json.loads(f.read_bytes()) if f.exists() else None
++        coverage['python'].append({'name': name, 'version': version, 'evidence': str(f.relative_to(r)), 'advisories': None if findings is None else [{'id': x['ghsa_id'], 'summary': x['summary'], 'vulnerabilities': x['vulnerabilities']} for x in findings], 'disposition': 'bounded applicability assessment in SECURITY_REVIEW.md; not blanket approval'})
++    for name in ('checkout', 'upload-artifact'):
++        f = r / 'security-sources-live' / (name + '.json')
++        coverage['actions'].append({'name': 'actions/' + name, 'advisories': json.loads(f.read_bytes()), 'bundled_npm_and_node_review': 'unresolved'})
++    write(r / 'security-coverage.json', coverage)
++    write(r / 'synthetic-approval-TEMPLATE.json', {'package_sha256': sha(a.package), 'orchestration_hashes': {n: sha(r / n) for n in ('acceptance_driver.py', 'build_lifecycle.py')}, 'synthetic_execution_approved': False, 'native_build_execution_reviewed': False, 'production_loading_approved': False, 'review_reference': None})
++    # Focused authored-source diff only; full ledger covers retrieved/generated evidence.
++    diff = []
++    names = {x.name for x in a.baseline.iterdir() if x.suffix in ('.py', '.md', '.yml')} | {x.name for x in r.iterdir() if x.suffix in ('.py', '.md', '.yml')}
++    for name in sorted(names):
++        old, new = a.baseline / name, r / name
++        diff.extend(difflib.unified_diff(old.read_text().splitlines(True) if old.exists() else [], new.read_text().splitlines(True) if new.exists() else [], fromfile='a/' + name if old.exists() else '/dev/null', tofile='b/' + name))
++    (r / 'focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++    excluded = {'file-hashes.json'}
++    ledger = {str(f.relative_to(r)).replace('\\', '/'): {'sha256': sha(f), 'size_bytes': f.stat().st_size} for f in sorted(r.rglob('*')) if f.is_file() and f.name not in excluded}
++    write(r / 'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.archive, 'x', zipfile.ZIP_DEFLATED) as z:
++        for f in sorted(r.rglob('*')):
++            if f.is_file():
++                z.write(f, str(f.relative_to(r)))
++    print(json.dumps({'archive': str(a.archive.resolve()), 'sha256': sha(a.archive), 'files': len(ledger) + 1}, indent=2))
++
++if __name__ == '__main__':
++    main()
+--- a/linux-synthetic-acceptance.yml
++++ b/linux-synthetic-acceptance.yml
+@@ -26,7 +26,6 @@
+       CUDA_VISIBLE_DEVICES: ''
+       PYTHONDONTWRITEBYTECODE: '1'
+       DOCKER_HOST: unix:///var/run/docker.sock
+-      DOCKER_BUILDKIT: '0'
+     steps:
+       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+         with:
+@@ -39,6 +38,11 @@
+           set -euo pipefail
+           unset DOCKER_CONTEXT DOCKER_TLS_VERIFY DOCKER_CERT_PATH
+           python3 -B acceptance_driver.py --package reviewed/inspector.zip --approval synthetic-approval.json --output "$RUNNER_TEMP/acceptance"
++      - name: Independent bounded build cleanup
++        if: ${{ always() }}
++        timeout-minutes: 2
++        shell: bash
++        run: python3 -B build_lifecycle.py --cleanup-output "$RUNNER_TEMP/acceptance"
+       - name: Retain bounded reports, including failures
+         if: ${{ always() }}
+         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+--- /dev/null
++++ b/test_correction.py
+@@ -0,0 +1,112 @@
++"""Mocked tests: no Docker/network/install/weights; fake clocks labeled explicitly."""
++import json
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++from unittest.mock import patch
++import acceptance_driver as driver
++import build_lifecycle as build
++
++class FakeDocker:
++    def __init__(self, timeout=False, cleanup_error=False, commit_error=False):
++        self.timeout, self.cleanup_error, self.commit_error = timeout, cleanup_error, commit_error
++        self.killed = False
++        self.calls = []
++    def __call__(self, args, timeout=10):
++        self.calls.append((args, timeout))
++        if args[0] == 'inspect':
++            if '.HostConfig' in args[2]:
++                return json.dumps({'Memory': 4 * 1024**3, 'MemorySwap': 4 * 1024**3, 'NanoCpus': 1000000000, 'PidsLimit': 16, 'NetworkMode': 'none', 'Privileged': False, 'CapDrop': ['ALL'], 'SecurityOpt': ['no-new-privileges']})
++            running = self.timeout and not self.killed
++            return json.dumps({'Running': running, 'Status': 'running' if running else 'exited', 'ExitCode': 0})
++        if args[0] == 'kill':
++            if self.cleanup_error:
++                raise subprocess.TimeoutExpired(args, timeout)
++            self.killed = True
++        if args[0] == 'commit':
++            if self.commit_error:
++                raise subprocess.TimeoutExpired(args, timeout)
++            return 'sha256:' + 'a' * 64
++        if args[0] == 'logs':
++            return 'invented installation log'
++        return ''
++
++class Tests(unittest.TestCase):
++    def test_approval_rejected_before_docker(self):
++        with patch.object(subprocess, 'run', side_effect=AssertionError('must not execute')):
++            with self.assertRaises(ValueError):
++                driver.validate_approval({})
++
++    def test_false_approval(self):
++        approval = {'package_sha256': driver.PACKAGE_SHA, 'orchestration_hashes': {n: driver.sha(Path(driver.__file__).parent / n) for n in ('acceptance_driver.py', 'build_lifecycle.py')}, 'synthetic_execution_approved': False}
++        with self.assertRaisesRegex(ValueError, 'approval missing'):
++            driver.validate_approval(approval)
++
++    def run_build(self, fake, expected=None):
++        with tempfile.TemporaryDirectory() as folder:
++            path = Path(folder)
++            if expected:
++                with self.assertRaises(expected):
++                    build.build(path, 'pinned-base', path, run=fake, clock=iter([0, 301]).__next__, sleep=lambda _: None)
++            else:
++                build.build(path, 'pinned-base', path, run=fake)
++            return json.loads((path / 'build-report.json').read_text()), (path / 'build.log').read_text()
++
++    def test_timeout_kills_container_not_only_cli(self):
++        fake = FakeDocker(timeout=True)
++        report, log = self.run_build(fake, TimeoutError)
++        self.assertTrue(fake.killed)
++        self.assertTrue(report['cleanup']['termination_confirmed'])
++        self.assertIn('300-second', report['primary_error'])
++        self.assertIn('invented', log)
++
++    def test_cleanup_timeout_preserves_original_failure(self):
++        report, _ = self.run_build(FakeDocker(timeout=True, cleanup_error=True), TimeoutError)
++        self.assertIn('300-second', report['primary_error'])
++        self.assertFalse(report['cleanup']['termination_confirmed'])
++        self.assertTrue(report['cleanup']['errors'])
++
++    def test_commit_timeout_uncertainty_preserved(self):
++        report, _ = self.run_build(FakeDocker(commit_error=True), subprocess.TimeoutExpired)
++        self.assertFalse(report['snapshot_termination_confirmed'])
++        self.assertTrue(report['cleanup']['termination_confirmed'])
++
++    def test_success_resource_flags_and_bounded_calls(self):
++        fake = FakeDocker()
++        report, _ = self.run_build(fake)
++        self.assertEqual(report['status'], 'complete')
++        for flag in ('--memory=4g', '--memory-swap=4g', '--pids-limit=16', '--cpus=1', '--network=none', '--cap-drop=ALL'):
++            self.assertIn(flag, fake.calls[0][0])
++        self.assertTrue(all(0 < timeout <= 60 for _, timeout in fake.calls))
++
++    def test_start_failure_preserves_report(self):
++        fake = FakeDocker()
++        def start_error(args, timeout=10):
++            if args[0] == 'start':
++                raise OSError('invented start failure')
++            return fake(args, timeout)
++        report, _ = self.run_build(start_error, OSError)
++        self.assertIn('invented start failure', report['primary_error'])
++
++    def test_cancellation_preserves_report(self):
++        fake = FakeDocker()
++        def cancel(args, timeout=10):
++            if args[0] == 'start':
++                raise InterruptedError('invented cancellation')
++            return fake(args, timeout)
++        report, _ = self.run_build(cancel, InterruptedError)
++        self.assertIn('invented cancellation', report['primary_error'])
++
++    def test_resource_mismatch_rejected_before_start(self):
++        fake = FakeDocker()
++        def mismatch(args, timeout=10):
++            if args[0] == 'inspect' and '.HostConfig' in args[2]:
++                return '{}'
++            return fake(args, timeout)
++        report, _ = self.run_build(mismatch, RuntimeError)
++        self.assertIn('configuration mismatch', report['primary_error'])
++        self.assertFalse(any(args[0] == 'start' for args, _ in fake.calls))
++
++if __name__ == '__main__':
++    unittest.main()
+--- a/validate_review.py
++++ b/validate_review.py
+@@ -1,49 +1,55 @@
+-"""Local inert archive/static validation. Never imports the inspector or Docker."""
++"""Portable read-only verification. Required input paths; stdout only; no network."""
++import argparse
+ import hashlib
+ import json
+ from pathlib import Path
+ import zipfile
+ import yaml
+ 
+-ROOT = Path(__file__).resolve().parent
+-BASE = ROOT.parent
+-digest = lambda b: hashlib.sha256(b).hexdigest()
+-evidence_path = Path('D:/Downloads/host-readiness-evidence-36412911139.zip')
+-with zipfile.ZipFile(evidence_path) as z:
+-    for line in z.read('SHA256SUMS.txt').decode().splitlines():
+-        expected, name = line.split(None, 1)
+-        assert digest(z.read(name.strip())) == expected
+-    e = json.loads(z.read('evidence.json'))
+-    r = json.loads(z.read('host-readiness.json'))
+-    assert e['report'] == r
+-    assert e['decoded_job_log'] == z.read('job.log').decode()
+-    assert e['run']['id'] == int(r['run_id']) == 36412911139
+-    assert e['run']['head_sha'] == r['workflow_commit'] == '12bb66279168c73b65a9b06f3112c6fa7a70950b'
+-    assert e['run']['run_attempt'] == int(r['run_attempt']) == 1
+-    assert e['run']['conclusion'] == 'success'
+-    assert e['jobs']['jobs'][0]['conclusion'] == 'success'
+-    assert r['linux_acceptance_passed'] is r['security_clearance_passed'] is r['container_enforcement_verified'] is False
+-package = BASE / 'performance-v2-cgroup-v1-amendment-review-20260928.zip'
+-assert digest(package.read_bytes()) == '2f97fdaf4dd7e3dd5a04255aa62a7dd7b603fcda0fd82ffcb026b3957407d45e'
+-with zipfile.ZipFile(package) as z:
+-    ledger = json.loads(z.read('file-hashes.json'))
+-    for name, record in ledger.items():
+-        data = z.read(name)
+-        assert len(data) == record['size_bytes'] and digest(data) == record['sha256']
+-workflow = yaml.safe_load((ROOT / 'linux-synthetic-acceptance.yml').read_text())
+-assert set(workflow.get('on', workflow.get(True))) == {'workflow_dispatch'}
+-assert workflow['permissions'] == {'contents': 'read'}
+-job = workflow['jobs']['synthetic']
+-assert job['runs-on'] == 'ubuntu-24.04' and job['timeout-minutes'] == 25
+-for p in ROOT.glob('*.py'):
+-    compile(p.read_text(), str(p), 'exec')
+-for p in ROOT.iterdir():
+-    if p.suffix in ('.py', '.md', '.yml', '.json'):
+-        assert all(line.rstrip() == line for line in p.read_text().splitlines()), str(p)
+-approval = {'package_sha256': digest(package.read_bytes()), 'driver_sha256': digest((ROOT / 'acceptance_driver.py').read_bytes()), 'synthetic_execution_approved': False, 'native_build_execution_reviewed': False, 'production_loading_approved': False, 'review_reference': None}
+-(ROOT / 'synthetic-approval-TEMPLATE.json').write_text(json.dumps(approval, indent=2) + '\n')
+-validation = {'status': 'local_static_checks_passed', 'evidence_zip_sha256': digest(evidence_path.read_bytes()), 'reviewed_package_sha256': digest(package.read_bytes()), 'evidence_internal_hashes_and_linkages': 'passed', 'package_internal_ledger': 'passed', 'yaml_python_whitespace': 'passed', 'linux_runtime_executed': False, 'docker_executed': False, 'security_clearance': 'pending', 'build_isolation_lifecycle': 'unresolved_blocker'}
+-(ROOT / 'validation-report.json').write_text(json.dumps(validation, indent=2) + '\n')
+-files = {p.name: {'sha256': digest(p.read_bytes()), 'size_bytes': p.stat().st_size} for p in sorted(ROOT.iterdir()) if p.is_file() and p.name not in ('file-hashes.json',)}
+-(ROOT / 'file-hashes.json').write_text(json.dumps(files, indent=2, sort_keys=True) + '\n')
+-print(json.dumps(validation, indent=2))
++def check(value, message):
++    if not value:
++        raise ValueError(message)
++
++def digest(data):
++    return hashlib.sha256(data).hexdigest()
++
++def verify(root, evidence_path, package, ledger_path):
++    with zipfile.ZipFile(evidence_path) as z:
++        for line in z.read('SHA256SUMS.txt').decode().splitlines():
++            expected, name = line.split(None, 1)
++            check(digest(z.read(name.strip())) == expected, 'evidence hash')
++        e = json.loads(z.read('evidence.json'))
++        r = json.loads(z.read('host-readiness.json'))
++        check(e['report'] == r and e['decoded_job_log'] == z.read('job.log').decode(), 'evidence copies')
++        check(e['run']['id'] == int(r['run_id']) == 36412911139, 'run ID')
++        check(e['run']['head_sha'] == r['workflow_commit'] == '12bb66279168c73b65a9b06f3112c6fa7a70950b', 'commit')
++        check(e['run']['run_attempt'] == int(r['run_attempt']) == 1, 'attempt')
++        check(e['run']['conclusion'] == e['jobs']['jobs'][0]['conclusion'] == 'success', 'conclusion')
++        check(r['linux_acceptance_passed'] is r['security_clearance_passed'] is r['container_enforcement_verified'] is False, 'scope')
++    check(digest(package.read_bytes()) == '2f97fdaf4dd7e3dd5a04255aa62a7dd7b603fcda0fd82ffcb026b3957407d45e', 'package identity')
++    with zipfile.ZipFile(package) as z:
++        for name, record in json.loads(z.read('file-hashes.json')).items():
++            data = z.read(name)
++            check(len(data) == record['size_bytes'] and digest(data) == record['sha256'], 'package member')
++    workflow = yaml.safe_load((root / 'linux-synthetic-acceptance.yml').read_text())
++    check(set(workflow.get('on', workflow.get(True))) == {'workflow_dispatch'}, 'trigger')
++    check(workflow['permissions'] == {'contents': 'read'}, 'permissions')
++    check(workflow['jobs']['synthetic']['runs-on'] == 'ubuntu-24.04', 'runner')
++    for p in root.glob('*.py'):
++        compile(p.read_text(), str(p), 'exec')
++    for name, record in json.loads(ledger_path.read_bytes()).items():
++        path = Path(name)
++        check(not path.is_absolute() and '..' not in path.parts, 'unsafe ledger path')
++        data = (root / path).read_bytes()
++        check(digest(data) == record['sha256'] and len(data) == record['size_bytes'], 'candidate hash: ' + name)
++    for p in root.iterdir():
++        if p.suffix in ('.py', '.md', '.yml', '.json'):
++            check(all(line.rstrip() == line for line in p.read_text().splitlines()), 'whitespace: ' + p.name)
++    return {'status': 'passed', 'scope': 'inert_read_only_validation', 'evidence_sha256': digest(evidence_path.read_bytes()), 'docker_executed': False}
++
++if __name__ == '__main__':
++    p = argparse.ArgumentParser()
++    for name in ('root', 'evidence', 'package', 'ledger'):
++        p.add_argument('--' + name, type=Path, required=True)
++    a = p.parse_args()
++    print(json.dumps(verify(a.root, a.evidence, a.package, a.ledger), indent=2))

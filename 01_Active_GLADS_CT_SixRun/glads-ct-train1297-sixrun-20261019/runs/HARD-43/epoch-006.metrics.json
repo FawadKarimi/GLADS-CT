@@ -1,0 +1,164 @@
+{
+  "checkpoint_sha256": null,
+  "checkpoint_written": false,
+  "elapsed_seconds": 49.35701560974121,
+  "epoch": 6,
+  "learning_rates": {
+    "encoder_bias_normalization": 0.0001,
+    "encoder_weights": 0.0001,
+    "head_bias_normalization": 0.001,
+    "head_weights": 0.001
+  },
+  "objective": "HARD",
+  "patience": {
+    "best": 0.628552672227371,
+    "last_epoch": 6,
+    "stop": false,
+    "stopped": false,
+    "without_improvement": 2
+  },
+  "run_id": "HARD-43",
+  "seed": 43,
+  "selected_so_far": {
+    "diagnostic_ce": 0.7424726049884685,
+    "epoch": 4,
+    "macro_f1": 0.628552672227371
+  },
+  "train": {
+    "accuracy": 0.5867386276021588,
+    "confusion_matrix": [
+      [
+        329,
+        211,
+        42
+      ],
+      [
+        119,
+        245,
+        78
+      ],
+      [
+        25,
+        61,
+        187
+      ]
+    ],
+    "diagnostic_ce": 0.8303977563347503,
+    "epoch_objective_loss": 0.8283731302423599,
+    "exposed_views_sha256": "e47b0539834a6d6deb3174d523bc4bf185d90da72fd941f54cd64f4c3660c479",
+    "loss_totals": {
+      "hard": 0.8283731302423599,
+      "legacy": 0.0,
+      "reader": 0.0
+    },
+    "macro_f1": 0.5931577245936136,
+    "max_grad_norm": 4.528690338134766,
+    "mean_batch_objective_loss": 0.8274584158164698,
+    "mean_grad_norm": 2.8383230814119664,
+    "per_class": {
+      "0": {
+        "f1": 0.623696682464455,
+        "precision": 0.6955602536997886,
+        "recall": 0.5652920962199313,
+        "support": 582
+      },
+      "1": {
+        "f1": 0.510948905109489,
+        "precision": 0.4738878143133462,
+        "recall": 0.5542986425339367,
+        "support": 442
+      },
+      "2": {
+        "f1": 0.6448275862068966,
+        "precision": 0.6091205211726385,
+        "recall": 0.684981684981685,
+        "support": 273
+      },
+      "benign": {
+        "f1": 0.623696682464455,
+        "precision": 0.6955602536997886,
+        "recall": 0.5652920962199313,
+        "support": 582
+      },
+      "indeterminate": {
+        "f1": 0.510948905109489,
+        "precision": 0.4738878143133462,
+        "recall": 0.5542986425339367,
+        "support": 442
+      },
+      "malignant": {
+        "f1": 0.6448275862068966,
+        "precision": 0.6091205211726385,
+        "recall": 0.684981684981685,
+        "support": 273
+      }
+    },
+    "weighted_diagnostic_ce": 0.8283731429333208
+  },
+  "validation": {
+    "accuracy": 0.6853146853146853,
+    "confusion_matrix": [
+      [
+        57,
+        5,
+        3
+      ],
+      [
+        19,
+        6,
+        13
+      ],
+      [
+        2,
+        3,
+        35
+      ]
+    ],
+    "diagnostic_ce": 0.7359713098690421,
+    "macro_f1": 0.599067599067599,
+    "metric_definition_sha256": "d6949a67cab98a06a9e07718e0e6ae2814cde77454893cd87555c93afbb5e13e",
+    "micro_f1": 0.6853146853146853,
+    "n": 143,
+    "per_class": {
+      "0": {
+        "f1": 0.7972027972027972,
+        "precision": 0.7307692307692307,
+        "recall": 0.8769230769230769,
+        "support": 65
+      },
+      "1": {
+        "f1": 0.23076923076923078,
+        "precision": 0.42857142857142855,
+        "recall": 0.15789473684210525,
+        "support": 38
+      },
+      "2": {
+        "f1": 0.7692307692307692,
+        "precision": 0.6862745098039216,
+        "recall": 0.875,
+        "support": 40
+      },
+      "benign": {
+        "f1": 0.7972027972027972,
+        "precision": 0.7307692307692307,
+        "recall": 0.8769230769230769,
+        "support": 65
+      },
+      "indeterminate": {
+        "f1": 0.23076923076923078,
+        "precision": 0.42857142857142855,
+        "recall": 0.15789473684210525,
+        "support": 38
+      },
+      "malignant": {
+        "f1": 0.7692307692307692,
+        "precision": 0.6862745098039216,
+        "recall": 0.875,
+        "support": 40
+      }
+    },
+    "prediction_identity_sha256": "49f2e3e95bb77de01a76a03b52b555d78d2f9ad9397bcac3db997e1a483fe289",
+    "split": "val",
+    "weighted_diagnostic_ce": 0.693956072222617
+  }
+}

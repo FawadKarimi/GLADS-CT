@@ -1,0 +1,509 @@
+--- a/activation_bridge.py
++++ b/activation_bridge.py
+@@ -50,6 +50,10 @@
+     role = runtime.g.args.role
+     runtime.verify_role()
+     runtime.reservations.claim(role, runtime.me())
++    if role == 'bootstrap':
++        runtime.write('storage-initial.json', runtime.g.storage)
++    else:
++        runtime.write(role+'-storage-admission.json', runtime.g.storage)
+     handlers = {'bootstrap': bootstrap, 'controller': controller, 'watchdog': watchdog, 'helper': helper}
+     return handlers[role](runtime)
+ 
+--- a/activation_trust.py
++++ b/activation_trust.py
+@@ -17,12 +17,16 @@
+ STATE = '/var/lib/pv2-acceptance'
+ AUTH = '/run/pv2-authorization'
+ _SEAL = object()
++INITIAL_STORAGE = 12 * 1024**3
++STORAGE_METADATA_ALLOWANCE = 16 * 1024**2
++VOLUME_BYTES = {'data': 8 * 1024**3, 'evidence': 512 * 1024**2}
+ 
+ 
+ class Grant:
+-    def __init__(self, seal, args, inventory, auth):
++    def __init__(self, seal, args, inventory, auth, storage=None):
+         need(seal is _SEAL, 'grant issuer')
+         self._seal, self.args, self.inventory, self.auth = seal, deepcopy(args), deepcopy(inventory), deepcopy(auth)
++        self.storage = deepcopy(storage)
+ 
+ 
+ def valid_grant(grant):
+@@ -117,7 +121,116 @@
+         fs = os.statvfs(STATE)
+         need(s.st_dev != parent.st_dev and fs.f_blocks*fs.f_frsize <= 1024**3 and
+              fs.f_bavail*fs.f_frsize >= 768*1024**2, 'dedicated <=1GiB state filesystem with >=768MiB free required')
+-        need(os.statvfs('/var/tmp').f_bavail*os.statvfs('/var/tmp').f_frsize >= 12*1024**3, 'host storage reserve')
++
++    def mounts(self):
++        from linux_host import mount_records
++        return mount_records(Path('/proc/self/mountinfo').read_text())
++
++    def storage_observation(self):
++        mounts = [m for m in self.mounts() if '/var/tmp' == m['mount'] or '/var/tmp'.startswith(m['mount'].rstrip('/')+'/')]
++        need(mounts, 'storage filesystem unavailable')
++        fs = os.statvfs('/var/tmp')
++        return {'filesystem': max(mounts, key=lambda m: len(m['mount'])),
++                'device': os.stat('/var/tmp').st_dev, 'available_bytes': fs.f_bavail*fs.f_frsize}
++
++    def backing_observation(self, path):
++        # /var/tmp is intentionally a sticky shared ancestor, not a trusted
++        # document directory. Only the fixed run directory/backing are trusted.
++        p = Path(path)
++        for component in [*reversed(p.parents), p]:
++            s = os.lstat(component)
++            need(not stat.S_ISLNK(s.st_mode), 'storage symlink')
++        parent = os.lstat(p.parent)
++        need(parent.st_uid == 0 and stat.S_ISDIR(parent.st_mode) and not parent.st_mode & 0o022,
++             'backing parent ownership')
++        need(s.st_uid == 0 and stat.S_ISREG(s.st_mode) and not s.st_mode & 0o022, 'backing ownership/type')
++        return {'inode': s.st_ino, 'device': s.st_dev, 'size': s.st_size, 'allocated': s.st_blocks*512}
++
++    def loop_backing(self, loop):
++        import re
++        need(re.fullmatch('/dev/loop[0-9]+', loop), 'storage loop name')
++        path = Path('/sys/class/block') / loop.rsplit('/', 1)[-1] / 'loop/backing_file'
++        return '/'+path.read_text().strip().lstrip('/')
++
++    def verify_storage(self, args, auth):
++        return verify_storage_admission(self, args, auth)
++
++
++def verify_storage_admission(io, args, auth):
++    """Pure policy with explicit read-only observations; no disk-space repair."""
++    root = STATE+'/'+args.token
++    binding = {'token': args.token, 'boot_id': auth['boot_id'], 'authorization_sha256': sha(canonical(auth)),
++               'scenario': args.scenario}
++    current = io.storage_observation()
++    need(type(current['available_bytes']) is int and current['available_bytes'] >= 0, 'storage free bytes')
++    if args.role == 'bootstrap':
++        need(current['available_bytes'] >= INITIAL_STORAGE, 'insufficient initial storage capacity')
++        return {'schema': 'pv2_storage_admission_v1', 'binding': binding, 'initial': current}
++    initial_record = io.json(root+'/storage-initial.json')
++    need(initial_record.get('schema') == 'pv2_storage_admission_v1' and initial_record.get('binding') == binding,
++         'initial storage binding')
++    initial = initial_record['initial']
++    need(initial['available_bytes'] >= INITIAL_STORAGE, 'invalid initial storage capacity')
++    need(all(current[k] == initial[k] for k in ('filesystem', 'device')), 'storage filesystem changed')
++    if args.role == 'controller':
++        need(current['available_bytes'] >= INITIAL_STORAGE and
++             current['available_bytes'] >= initial['available_bytes']-STORAGE_METADATA_ALLOWANCE,
++             'pre-provision storage consumption')
++        return initial_record
++    need(args.role in ('watchdog', 'helper'), 'storage role')
++    capsule = io.json(root+('/watchdog-bootstrap.json' if args.role == 'watchdog' else '/full-state.json'))
++    need(capsule['token'] == args.token and capsule['boot_id'] == binding['boot_id'], 'allocation capsule binding')
++    # Verify durable observed entries against their ledger bytes and matching
++    # intent. A pending service-start intent is allowed: it is not a volume.
++    ledger_path = root+'/journal/report-hashes.json'
++    ledger_raw = io.read(ledger_path)
++    ledger = json.loads(ledger_raw, object_pairs_hook=no_duplicates)
++    pending, observed = [], []
++    import re
++    need(len(ledger) <= 1024, 'storage journal bound')
++    for name, rec in sorted(ledger.items()):
++        need(re.fullmatch(r'[0-9]{4,}-[a-z-]+\.json', name), 'storage journal name')
++        raw = io.read(root+'/journal/'+name)
++        need(len(raw) == rec['size_bytes'] and sha(raw) == rec['sha256'], 'storage journal hash')
++        value = json.loads(raw, object_pairs_hook=no_duplicates)
++        if name.endswith('-provision-intent.json'): pending.append(value)
++        elif name.endswith('-provision-observed.json'):
++            intent = {k: v for k, v in value.items() if k != 'identity'}; intent['phase'] = 'intent'
++            need(intent in pending, 'allocation observation without intent')
++            pending.remove(intent); observed.append(value)
++    need(io.read(ledger_path) == ledger_raw, 'storage journal changed during validation')
++    allocated = 0
++    mounts = io.mounts()
++    for role, size in VOLUME_BYTES.items():
++        backing = '/var/tmp/pv2-'+args.token+'/'+role+'.ext4'
++        target = '/var/tmp/pv2-'+args.token+'/'+role
++        records = [r for r in capsule['resources'] if r['kind'] == 'backing' and r['requested'] == backing]
++        volumes = [r for r in capsule['resources'] if r['kind'] == 'mount' and r['requested'] == target]
++        need(len(records) == len(volumes) == 1, 'allocation record coverage')
++        for record in records+volumes:
++            need(record in observed and observed.count(record) == 1 and record['boot_id'] == binding['boot_id'],
++                 'allocation not durably owned')
++        recorded, volume = records[0]['identity'], volumes[0]['identity']
++        actual = io.backing_observation(backing)
++        need(recorded['path'] == backing and recorded['filesystem'] == initial['filesystem'] and
++             actual['device'] == initial['device'] and actual['inode'] == recorded['inode'], 'allocation identity mismatch')
++        need(volume['backing'] == backing and volume['inode'] == actual['inode'] and
++             volume['size'] == actual['size'] == size and volume['allocated'] == actual['allocated'] >= size,
++             'allocation size/sparse/mismatch')
++        need(volume['mount']['mount'] == target and volume['mount']['source'] == volume['loop'] and
++             volume['mount']['filesystem'] == 'ext4' and mounts.count(volume['mount']) == 1 and
++             io.loop_backing(volume['loop']) == backing, 'allocation mount/loop mismatch')
++        allocated += actual['allocated']
++    expected = sum(VOLUME_BYTES.values())
++    need(expected <= allocated <= expected+STORAGE_METADATA_ALLOWANCE, 'unexpected backing allocation extent')
++    remaining = max(INITIAL_STORAGE-expected-STORAGE_METADATA_ALLOWANCE,
++                    initial['available_bytes']-allocated-STORAGE_METADATA_ALLOWANCE)
++    # Reobserve after validating allocations; do not use a stale pre-check count.
++    after = io.storage_observation()
++    need(all(after[k] == initial[k] for k in ('filesystem', 'device')), 'storage filesystem changed after validation')
++    need(after['available_bytes'] >= remaining, 'unexpected post-provision storage consumption')
++    return {'schema': 'pv2_storage_child_check_v1', 'binding': binding, 'initial': initial,
++            'allocated_bytes': allocated, 'remaining_required_bytes': remaining, 'observed': after}
+ 
+ 
+ def validate_trust(args, io, now):
+@@ -143,7 +256,8 @@
+     for field in ('security_review', 'host_evidence'):
+         need(io.digest(AUTH+'/'+field+'.json') == inventory[field+'_sha256'], field+' evidence bytes')
+     io.verify_environment(inventory)
+-    return Grant(_SEAL, args, inventory, auth)
++    storage = io.verify_storage(args, auth)
++    return Grant(_SEAL, args, inventory, auth, storage)
+ 
+ 
+ class Reservations:
+--- a/launcher-sources.json
++++ b/launcher-sources.json
+@@ -1,12 +1,12 @@
+ {
+   "files": {
+     "/opt/pv2-native-acceptance/activation_bridge.py": {
+-      "sha256": "d31032bb69a746c15ff1f7a378a01401f6d1340b4684da07fcd09b4f3574e174",
+-      "size_bytes": 19250
++      "sha256": "b1396de2665ce25301df1d380bb059fddfbdb05e906d9025acb04282118b9a25",
++      "size_bytes": 19426
+     },
+     "/opt/pv2-native-acceptance/activation_trust.py": {
+-      "sha256": "0ed8148677562fa81aac0f1c3b159fb6cd975c44a778e8ebf54e7574ff3cbf5e",
+-      "size_bytes": 8507
++      "sha256": "068343c91b92761a55bc4e8940d5585589ae9974c004021fb93dbf646b22c87a",
++      "size_bytes": 15683
+     },
+     "/opt/pv2-native-acceptance/evidence_export.py": {
+       "sha256": "6fc8c36101804a997f02d769dfd8338740a25fc284f49cb94a86b99abe0e3418",
+--- /dev/null
++++ b/package_storage.py
+@@ -0,0 +1,90 @@
++"""Review packaging and mocked tests only; no activation or host operations."""
++import argparse
++import ast
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++from launcher_binding import source_manifest
++
++BASE = 'a1f9f1568132414ab4cbbc6c97afcf9bcc0050d85f63cb90071b644c5f18ad8e'
++EDITED = {'activation_trust.py', 'activation_bridge.py', 'test_activation_bridge.py', 'launcher-sources.json'}
++
++
++def sha(raw): return hashlib.sha256(raw).hexdigest()
++
++
++def write(path, value):
++    path.write_text(json.dumps(value, sort_keys=True, indent=2)+'\n', encoding='utf-8', newline='\n')
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): parser.add_argument('--'+name, type=Path, required=True)
++    a = parser.parse_args(); root = a.root.resolve()
++    if sha(a.base.read_bytes()) != BASE: raise ValueError('base SHA')
++    with zipfile.ZipFile(a.base) as z:
++        old = json.loads(z.read('file-hashes.json'))
++        if set(z.namelist()) != set(old) | {'file-hashes.json'}: raise ValueError('parent coverage')
++        for name, rec in old.items():
++            raw = z.read(name)
++            if len(raw) != rec['size_bytes'] or sha(raw) != rec['sha256']: raise ValueError('parent hash '+name)
++            if name not in EDITED and (root/name).read_bytes() != raw: raise ValueError('unintended edit '+name)
++        (root/'history'/'activation-file-hashes.json').write_bytes(z.read('file-hashes.json'))
++        (root/'history'/'launcher-sources-before-storage.json').write_bytes(z.read('launcher-sources.json'))
++        write(root/'launcher-sources.json', source_manifest(root))
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        tests = []
++        commands = [('targeted', [sys.executable, '-B', '-m', 'unittest', 'test_storage_admission', '-v']),
++                    ('full', [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v'])]
++        for label, cmd in commands:
++            run = subprocess.run(cmd, cwd=root, env=env, capture_output=True, text=True, timeout=120)
++            (root/('storage-'+label+'-tests.log')).write_text(run.stdout+run.stderr, encoding='utf-8')
++            if run.returncode: raise RuntimeError(label+' tests failed')
++            tests.append({'command': cmd, 'suite': label, 'exit_code': run.returncode,
++                          'result': re.search(r'Ran \d+ tests in [^\n]+', run.stderr).group()})
++        changed, patch = [], []
++        for path in sorted(root.iterdir()):
++            if path.suffix not in ('.py', '.md') and path.name != 'launcher-sources.json': continue
++            before = z.read(path.name) if path.name in old else b''
++            after = path.read_bytes()
++            if before == after: continue
++            text = after.decode()
++            if any(s.rstrip() != s for s in text.splitlines()): raise ValueError('whitespace '+path.name)
++            if path.suffix == '.py': ast.parse(text, feature_version=(3, 10)); compile(text, path.name, 'exec')
++            changed.append(path.name)
++            patch.extend(difflib.unified_diff(before.decode().splitlines(True), text.splitlines(True),
++                                              fromfile='a/'+path.name if before else '/dev/null', tofile='b/'+path.name))
++        (root/'storage-focused.patch').write_text(''.join(patch), encoding='utf-8', newline='\n')
++        write(root/'STORAGE_VALIDATION.json', {'base_sha256': BASE, 'base_ledger_entries_verified': len(old),
++              'tests': tests, 'python': sys.version, 'platform': platform.platform(), 'changed_files': changed,
++              'python310_syntax': 'passed', 'execution_approved': False, 'security_approved': False,
++              'dependencies_approved': False, 'pilot_execution_authorized': False, 'stage_b': 'paused',
++              'native_execution': False, 'production_pins_unchanged': True,
++              'boundaries': 'invented filesystem/allocations and mocked OS only; no Docker or privileged operations',
++              'development_failure': 'Windows lacks os.statvfs; Linux-only mocked attribute now explicitly created',
++              'historical_warning': 'unchanged acceptance_driver.py return-in-finally SyntaxWarning'})
++    ledger = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path != root/'file-hashes.json':
++            raw = path.read_bytes(); ledger[path.relative_to(root).as_posix()] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    write(root/'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.output, 'x', zipfile.ZIP_DEFLATED) as z:
++        for name in [*sorted(ledger), 'file-hashes.json']: z.write(root/name, name)
++    with zipfile.ZipFile(a.output) as z:
++        if set(z.namelist()) != set(ledger) | {'file-hashes.json'}: raise ValueError('output coverage')
++        for name, rec in ledger.items():
++            raw = z.read(name)
++            if sha(raw) != rec['sha256'] or len(raw) != rec['size_bytes']: raise ValueError('output hash')
++    print(json.dumps({'zip': str(a.output.resolve()), 'sha256': sha(a.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': tests}, indent=2))
++
++
++if __name__ == '__main__': main()
+--- /dev/null
++++ b/STORAGE_ADMISSION_REVIEW.md
+@@ -0,0 +1,83 @@
++# Storage-admission lifecycle correction — 2026-09-29
++
++Base archive SHA-256:
++`a1f9f1568132414ab4cbbc6c97afcf9bcc0050d85f63cb90071b644c5f18ad8e`.
++
++Preparation and mocked testing only. Execution/security/dependency approvals
++remain false. Production pins, Stage A and historical reports are unchanged;
++Stage B remains paused. This supersedes only the all-roles /var/tmp admission
++rule described in the historical activation review.
++
++## Policy and placement
++
++The stable environment checks still run for every role. The separate dedicated
++state filesystem check (<=1 GiB capacity, >=768 MiB free) is unchanged. The erroneous
++unconditional /var/tmp >=12 GiB test is replaced by a role-aware storage check
++called by validate_trust **before a native grant is returned**:
++
++- Bootstrap: observe one statvfs snapshot and the containing filesystem/device;
++  require >=12 GiB. Save that observation in the verified grant, then exclusively
++  persist `storage-initial.json` after the single-use reservation and before any
++  controller launch. Bind it to token, boot, scenario and authorization hash.
++- Controller: require the matching saved initial observation, unchanged
++  filesystem/device, >=12 GiB immediately before provisioning, and no unexplained
++  pre-provision decrease greater than 16 MiB. Existing Coordinator/lifecycle reserve
++  and fully-allocated backing checks are not changed.
++- Watchdog/helper: use their existing early/full ownership capsule respectively.
++  Verify exactly one recorded backing and mount for each of the data (8 GiB) and
++  evidence (512 MiB) volumes. Validate those observations against original
++  intent/observation pairs and the journal's hash ledger. A pending service-start
++  intent is not mistaken for missing volume ownership. Read the ledger again to
++  reject a changing snapshot; no retry or speculative exclusion is introduced.
++  Reobserve root-owned nonsymlink run-directory/backing inode, device, size and
++  allocated extent; exact mount record and loop-to-backing mapping through proc
++  and sysfs. No Docker or privileged command is used for these checks.
++
++The backing's original containing filesystem must match the initial filesystem.
++Sparse, missing, duplicate, replaced, mismatched or unjournaled allocations fail.
++The /var/tmp sticky shared ancestor is not treated like a protected source-document
++directory; the fixed run directory and regular backing must themselves be root-owned
++and not group/other writable, and symlinks are rejected throughout the path.
++
++Let F0 be initial free bytes, A be the freshly verified total physical allocation,
++E = 8 GiB + 512 MiB, and M = 16 MiB. Require E <= A <= E + M. Reobserve free space
++after allocation validation and require:
++
++`remaining_free >= max(12 GiB - E - M, F0 - A - M)`.
++
++At minimum initial admission, normal allocation leaves 3.5 GiB; the remaining
++floor is 3.5 GiB minus 16 MiB = **3,741,319,168 bytes**. The allowance is an explicit
++conservative admission-policy budget for host filesystem/run-directory metadata,
++not a measured native overhead or permission for additional data growth. It is
++small relative to the remaining reserve; no data grows beyond preallocated files.
++Runtime tmpfs consumes memory, and control journals/exports use the separate
++bounded state filesystem. Any overhead/other consumption beyond the bound fails
++closed and requires investigation, not automatic adjustment. A larger initial
++disk does not conceal unrelated consumption: the F0-A-M condition still applies.
++These readbacks do not reserve free space against competing processes; later
++allocation/space checks remain authoritative and native races remain untested.
++
++Each admitted child stores its check in `<role>-storage-admission.json`, including
++verified allocated bytes, required remaining space, actual observation and binding.
++These records become part of the existing final evidence manifest. Bootstrap
++record/persistence failure prevents a valid child grant. No fallback removes the
++storage test.
++
++## Validation and unchanged limits
++
++Focused tests cover minimum initial capacity followed by valid controller,
++watchdog and helper admission after 8.5 GiB allocation; insufficient initial
++capacity; metadata-budget boundary; unexpected consumption on both minimum and
++large disks; inode/device/size/sparse/loop mismatch; absent/duplicate/unjournaled
++records; journal corruption; authorization/filesystem drift; one statvfs snapshot;
++and record ordering. All inputs and OS results are invented. Windows lacks
++os.statvfs, so the test explicitly creates a mocked Linux-only API attribute;
++no native filesystem inspection is implied.
++
++See STORAGE_VALIDATION.json and storage-*-tests.log for exact results. The existing
++activation tests' fake IO acquired a labeled storage-boundary method; production
++has no validation bypass. Original resource, hierarchy, termination, deadline,
++persistence, authorization and dependency guards remain in force. No native Linux
++acceptance, security clearance or execution authorization is supplied. Existing
++host/runtime inventory and subsequent dependency/weight-inspection prerequisites
++remain unresolved and separate.
+--- a/test_activation_bridge.py
++++ b/test_activation_bridge.py
+@@ -36,6 +36,7 @@
+         self.check_path(path)
+         return self.digests[path] if path in self.digests else sha(self.read(path))
+     def verify_environment(self, inventory): self.check_path('invented-environment')
++    def verify_storage(self, args, auth): return {'fixture': 'storage OS boundary mocked; policy tested separately'}
+     def mkdir(self, path):
+         if path in self.dirs: raise FileExistsError(path)
+         self.dirs.add(path)
+--- /dev/null
++++ b/test_storage_admission.py
+@@ -0,0 +1,137 @@
++"""Invented allocations and filesystem observations only; no native operations."""
++from copy import deepcopy
++import json
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++
++from activation_trust import (INITIAL_STORAGE, STORAGE_METADATA_ALLOWANCE, VOLUME_BYTES,
++                              STATE, TrustedIO, verify_storage_admission)
++from launcher_binding import canonical, sha
++from test_activation_bridge import IO, setup
++
++
++class StorageIO(IO):
++    def __init__(self):
++        super().__init__()
++        self.free = INITIAL_STORAGE
++        self.fs = {'id': 1, 'device': '8:1', 'root': '/', 'mount': '/', 'filesystem': 'ext4', 'source': '/dev/invented'}
++        self.backings = {}; self.mounted = []; self.loops = {}
++    def storage_observation(self): return {'filesystem': deepcopy(self.fs), 'device': 2049, 'available_bytes': self.free}
++    def backing_observation(self, path): return deepcopy(self.backings[path])
++    def mounts(self): return deepcopy(self.mounted)
++    def loop_backing(self, loop): return self.loops[loop]
++
++
++def prepared(initial=INITIAL_STORAGE):
++    args, _ = setup()
++    auth = {'boot_id': 'invented-boot', 'scenario': 'success'}  # policy fixture, not an execution authorization
++    io = StorageIO(); io.free = initial
++    root = STATE+'/'+args.token
++    first = verify_storage_admission(io, args, auth)
++    io.files[root+'/storage-initial.json'] = canonical(first)
++    args.role = 'controller'
++    verify_storage_admission(io, args, auth)
++    resources = []
++    for index, (role, size) in enumerate(VOLUME_BYTES.items()):
++        backing = '/var/tmp/pv2-'+args.token+'/'+role+'.ext4'
++        target = '/var/tmp/pv2-'+args.token+'/'+role
++        inode, loop = 50+index, '/dev/loop'+str(10+index)
++        mount = {'id': 20+index, 'device': '7:'+str(10+index), 'root': '/', 'mount': target, 'filesystem': 'ext4', 'source': loop}
++        io.backings[backing] = {'inode': inode, 'device': 2049, 'size': size, 'allocated': size}
++        io.mounted.append(mount); io.loops[loop] = backing
++        for kind, requested, identity in (
++            ('backing', backing, {'path': backing, 'inode': inode, 'filesystem': deepcopy(io.fs), 'disposition': 'host-entry'}),
++            ('mount', target, {'backing': backing, 'inode': inode, 'size': size, 'allocated': size, 'loop': loop, 'mount': mount})):
++            resources.append({'kind': kind, 'requested': requested, 'boot_id': auth['boot_id'], 'phase': 'observed', 'identity': identity})
++    ledger = {}; serial = 0
++    for resource in resources:
++        intent = {k: v for k, v in resource.items() if k != 'identity'}; intent['phase'] = 'intent'
++        for suffix, value in (('intent', intent), ('observed', resource)):
++            serial += 1; name = f'{serial:04d}-provision-{suffix}.json'; raw = canonical(value)
++            io.files[root+'/journal/'+name] = raw
++            ledger[name] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    io.files[root+'/journal/report-hashes.json'] = canonical(ledger)
++    capsule = {'token': args.token, 'boot_id': auth['boot_id'], 'resources': resources}
++    for name in ('watchdog-bootstrap.json', 'full-state.json'): io.files[root+'/'+name] = canonical(capsule)
++    io.free -= sum(VOLUME_BYTES.values())
++    args.role = 'watchdog'
++    return args, auth, io
++
++
++class StorageAdmissionTests(unittest.TestCase):
++    def test_initial_controller_and_both_children_after_allocations(self):
++        args, auth, io = prepared()
++        self.assertEqual(io.free, 7*1024**3//2)
++        for role in ('watchdog', 'helper'):
++            args.role = role
++            check = verify_storage_admission(io, args, auth)
++            self.assertEqual(check['allocated_bytes'], sum(VOLUME_BYTES.values()))
++            self.assertEqual(check['remaining_required_bytes'], io.free-STORAGE_METADATA_ALLOWANCE)
++            self.assertLess(check['observed']['available_bytes'], INITIAL_STORAGE)
++
++    def test_insufficient_initial_capacity(self):
++        args, _ = setup(); io = StorageIO(); io.free = INITIAL_STORAGE-1
++        with self.assertRaisesRegex(ValueError, 'insufficient initial'): verify_storage_admission(io, args, {'boot_id': 'invented'}, )
++
++    def test_unexpected_consumption_even_with_large_initial_disk(self):
++        for initial in (INITIAL_STORAGE, 100*1024**3):
++            args, auth, io = prepared(initial)
++            io.free -= STORAGE_METADATA_ALLOWANCE+1
++            with self.assertRaisesRegex(ValueError, 'unexpected post-provision'): verify_storage_admission(io, args, auth)
++
++    def test_metadata_allowance_boundary(self):
++        args, auth, io = prepared(); io.free -= STORAGE_METADATA_ALLOWANCE
++        verify_storage_admission(io, args, auth)
++        io.free -= 1
++        with self.assertRaises(ValueError): verify_storage_admission(io, args, auth)
++
++    def test_allocation_inode_sparse_size_device_and_loop_mismatch(self):
++        for field, value in (('inode', 999), ('allocated', 1), ('size', 1), ('device', 999)):
++            args, auth, io = prepared()
++            io.backings[next(iter(io.backings))][field] = value
++            with self.subTest(field=field), self.assertRaises(ValueError): verify_storage_admission(io, args, auth)
++        args, auth, io = prepared(); io.loops['/dev/loop10'] = '/var/tmp/unrelated'
++        with self.assertRaisesRegex(ValueError, 'mount/loop'): verify_storage_admission(io, args, auth)
++
++    def test_missing_duplicate_and_unjournaled_allocations(self):
++        for mutation in ('missing', 'duplicate', 'unjournaled'):
++            args, auth, io = prepared(); name = STATE+'/'+args.token+'/watchdog-bootstrap.json'
++            capsule = io.json(name)
++            if mutation == 'missing': capsule['resources'].pop()
++            elif mutation == 'duplicate': capsule['resources'].append(deepcopy(capsule['resources'][0]))
++            else: capsule['resources'][0]['identity']['inode'] += 1
++            io.files[name] = canonical(capsule)
++            with self.subTest(mutation=mutation), self.assertRaises(ValueError): verify_storage_admission(io, args, auth)
++
++    def test_journal_corruption(self):
++        args, auth, io = prepared()
++        io.files[STATE+'/'+args.token+'/journal/0002-provision-observed.json'] += b' '
++        with self.assertRaisesRegex(ValueError, 'journal hash'): verify_storage_admission(io, args, auth)
++
++    def test_initial_binding_or_filesystem_change(self):
++        args, auth, io = prepared(); auth['scenario'] = 'other'
++        with self.assertRaisesRegex(ValueError, 'initial storage binding'): verify_storage_admission(io, args, auth)
++        args, auth, io = prepared(); io.fs['id'] = 999
++        with self.assertRaisesRegex(ValueError, 'filesystem changed'): verify_storage_admission(io, args, auth)
++
++    def test_native_observation_reads_one_statvfs_snapshot(self):
++        io = TrustedIO()
++        filesystem = StorageIO().fs
++        with patch.object(io, 'mounts', return_value=[filesystem]), \
++             patch('activation_trust.os.stat', return_value=SimpleNamespace(st_dev=2049)), \
++             patch('activation_trust.os.statvfs', create=True, return_value=SimpleNamespace(f_bavail=123, f_frsize=4096)) as statvfs:
++            self.assertEqual(io.storage_observation()['available_bytes'], 123*4096)
++            statvfs.assert_called_once_with('/var/tmp')
++
++    def test_initial_record_persisted_after_reservation(self):
++        from activation_bridge import dispatch
++        from unittest.mock import Mock
++        rt = Mock(); rt.g.args.role = 'bootstrap'; rt.g.storage = {'initial': 'invented'}
++        with patch('activation_bridge.bootstrap', return_value={'complete': False}): dispatch(rt)
++        rt.write.assert_called_once_with('storage-initial.json', rt.g.storage)
++        names = [call[0] for call in rt.mock_calls]
++        self.assertLess(names.index('reservations.claim'), names.index('write'))
++
++
++if __name__ == '__main__': unittest.main()

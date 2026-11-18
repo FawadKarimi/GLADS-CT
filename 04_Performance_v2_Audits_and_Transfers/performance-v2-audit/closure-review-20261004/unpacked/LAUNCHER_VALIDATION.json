@@ -1,0 +1,38 @@
+{
+  "all_base_files_unchanged": true,
+  "base_entries_verified": 94,
+  "base_sha256": "737f7a8c814592378c27f7240aea5be2ab20affb9b4310dfe52ebe615f9c0df7",
+  "changed_source_documents": [
+    "launcher_binding.py",
+    "LAUNCHER_REVIEW.md",
+    "native_launcher.py",
+    "package_launcher.py",
+    "synthetic_helper.py",
+    "test_launcher_binding.py"
+  ],
+  "command": [
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-launcher-review-20260928",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "execution_approved": false,
+  "exit_code": 0,
+  "initial_test_failure": "New test imported IntegratedTests instead of IntegrationTests; corrected before final suite.",
+  "linux_acceptance_executed": false,
+  "live_bridge_complete": false,
+  "new_tests": 8,
+  "pilot_execution_authorized": false,
+  "platform": "Windows-11-10.0.22621-SP0",
+  "result": "Ran 135 tests in 1.422s",
+  "runtime": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "scope": "mocked OS only; local temporary synthetic evidence",
+  "stage_b": "paused",
+  "warning": "Retained acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14"
+}

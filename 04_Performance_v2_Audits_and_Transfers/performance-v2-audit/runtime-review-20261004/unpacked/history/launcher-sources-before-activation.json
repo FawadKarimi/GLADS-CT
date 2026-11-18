@@ -1,0 +1,50 @@
+{
+  "files": {
+    "/opt/pv2-native-acceptance/evidence_export.py": {
+      "sha256": "6fc8c36101804a997f02d769dfd8338740a25fc284f49cb94a86b99abe0e3418",
+      "size_bytes": 4850
+    },
+    "/opt/pv2-native-acceptance/launcher_binding.py": {
+      "sha256": "d2e64837d63b47a61caf039827e3301461e5865345bc333900780885121564b6",
+      "size_bytes": 4945
+    },
+    "/opt/pv2-native-acceptance/linux_host.py": {
+      "sha256": "63b6f8977e1c6fedcef174092e4236ac5a6d6d5517c038c03011b3d001d9a743",
+      "size_bytes": 9848
+    },
+    "/opt/pv2-native-acceptance/linux_integration.py": {
+      "sha256": "3c003e93db3de6226950262453f0818702de1706126c6e6bd76aadd7044e057a",
+      "size_bytes": 28128
+    },
+    "/opt/pv2-native-acceptance/linux_lifecycle.py": {
+      "sha256": "924ad53c23cdd68402791acc856a5ef11382a44884ba518c56b93f4b12b1464f",
+      "size_bytes": 21561
+    },
+    "/opt/pv2-native-acceptance/native_launcher.py": {
+      "sha256": "e7aef7ef22eae68ae048d3c3cae4999a720fe6b812642643fb011d3b58bf62b9",
+      "size_bytes": 1759
+    },
+    "/opt/pv2-native-acceptance/supervisor_evidence.py": {
+      "sha256": "0012b8c87ac2370f6b6aabc6e817f23f19c6eaa7b23374926e91c066332e6229",
+      "size_bytes": 5072
+    },
+    "/opt/pv2-native-acceptance/supervisor_v2.py": {
+      "sha256": "0a9a83fb2542f1e89c348326a3c9d6bef598c7d4fe48a22e7191540e783918b8",
+      "size_bytes": 16437
+    },
+    "/opt/pv2-native-acceptance/synthetic_helper.py": {
+      "sha256": "e87f160619a9457d65f025f606c24b1b2a71abdaf739577472275553d300a146",
+      "size_bytes": 521
+    },
+    "/opt/pv2-native-acceptance/systemd_ownership.py": {
+      "sha256": "c0e0aac9b2c8f685a30949cd911d273ea0c90063947b40d1fbf27e10d28d99c3",
+      "size_bytes": 5120
+    },
+    "/opt/pv2-native-acceptance/watchdog_worker.py": {
+      "sha256": "998d16556426985779f1ace5e84af6369f05aa1f05ac798b579317883672fa80",
+      "size_bytes": 1526
+    }
+  },
+  "root": "/opt/pv2-native-acceptance",
+  "schema": "pv2_launcher_sources_v1"
+}

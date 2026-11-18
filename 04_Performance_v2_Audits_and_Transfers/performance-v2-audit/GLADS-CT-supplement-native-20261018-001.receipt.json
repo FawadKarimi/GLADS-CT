@@ -1,0 +1,14 @@
+{
+  "archive": "/experiment-storage/chaidir/fawad-dsai/performance-v2-audit/GLADS-CT-supplement-native-20261018-001.zip",
+  "bytes": 23626617,
+  "sha256": "c10f2cf8fcac2a1e748d31e2bcb5c27df52846d4355b901b7b95db328bb612fa",
+  "ledger_sha256": "97af7d8a4067febbb6dab677277414c82a3e1578352ce1b530952b29164f0372",
+  "ledger_entries": 21576,
+  "uid": 1009,
+  "mode": "0o600",
+  "models_executed": false,
+  "weights_opened": false,
+  "research_images_read": 9,
+  "test_images_read": 0,
+  "originals_modified": false
+}

@@ -1,0 +1,16 @@
+{
+  "ZIP_bytes": 690484,
+  "ZIP_sha256": "fb9400382643ffc5a3f4e4e3f21e13ade673371e2a864d4c870726acd8f1c92b",
+  "all_files_uid": 1009,
+  "directory_mode": "0700",
+  "exclusive": true,
+  "file_mode": "0600",
+  "ledger_entries": 200,
+  "source": {
+    "bindings": 166,
+    "matching": true,
+    "source_lock_sha256": "65fda6b5f7916136803a5aeabc6bcee6e8f9aee9a0eaf02d2502538f41886caa"
+  },
+  "source_root": "/home/chaidir/.performance-v2-replication-20261013",
+  "wrapper_sha256": "5931bb0d5384d8914ce7adef65156effaf3736edc5d62aae5e965dbebcc72bae"
+}

@@ -1,0 +1,19 @@
+{
+  "status": "mocked_tests_passed_execution_blocked",
+  "mocked_tests": "Ran 9 tests in 0.117s; OK",
+  "test_command": "PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES= python -B -m unittest discover -s performance-v2-linux-acceptance-corrected-20260928 -p test_correction.py -v",
+  "runtime": "Windows Python 3.14.6 MSC v.1944 64-bit AMD64; no target environment installed",
+  "verifier_read_only": "passed: all candidate file hashes and modification times unchanged",
+  "patch_applicability": "raw Windows CRLF baseline check failed at REVIEW.md; git apply --check --whitespace=error passed against LF-normalized temporary baseline",
+  "evidence_zip_sha256": "041f038ccb61a51ca8af5aca03e648e7b8bbda73a0dc0726647620b8a46dd86b",
+  "reviewed_package_sha256": "2f97fdaf4dd7e3dd5a04255aa62a7dd7b603fcda0fd82ffcb026b3957407d45e",
+  "evidence_internal_hashes_and_linkages": "passed",
+  "package_internal_ledger": "passed",
+  "yaml_python_whitespace": "passed",
+  "linux_runtime_executed": false,
+  "docker_executed": false,
+  "security_clearance": "pending",
+  "build_isolation_lifecycle": "named installation compute bounded; daemon snapshot/pull/copy I/O and disk quota remain unresolved",
+  "security_metadata": "22 official metadata/doc responses retained; Debian bulk exceeded 40MiB bound; full native and bundled Actions coverage unresolved",
+  "approval_flags": false
+}

@@ -1,0 +1,1535 @@
+--- a/evidence_export.py
++++ b/evidence_export.py
+@@ -11,9 +11,11 @@
+ 
+ 
+ class LocalEvidenceExport:
+-    def __init__(self, source, destination, clock=time.monotonic):
++    def __init__(self, source, destination, clock=time.monotonic, directory_sync=None):
++        from supervisor_evidence import sync_directory
+         self.source, self.destination = Path(source), Path(destination)
+         self.clock = clock
++        self.directory_sync = directory_sync or sync_directory
+ 
+     def export(self, raw_manifest, manifest, maximum_bytes, timeout):
+         if raw_manifest != json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode():
+@@ -39,6 +41,7 @@
+         if total > maximum_bytes:
+             raise ValueError('export aggregate size')
+         self.destination.mkdir(exist_ok=False)
++        self.directory_sync(self.destination.parent)
+         deadline = self.clock() + timeout
+ 
+         def digest_copy(src, expected_size, dst=None):
+@@ -83,6 +86,7 @@
+             f.flush()
+             os.fsync(f.fileno())
+         digest = hashlib.sha256(raw_manifest).hexdigest()
++        self.directory_sync(self.destination)
+         if hashlib.sha256((self.destination / 'manifest.json').read_bytes()).hexdigest() != digest:
+             raise ValueError('manifest read-back mismatch')
+         return {'manifest_sha256': digest, 'readback_verified': True,
+--- /dev/null
++++ b/INTEGRATION_REVIEW.md
+@@ -0,0 +1,132 @@
++# Supervisor integration and termination/durability corrections
++
++2026-09-28. Preparation and mocked tests only. All execution approvals false;
++Stage B paused; Stage A and production pins unchanged. No public live entry
++point and no workflow publication. This document supersedes earlier package
++status descriptions only for the source changes described here.
++
++## Verified parent
++
++`performance-v2-supervisor-linux-revision-20260928.zip`, SHA-256
++`a579bc9ba7eaff586f95a21e1cbc45c72b34fca2c63f4133896605c969279129`.
++All 69 parent ledger entries independently verified. Historical reports,
++proposal, metadata resolver, embedded inspector, original 15 regression tests
++and dependency/security evidence remain unchanged. Their dates/statuses are
++historical, not newly granted approvals.
++
++## 1. Teardown authorization correction
++
++One termination contract (`pv2_termination_v1`) binds exactly:
++schema, literal `termination_confirmed=true`, empty errors list, run token,
++boot/cgroup path/inode identity, observation time, and a random receipt nonce.
++It must equal the latest receipt issued by that lifecycle instance and be no
++more than 10 monotonic seconds old. A recovered process must issue a new receipt;
++it cannot import another instance's cached authority. Future timestamps,
++superseded results, altered fields, integer 1 and truthy failed dictionaries
++are rejected. Errors are conservative blockers even if later empty read-back
++succeeds. A fresh termination attempt may resolve a transient error.
++
++partial_cleanup, detach_volume and export_and_ack enforce the same contract.
++Before unmount and loop detach, they re-read boot/cgroup identity, populated
++state, process census, global token-bearing processes and private listeners.
++Volume identity and loop association are independently checked. Repopulation
++after the receipt, or during volume inspection, prevents the destructive call.
++After export, a new receipt is obtained rather than extending an old timestamp.
++
++## 2. Integrated source paths and mocked coverage
++
++- Coordinator: controller-resource prerequisite; incremental ownership; fixed
++  volumes/runtime tmpfs; private services/configuration; admission only after
++  the independently observed watchdog handshake and a complete snapshot.
++- Services: private systemd service/slice arguments, resource/lifetime settings,
++  explicit private containerd/dockerd paths and configurations, inventory hashes,
++  service PID/cgroup read-back. The worker algorithm publishes its own identity.
++- Backend.request/read: accepted supervisor state machine, bounded streaming,
++  operation service below the workload slice, exact record binding, termination
++  receipt generation, fresh mount/loop absence checks. CLI exit alone never
++  proves daemon termination.
++- Snapshots: resource controls, /proc process identities, global runtime census,
++  baseline external-process identity protection, writable-FD paths, exact daemon
++  argv, configuration bytes/inodes, socket inode ownership, volume/loop identities,
++  bounded runtime tmpfs, watchdog identity/controls, free bytes/inodes and listeners.
++- Recovery: verifies journal hashes and complete member coverage, boot/token and
++  ordered intent/observation pairing. Observed resources feed independent cleanup.
++  Intent without an observation fails closed; it is not guessed into ownership.
++- Finalization: fresh termination, stop/read-back of the external watchdog,
++  local evidence export/independent byte read-back/acknowledgment, evidence and
++  runtime detach, recorded backing inode deletion, nonrecursive empty-cgroup and
++  directory removal. Failures preserve diagnostics; no remote upload occurs.
++  An external final sink uses the accepted provisional-report/final-receipt
++  mechanism and binds the export receipt/manifest hash. It is not placed in a
++  filesystem being removed.
++
++The integrated tests run these orchestration paths against an invented in-memory
++Linux OS interpreter. They do not replace the coordinator with canned success.
++The fake intercepts every service/subprocess, proc, cgroup, loop, mount and file
++operation. Local report/export tests use temporary invented bytes only.
++
++## 3. Linux journal durability
++
++FileEvidence now requires directory synchronization. On Linux, sync_directory
++opens the directory with O_DIRECTORY/O_NOFOLLOW, fsyncs and closes it. Creating
++the journal syncs its parent and itself. An ownership append returns only after
++file flush/fsync AND journal-directory fsync. Atomic ledger replacement uses
++temporary-file fsync, directory fsync, replace, then directory fsync. Completion
++also fsyncs its directory; any directory-sync failure poisons completion.
++
++Local evidence export additionally syncs the destination parent and destination
++directory before acknowledgment. Unsupported directory fsync fails closed; no
++Windows emulation is silently treated as Linux durability. Windows tests inject
++explicit fake directory synchronizers and mock native calls for error/order
++tests. A file already visible after a failed fsync is not a durable-success claim.
++
++Host loss, SIGKILL, hardware/storage faults and uninterruptible kernel I/O remain
++limitations. No userspace mechanism promises guaranteed physical teardown or
++atomic delivery across disk/stdout/caller memory. Missing/incomplete records are
++inconclusive. Controller operations, export and teardown receipts require review
++as one linked evidence set; an intermediate report is not final authorization.
++
++## 4. Controller versus inspection Python
++
++Controller source requires Python >=3.10, independently of the frozen inspection
++environment. annotate() uses add_note where available and a __notes__ fallback on
++3.10, preserving the original exception. Python-3.10 syntax parsing is tested;
++an actual Python-3.10 controller runtime was NOT executed. Actual tests use the
++existing Windows Python recorded in INTEGRATION_VALIDATION.json. No interpreter,
++torch/torchvision or inspection dependency was installed, upgraded or approved.
++
++## 5. Exact remaining blockers and limits
++
++1. Independent source review and unexecuted Linux acceptance remain required.
++   Mock results do not prove systemd handling of manually established slices,
++   cgroup delegation, native filesystem durability, socket/proc races, kernel
++   resource enforcement, quota exhaustion, unmount or process teardown.
++2. Public live construction remains disabled. Binding the internal worker to an
++   executable service launcher and approved controller/source inventory is not
++   enabled by this package. The caller-supplied service/operation argv used by
++   tests are invented, not an execution recipe. No historical workflow is wired
++   to this coordinator. A reviewed live bootstrap must place the controller in
++   its separately bounded cgroup before construction; the coordinator refuses
++   unbounded control processes rather than moving itself.
++3. Recovery intentionally blocks ambiguous crash windows (durable intent but no
++   observed resource identity), unknown/new external runtime processes and
++   unreadable/racing proc observations. They require inspection, not guessed
++   deletion or automatic retries. This is fail-closed recovery, not guaranteed
++   reclamation after every possible interruption. TERM errors remain blockers.
++4. Snapshot confinement is observational, not proof of all future native writes
++   or absence of every possible host escape. Privileged setup/control operations
++   run in the separately bounded controller; allocation/format helpers and
++   research-free operations use the workload slice. Actual privilege, parent
++   hierarchy and aggregate-storage behavior must be demonstrated on disposable
++   Linux. No security clearance follows from these mocks.
++5. Local export/read-back is implemented. Remote artifact transport, a fresh
++   zero-paid usage/storage gate and server-side receipt verification remain
++   outside this disabled source integration. No public availability is claimed.
++6. Metadata resolution, actual binary verification, approved immutable lock,
++   native/Python/Actions advisory dispositions, topology/compatibility clearance
++   and real Linux testing remain outstanding. Dependency candidates remain
++   unapproved and production pins unchanged.
++
++The next step is independent review of this source/patch and its mocked tests,
++including the intentionally disabled bootstrap boundary. Do not dispatch,
++install, load weights, access research data or launch any pilot.
+--- a/linux_host.py
++++ b/linux_host.py
+@@ -11,6 +11,16 @@
+ import time
+ import shutil
+ 
++def annotate(primary, message):
++    """Controller supports Python >=3.10; add_note appeared only in 3.11."""
++    method = getattr(primary, 'add_note', None)
++    if callable(method):
++        method(message)
++    else:
++        notes = list(getattr(primary, '__notes__', []))
++        notes.append(message)
++        primary.__notes__ = notes
++
+ 
+ class LinuxHost:
+     is_fake = False
+@@ -42,6 +52,41 @@
+     def mkdir(self, path):
+         Path(path).mkdir(mode=0o700, exist_ok=False)
+ 
++    def assert_no_symlinks(self, path):
++        current = Path(path)
++        for parent in [current, *current.parents]:
++            if parent.is_symlink():
++                raise ValueError('symlink path component')
++
++    def filesystem(self, path):
++        self.assert_no_symlinks(path)
++        st = os.statvfs(path)
++        return {'capacity_bytes': st.f_blocks * st.f_frsize,
++                'free_bytes': st.f_bavail * st.f_frsize, 'inode_capacity': st.f_files, 'free_inodes': st.f_favail}
++
++    def write_exclusive(self, path, raw):
++        from supervisor_evidence import sync_directory
++        self.assert_no_symlinks(str(Path(path).parent))
++        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
++        with os.fdopen(fd, 'wb') as f:
++            f.write(raw)
++            f.flush()
++            os.fsync(f.fileno())
++        sync_directory(Path(path).parent)
++
++    def remove_owned(self, path, inode, directory=False):
++        from supervisor_evidence import sync_directory
++        self.assert_no_symlinks(path)
++        if self.stat(path).st_ino != inode:
++            raise ValueError('removal identity changed')
++        if directory:
++            os.rmdir(path)  # never recursive; busy/nonempty fails
++        else:
++            os.unlink(path)
++        sync_directory(Path(path).parent)
++        if os.path.lexists(path):
++            raise ValueError('removal unconfirmed')
++
+     def pause(self, seconds):
+         if not 0 < seconds <= 1:
+             raise ValueError('bounded pause required')
+@@ -53,7 +98,11 @@
+     def allocate_exclusive(self, path, capacity):
+         fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+         try:
+-            os.posix_fallocate(fd, 0, capacity)
++            # Allocation is a bounded helper in the private workload slice,
++            # not an uninterruptible call in the supervising Python process.
++            if not getattr(self, 'workload_slice', None):
++                raise ValueError('allocation requires workload containment')
++            self.command(['fallocate', '--length', str(capacity), path], 60)
+             os.fsync(fd)
+         finally:
+             os.close(fd)
+@@ -78,9 +127,37 @@
+                 'executable_sha256': self.digest(prefix + '/exe'),
+                 'cgroup': group[0], 'executable': exe}
+ 
++    def writable_paths(self, pid):
++        paths = []
++        for fd in self.children('/proc/' + str(pid) + '/fd'):
++            info = dict(line.split(':', 1) for line in self.text('/proc/' + str(pid) + '/fdinfo/' + fd.name).splitlines() if ':' in line)
++            flags = int(info['flags'].strip(), 8)
++            if flags & 3 not in (1, 2):
++                continue
++            target = os.readlink(str(fd))
++            if target.startswith(('socket:[', 'pipe:[', 'anon_inode:')) or target in ('/dev/null', '/dev/urandom'):
++                continue
++            paths.append(target)
++        return paths
++
++    def socket_owned(self, pid, path):
++        rows = [line.split() for line in self.text('/proc/net/unix').splitlines()[1:]]
++        rows = [row for row in rows if len(row) == 8 and row[-1] == path]
++        if len(rows) != 1:
++            return False
++        inode = rows[0][6]
++        return any(os.readlink(str(fd)) == 'socket:[' + inode + ']'
++                   for fd in self.children('/proc/' + str(pid) + '/fd'))
++
+     def start(self, argv):
+         if not isinstance(argv, list) or not argv or not all(isinstance(x, str) for x in argv):
+             raise ValueError('explicit argv required')
++        if argv[0] in ('fallocate', 'mkfs.ext4'):
++            slice_name = getattr(self, 'workload_slice', None)
++            if not slice_name:
++                raise ValueError('provisioning helper containment unavailable')
++            argv = ['systemd-run', '--pipe', '--wait', '--collect', '--slice=' + slice_name,
++                    '--property=RuntimeMaxSec=60', '--property=KillMode=control-group', '--', *argv]
+         p = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, close_fds=True, start_new_session=True,
+                              env={'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C'})
+@@ -128,14 +205,14 @@
+                     p.kill()
+                 except BaseException as exc:
+                     if primary is not None:
+-                        primary.add_note('helper kill failed: ' + repr(exc))
++                        annotate(primary, 'helper kill failed: ' + repr(exc))
+                     else:
+                         raise
+                 try:
+                     p.wait(timeout=1)
+                 except BaseException as exc:
+                     if primary is not None:
+-                        primary.add_note('helper reap failed: ' + repr(exc))
++                        annotate(primary, 'helper reap failed: ' + repr(exc))
+                     else:
+                         raise
+ 
+--- /dev/null
++++ b/linux_integration.py
+@@ -0,0 +1,416 @@
++"""Internal orchestration source. No public live CLI; injected fake host only.
++
++All commands below are source for Linux acceptance, not commands run by tests.
++The supplied host must implement the LinuxHost OS boundary, never Docker APIs
++against a shared socket. Watchdog deployment needs the internal worker described
++in the integration review. Missing observations block admission.
++"""
++from copy import deepcopy
++import hashlib
++import json
++import re
++from pathlib import Path
++
++from linux_lifecycle import LinuxLifecycle
++from linux_host import mount_records
++from supervisor_v2 import POLICY, Supervisor, require, within, validate_record
++
++
++def canonical(value):
++    return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
++
++
++def recover_records(root, token, boot):
++    """Read-only journal recovery: complete hash coverage, pairing, no guesses.
++
++    A durable intent without observation is returned unresolved. It cannot be
++    authorized for cleanup by path alone. A new host observation/reconciliation
++    is required; the coordinator blocks re-admission while intents remain.
++    """
++    root = Path(root)
++    require(not root.is_symlink(), 'journal symlink')
++    ledger = json.loads((root / 'report-hashes.json').read_bytes())
++    require(set(ledger) == {p.name for p in root.iterdir()} - {'report-hashes.json'}, 'journal coverage')
++    pending, observed = [], []
++    for name, item in sorted(ledger.items()):
++        require(re.fullmatch(r'[0-9]{4,}-[a-z-]+\.json', name), 'journal name')
++        p = root / name
++        require(not p.is_symlink() and p.is_file(), 'journal member')
++        raw = p.read_bytes()
++        require(len(raw) == item['size_bytes'] and hashlib.sha256(raw).hexdigest() == item['sha256'], 'journal hash')
++        value = json.loads(raw)
++        if 'provision-intent' in name:
++            require(value.get('boot_id') == boot and token in str(value.get('requested')), 'journal ownership')
++            pending.append(value)
++        elif 'provision-observed' in name:
++            key = {k: v for k, v in value.items() if k != 'identity'}
++            key['phase'] = 'intent'
++            require(key in pending, 'unpaired observation')
++            pending.remove(key)
++            observed.append(value)
++    return {'observed': observed, 'unresolved_intents': pending, 'admission_allowed': not pending}
++
++
++class Services:
++    def __init__(self, host, lifecycle):
++        self.host, self.l = host, lifecycle
++        self.arguments = {}
++
++    def inspect(self, unit):
++        raw = self.host.command(['systemctl', 'show', unit, '--property=Id,ActiveState,MainPID,ControlGroup'], 10).decode()
++        values = dict(line.split('=', 1) for line in raw.splitlines() if '=' in line)
++        require(values.get('Id') == unit and values.get('ActiveState') == 'active', 'service not independently active')
++        pid = int(values.get('MainPID', '0'))
++        require(pid > 1, 'missing service PID')
++        proc = self.host.process(pid)
++        require(proc['cgroup'] == values.get('ControlGroup'), 'service/proc cgroup mismatch')
++        return proc
++
++    def start(self, role, argv, outside=False):
++        require(role in ('containerd', 'dockerd', 'watchdog'), 'service role')
++        unit = 'pv2-' + self.l.token + '-' + role + '.service'
++        self.arguments[role] = list(argv)
++        slice_name = 'pv2-' + self.l.token + (('-control.slice') if outside else '.slice')
++        command = ['systemd-run', '--unit=' + unit, '--slice=' + slice_name, '--service-type=exec',
++                   '--property=Restart=no', '--property=KillMode=control-group',
++                   '--property=TimeoutStopSec=10', '--property=RuntimeMaxSec=1200',
++                   '--property=MemoryMax=' + str(256 * 1024**2 if outside else POLICY['memory_max']),
++                   '--property=MemorySwapMax=0', '--property=TasksMax=' + ('16' if outside else '256'),
++                   '--property=CPUQuota=' + ('25%' if outside else '150%'),
++                   '--property=StandardOutput=append:' + self.l.root + '/evidence/' + role + '.log',
++                   '--property=StandardError=inherit', '--setenv=TMPDIR=' + self.l.root + '/data/tmp', '--', *argv]
++        def observe():
++            p = self.inspect(unit)
++            require(within(p['cgroup'], '/pv2-' + self.l.token + '.slice') is not outside, 'service escaped boundary')
++            return dict(p, role=role, unit=unit)
++        return self.l.acquire('service', unit, lambda: self.host.command(command, 10), observe)
++
++
++class LinuxBackend:
++    """Supervisor Backend.request/read adapter; fresh native observations."""
++    is_fake = True
++    def __init__(self, lifecycle, services, operation):
++        require(lifecycle.host.is_fake is True, 'live backend disabled')
++        self.l, self.host, self.services, self.operation = lifecycle, lifecycle.host, services, operation
++        self.handle = None
++        self.result = None
++        self.record = None
++        self.terminated = None
++
++    def now(self):
++        return self.host.now()
++
++    def processes(self):
++        # Scan /proc globally, not only children visible in the expected subtree.
++        # Unreadable process metadata is an error, not silently omitted.
++        owned, escaped = [], []
++        for path in self.host.children('/proc'):
++            if not path.name.isdigit():
++                continue
++            p = self.host.process(int(path.name))
++            argv = self.host.text(str(path) + '/cmdline')
++            baseline = getattr(self.host, 'baseline_processes', {})
++            if any(name in argv for name in ('containerd-shim', '/runc', '/dockerd', '/containerd')) and not within(p['cgroup'], '/pv2-' + self.l.token + '.slice'):
++                require(baseline.get(p['pid']) == p, 'new or changed external runtime process; ownership inconclusive')
++            belongs = self.l.token in argv or within(p['cgroup'], '/pv2-' + self.l.token + '.slice')
++            if not belongs:
++                continue
++            if '-watchdog.service' in p['cgroup'] or '-control.slice' in p['cgroup']:
++                continue
++            if not within(p['cgroup'], '/pv2-' + self.l.token + '.slice'):
++                escaped.append(p)
++            else:
++                owned.append(p)
++        return owned, escaped
++
++    def snapshot(self, record):
++        identity = self.l.cgroup_identity()
++        require(identity['inode'] == record['cgroup_inode'] and identity['boot_id'] == record['boot_id'], 'cgroup changed')
++        policy = {'memory_max': int(self.host.text(self.l.cg + '/memory.max')),
++                  'swap_max': int(self.host.text(self.l.cg + '/memory.swap.max')),
++                  'cpu_max': [int(x) for x in self.host.text(self.l.cg + '/cpu.max').split()],
++                  'pids_max': int(self.host.text(self.l.cg + '/pids.max')),
++                  'workload_seconds': 1200, 'operation_seconds': 60}
++        processes, escaped = self.processes()
++        saved = {p['pid']: p for p in record['processes']}
++        normalized = []
++        for p in processes:
++            require(all(within(path, self.l.root + '/data') or within(path, self.l.root + '/evidence') or within(path, self.l.runtime)
++                        for path in self.host.writable_paths(p['pid'])), 'writable FD outside bounded storage')
++            q = {k: p[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}
++            q['role'] = saved.get(p['pid'], {}).get('role', 'descendant')
++            normalized.append(q)
++        volumes = {}
++        for role, volume in record['volumes'].items():
++            current = self.l.volume_identity(role, volume['loop'])
++            volumes[role] = volume_record(current, self.host)
++        paths = record['paths']
++        # Independently bind daemon invocation, private socket and all configured
++        # storage paths. No config-file default or shared daemon acceptance.
++        for role in ('dockerd', 'containerd'):
++            found = [p for p in record['processes'] if p['role'] == role]
++            require(len(found) == 1, 'daemon record')
++            if any(p['pid'] == found[0]['pid'] for p in processes):
++                argv = self.host.text('/proc/' + str(found[0]['pid']) + '/cmdline').split('\0')
++                if argv and argv[-1] == '':
++                    argv.pop()
++                require(argv == self.services.arguments[role], 'daemon exact argv binding')
++                require(self.host.socket_owned(found[0]['pid'], paths['docker_socket' if role == 'dockerd' else 'containerd_socket']),
++                        'private socket inode owner mismatch')
++        for name, path in paths.items():
++            require(within(path, self.l.runtime) or within(path, self.l.root + '/data') or within(path, self.l.root + '/evidence'), 'storage escape')
++            self.host.assert_no_symlinks(path)
++        for resource in self.l.resources:
++            if resource['kind'] == 'configuration':
++                c = resource['identity']
++                require(self.host.stat(c['path']).st_ino == c['inode'] and self.host.digest(c['path']) == c['sha256'], 'configuration changed')
++        runtime = [m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == self.l.runtime]
++        require(len(runtime) == 1 and runtime[0]['filesystem'] == 'tmpfs', 'runtime mount')
++        runtime_stats = self.host.filesystem(self.l.runtime)
++        require(runtime_stats['capacity_bytes'] <= 64 * 1024**2, 'runtime capacity')
++        watchdog = self.services.inspect('pv2-' + self.l.token + '-watchdog.service')
++        control = self.l.cgmount + watchdog['cgroup']
++        require(int(self.host.text(control + '/memory.max')) <= 256 * 1024**2 and
++                self.host.text(control + '/memory.swap.max').strip() == '0' and
++                0 < int(self.host.text(control + '/pids.max')) <= 16, 'watchdog enforced controls')
++        quota, period = [int(x) for x in self.host.text(control + '/cpu.max').split()]
++        require(0 < quota <= period // 4, 'watchdog CPU control')
++        wd = {k: watchdog[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}
++        wd.update(outside_workload=True, lifetime_seconds=1200)
++        # Worker must publish its own armed identity, not a controller boolean.
++        armed = json.loads(self.host.text(self.l.root + '/evidence/watchdog-armed.json'))
++        require(armed == {'token': self.l.token, 'boot_id': self.l.boot, 'watchdog': wd}, 'watchdog handshake')
++        fs = self.host.filesystem(self.l.root + '/data')
++        events = dict(line.split() for line in self.host.text(self.l.cg + '/cgroup.events').splitlines())
++        listeners = [p for p in (paths['docker_socket'], paths['containerd_socket']) if p in self.host.text('/proc/net/unix')]
++        return {'identity': {'boot_id': identity['boot_id'], 'cgroup_inode': identity['inode'], 'token': self.l.token},
++                'paths': deepcopy(paths), 'volumes': volumes, 'policy': policy, 'processes': normalized,
++                'external_owned_processes': escaped, 'all_storage_confined': True,
++                'watchdog_armed': True, 'watchdog_identity': wd, 'free_bytes': fs['free_bytes'],
++                'free_inodes': fs['free_inodes'], 'populated': events.get('populated') != '0', 'listeners': listeners}
++
++    def request(self, action, record, timeout):
++        require(0 < timeout <= 10, 'control timeout')
++        require(record == self.record, 'backend record binding')
++        if action == 'snapshot':
++            return self.snapshot(record)
++        if action == 'begin_operation':
++            require(self.l.admission and self.handle is None, 'operation admission')
++            # systemd-run service stays below the parent; killing its client is
++            # not the cleanup mechanism. No shell expansion or shared socket.
++            argv = ['systemd-run', '--pipe', '--wait', '--unit=pv2-' + self.l.token + '-operation.service',
++                    '--slice=pv2-' + self.l.token + '.slice', '--property=RuntimeMaxSec=60',
++                    '--property=KillMode=control-group', '--', *self.operation]
++            self.handle = self.host.start(argv)
++            return {'handle': 'operation', 'deadline_seconds': 60}
++        if action == 'operation_status':
++            return {'exit_code': self.handle.poll()}
++        if action == 'close_admission':
++            self.l.admission = False
++            return {}
++        if action == 'term_service':
++            self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=TERM',
++                               'pv2-' + self.l.token + '-dockerd.service',
++                               'pv2-' + self.l.token + '-containerd.service'], 10)
++            return {}
++        if action in ('kill_subtree', 'wait_empty'):
++            self.terminated = self.l.terminate(self.l.cgroup_identity())
++            if action == 'wait_empty':
++                self.l.require_termination(self.terminated)
++                return self.snapshot(record)
++            return self.terminated
++        if action == 'unmount_data':
++            self.l.require_termination(self.terminated)
++            self.l.detach_volume('data', self.l.volume_identity('data', record['volumes']['data']['loop']), self.terminated)
++            return {}
++        if action in ('read_mount', 'read_loop', 'detach_data_loop'):
++            v = record['volumes']['data']
++            mounts = mount_records(self.host.text('/proc/self/mountinfo'))
++            loops = json.loads(self.host.command(['losetup', '--json', '--associated', v['backing'], '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++            require(not loops, 'data loop detach unconfirmed')
++            return {'record_identity': deepcopy(v), 'mounted': any(m['mount'] == v['mount'] for m in mounts), 'attached': False}
++        raise ValueError('unknown backend action: ' + action)
++
++    def read(self, handle, maximum, timeout):
++        require(handle == 'operation' and self.handle is not None, 'stream identity')
++        return self.host.read(self.handle, maximum, timeout)
++
++
++def volume_record(observed, host):
++    fs = host.filesystem(observed['mount']['mount'])
++    return {'mount': observed['mount']['mount'], 'backing': observed['backing'], 'loop': observed['loop'],
++            'capacity_bytes': observed['size'], 'allocated_bytes': observed['allocated'], 'filesystem': 'ext4',
++            'uuid': observed['uuid'], 'device': observed['mount']['device'], 'mount_id': observed['mount']['id'],
++            'inode_capacity': fs['inode_capacity'], 'auto_expand': False}
++
++
++class Coordinator:
++    def __init__(self, host, journal, token):
++        self.l = LinuxLifecycle(host, journal, token)
++        self.host, self.journal = host, journal
++        control = self.l.cgmount + self.l.parent
++        require(0 < int(host.text(control + '/memory.max')) <= 256 * 1024**2 and
++                host.text(control + '/memory.swap.max').strip() == '0' and
++                0 < int(host.text(control + '/pids.max')) <= 16, 'controller enforced bounds required')
++        quota, period = [int(x) for x in host.text(control + '/cpu.max').split()]
++        require(0 < quota <= period // 4, 'controller CPU bound')
++        host.workload_slice = 'pv2-' + token + '.slice'
++        host.baseline_processes = {int(p.name): host.process(int(p.name)) for p in host.children('/proc') if p.name.isdigit()}
++        self.services = Services(host, self.l)
++
++    def directory(self, path):
++        return self.l.acquire('directory', path, lambda: self.host.mkdir(path),
++                              lambda: {'path': path, 'inode': self.host.stat(path).st_ino})
++
++    def provision(self, inventory, watchdog_argv, operation, run_id, attempt):
++        # No daemon before durable volume/cgroup records and armed watchdog.
++        l = self.l
++        self.directory(l.root)
++        identity = l.provision_cgroup()
++        volumes = {role: l.provision_volume(role) for role in ('data', 'evidence')}
++        self.directory(l.runtime)
++        l.acquire('runtime-mount', l.runtime,
++                  lambda: self.host.command(['mount', '-t', 'tmpfs', '-o', 'size=67108864,nodev,nosuid,noexec', 'tmpfs', l.runtime], 10),
++                  lambda: next(m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == l.runtime))
++        for path in (l.root + '/data/tmp', l.root + '/data/downloads'):
++            self.directory(path)
++        watchdog = self.services.start('watchdog', watchdog_argv, outside=True)
++        wd = {k: watchdog[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}
++        wd.update(outside_workload=True, lifetime_seconds=1200)
++        deadline = self.host.now() + 10
++        while True:
++            try:
++                armed = json.loads(self.host.text(l.root + '/evidence/watchdog-armed.json'))
++                break
++            except FileNotFoundError:
++                require(self.host.now() < deadline, 'watchdog arm timeout')
++                self.host.pause(.05)
++        require(armed == {'token': l.token, 'boot_id': l.boot, 'watchdog': wd}, 'watchdog did not arm')
++        args = l.daemon_arguments(inventory)
++        configs = {'dockerd': (l.runtime + '/dockerd.json', b'{}\n'),
++                   'containerd': (l.runtime + '/containerd.toml', b'version = 2\ndisabled_plugins = ["io.containerd.grpc.v1.cri"]\n')}
++        for role, (path, raw) in configs.items():
++            l.acquire('configuration', path, lambda p=path, b=raw: self.host.write_exclusive(p, b),
++                      lambda p=path, b=raw: {'path': p, 'sha256': hashlib.sha256(b).hexdigest(), 'inode': self.host.stat(p).st_ino})
++            args[role].extend((['--config-file', path] if role == 'dockerd' else ['--config', path]))
++        processes = []
++        for role in ('containerd', 'dockerd'):
++            p = self.services.start(role, args[role])
++            processes.append({k: p[k] for k in ('role', 'pid', 'start_ticks', 'executable_sha256', 'cgroup')})
++        r = {'schema': 'pv2_ownership_v2', 'token': l.token, 'run_id': run_id, 'attempt': attempt,
++             'root': l.root, 'runtime_root': l.runtime, 'cgroup': '/pv2-' + l.token + '.slice',
++             'cgroup_inode': identity['inode'], 'boot_id': identity['boot_id'], 'policy': deepcopy(POLICY),
++             'service': 'pv2-' + l.token + '.service', 'runtime_tmpfs_bytes': 64 * 1024**2,
++             'network': {'bridge': False, 'iptables': False, 'ip_forward': False},
++             'container_cgroup_parent': '/pv2-' + l.token + '.slice', 'supervisor_cgroup': l.parent,
++             'watchdog': wd, 'processes': processes,
++             'volumes': {role: volume_record(v, self.host) for role, v in volumes.items()},
++             'paths': {'docker_socket': l.runtime + '/docker.sock', 'containerd_socket': l.runtime + '/containerd.sock',
++                       'pidfile': l.runtime + '/dockerd.pid', 'exec_root': l.runtime + '/exec',
++                       'data_root': l.root + '/data/docker', 'containerd_root': l.root + '/data/containerd',
++                       'containerd_state': l.runtime + '/containerd', 'download_root': l.root + '/data/downloads',
++                       'scratch_root': l.root + '/data/tmp', 'daemon_log': l.root + '/evidence/daemon.log'}}
++        validate_record(r)
++        backend = LinuxBackend(l, self.services, operation)
++        backend.record = deepcopy(r)
++        backend.snapshot(r)
++        l.admission = True
++        return backend, r
++
++    def recover(self, root):
++        recovered = recover_records(root, self.l.token, self.l.boot)
++        self.l.resources = recovered['observed']
++        require(not recovered['unresolved_intents'], 'recovery blocked: intent without observed identity')
++        self.l.admission = False
++        result = self.l.terminate(self.l.cgroup_identity())
++        return self.l.partial_cleanup(result)
++
++    def finalize(self, backend, exporter, manifest, final_sink):
++        """Local export acknowledgement then bounded teardown, no upload.
++
++        The external final_sink must be outside all removed resources. Failures
++        retain backing files; final journal completion is never fabricated.
++        """
++        l = self.l
++        if hasattr(final_sink, 'root'):
++            destination = str(final_sink.root.resolve())
++            require(not within(destination, l.root) and not within(destination, l.runtime), 'final receipt must survive teardown')
++        report = {'execution_approved': False, 'stage_b': 'paused', 'complete': False, 'errors': []}
++        try:
++            termination = l.terminate(l.cgroup_identity())
++            l.require_termination(termination)
++            evidence = next(x['identity'] for x in l.resources if x['kind'] == 'mount' and x['identity']['mount']['mount'] == l.root + '/evidence')
++            # Stop the external writer before copying a stable evidence snapshot.
++            wd = self.services.inspect('pv2-' + l.token + '-watchdog.service')
++            require(wd['cgroup'].startswith('/pv2-' + l.token + '-control.slice/'), 'watchdog ownership')
++            self.host.command(['systemctl', 'stop', 'pv2-' + l.token + '-watchdog.service'], 10)
++            try:
++                self.host.process(wd['pid'])
++            except FileNotFoundError:
++                pass
++            else:
++                raise ValueError('watchdog termination not confirmed')
++            report['export'] = l.export_and_ack(exporter, manifest, evidence, termination)
++            fresh = l.terminate(l.cgroup_identity())
++            l.require_termination(fresh)
++            runtime = next(x['identity'] for x in l.resources if x['kind'] == 'runtime-mount')
++            current = [m for m in mount_records(self.host.text('/proc/self/mountinfo')) if m['mount'] == l.runtime]
++            require(current == [runtime], 'runtime mount changed')
++            self.host.command(['umount', l.runtime], 10)
++            require(not any(m['mount'] == l.runtime for m in mount_records(self.host.text('/proc/self/mountinfo'))), 'runtime mount survives')
++            # Remove only hash-journaled backing inodes after both mount and loop
++            # absence read-back. Never delete retained evidence on failed export.
++            for item in l.resources:
++                if item['kind'] != 'backing':
++                    continue
++                v = item['identity']
++                loops = json.loads(self.host.command(['losetup', '--json', '--associated', v['path'], '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
++                require(loops == [], 'backing still attached')
++                l.require_termination(fresh)
++                self.host.remove_owned(v['path'], v['inode'])
++            # Child service cgroups must already be empty. Native rmdir does not
++            # recursively erase anything and fails closed on unexpected content.
++            for child in reversed(self.host.children(l.cg)):
++                if child.is_dir():
++                    self.host.remove_owned(str(child), self.host.stat(str(child)).st_ino, directory=True)
++            l.require_termination(fresh)
++            self.host.remove_owned(l.cg, fresh['ownership']['inode'], directory=True)
++            control_root = l.cgmount + '/pv2-' + l.token + '-control.slice'
++            for child in reversed(self.host.children(control_root)):
++                if child.is_dir():
++                    require(self.host.text(str(child) + '/cgroup.procs').strip() == '', 'control tasks survive')
++                    self.host.remove_owned(str(child), self.host.stat(str(child)).st_ino, directory=True)
++            self.host.remove_owned(control_root, self.host.stat(control_root).st_ino, directory=True)
++            for item in reversed(l.resources):
++                if item['kind'] in ('directory', 'mount-directory'):
++                    v = item['identity']
++                    self.host.remove_owned(v['path'], v['inode'], directory=True)
++            report['complete'] = True
++        except BaseException as exc:
++            report['errors'].append(repr(exc))
++        # Reuse the accepted provisional-report/last-receipt finalizer rather
++        # than introducing another saved-success-before-ledger failure mode.
++        finalizer = Supervisor(backend, final_sink)
++        finalizer.report.update({'teardown': deepcopy(report), 'complete': False,
++                                 'state': 'CLEANUP_VERIFIED_FAKE' if report['complete'] else 'FAILED'})
++        finalizer.persist()
++        finalizer.report['complete'] = report['complete'] and finalizer.report['evidence_finalized']
++        return deepcopy(finalizer.report)
++
++    def execute(self, inventory, watchdog_argv, operation, run_id, attempt, evidence):
++        try:
++            backend, record = self.provision(inventory, watchdog_argv, operation, run_id, attempt)
++            return Supervisor(backend, evidence).run(record)
++        except BaseException as exc:
++            report = {'state': 'FAILED', 'primary_error': repr(exc), 'cleanup_errors': [], 'execution_approved': False}
++            try:
++                result = self.l.terminate(self.l.cgroup_identity())
++                report['cleanup'] = self.l.partial_cleanup(result)
++            except BaseException as cleanup:
++                report['cleanup_errors'].append(repr(cleanup))
++            try:
++                evidence.append('coordinator-failure', report)
++                evidence.seal()
++            except BaseException as persistence:
++                report['persistence_error'] = repr(persistence)
++            return report
+--- a/linux_lifecycle.py
++++ b/linux_lifecycle.py
+@@ -8,6 +8,8 @@
+ import hashlib
+ import json
+ import re
++import math
++import secrets
+ 
+ from supervisor_v2 import POLICY, require, within
+ from linux_host import mount_records, resolve_cgroup
+@@ -23,6 +25,7 @@
+         self.resources, self.errors = [], []
+         self.admission = False
+         self.reserve_checked = False
++        self.latest_termination = None
+         self.cgmount, self.parent = resolve_cgroup(host.text('/proc/self/mountinfo'), host.text('/proc/self/cgroup'))
+         self.cg = self.cgmount + '/pv2-' + token + '.slice'
+         self.boot = host.text('/proc/sys/kernel/random/boot_id').strip()
+@@ -81,7 +84,8 @@
+                 self.assert_cgroup(identity)
+                 if action == 'term':
+                     self.host.command(['systemctl', 'kill', '--kill-whom=all', '--signal=TERM',
+-                                       'pv2-' + self.token + '.service'], 10)
++                                       'pv2-' + self.token + '-dockerd.service',
++                                       'pv2-' + self.token + '-containerd.service'], 10)
+                 else:
+                     self.host.put(self.cg + '/cgroup.kill', '1')
+             except BaseException as exc:
+@@ -102,7 +106,43 @@
+             require(empty, 'subtree termination unconfirmed')
+         except BaseException as exc:
+             errors.append('readback: ' + repr(exc))
+-        return {'termination_confirmed': empty, 'errors': errors}
++        result = {'schema': 'pv2_termination_v1', 'termination_confirmed': empty,
++                  'errors': errors, 'token': self.token, 'ownership': deepcopy(identity),
++                  'observed_at': self.host.now(), 'nonce': secrets.token_hex(16)}
++        self.latest_termination = deepcopy(result)
++        return result
++
++    def require_termination(self, result):
++        """A truthy object is never permission; reobserve at each boundary.
++
++        Receipts are valid only in the issuing lifecycle instance, for <=10s.
++        Recovery must issue its own receipt. No cached success can authorize
++        teardown after repopulation, changed boot/cgroup, or a surviving socket.
++        """
++        fields = {'schema', 'termination_confirmed', 'errors', 'token', 'ownership', 'observed_at', 'nonce'}
++        require(type(result) is dict and set(result) == fields, 'malformed termination result')
++        require(result['schema'] == 'pv2_termination_v1' and result['termination_confirmed'] is True,
++                'termination was not confirmed')
++        require(result['errors'] == [] and type(result['errors']) is list, 'termination errors')
++        require(result['token'] == self.token and result == self.latest_termination, 'unrelated or superseded termination')
++        require(type(result['observed_at']) in (int, float) and math.isfinite(result['observed_at']), 'termination timestamp')
++        require(0 <= self.host.now() - result['observed_at'] <= 10, 'stale termination result')
++        self.assert_cgroup(result['ownership'])
++        events = dict(x.split() for x in self.host.text(self.cg + '/cgroup.events').splitlines())
++        require(events.get('populated') == '0' and not self.census(), 'termination no longer holds')
++        listeners = self.host.text('/proc/net/unix')
++        require(self.runtime + '/docker.sock' not in listeners and self.runtime + '/containerd.sock' not in listeners,
++                'private listener survives at destructive boundary')
++        # Whole-host check as well as cgroup-local emptiness. Known service PID
++        # reuse or escaped token-bearing workers makes teardown inconclusive.
++        for entry in self.host.children('/proc'):
++            if not entry.name.isdigit():
++                continue
++            p = self.host.process(int(entry.name))
++            argv = self.host.text(str(entry) + '/cmdline')
++            if self.token in argv or within(p['cgroup'], '/pv2-' + self.token + '.slice'):
++                require(within(p['cgroup'], '/pv2-' + self.token + '-control.slice'), 'owned process survives outside empty subtree')
++        return True
+ 
+     def volume_identity(self, role, loop):
+         backing, target = self.root + '/' + role + '.ext4', self.root + '/' + role
+@@ -166,6 +206,7 @@
+         Backings/directories intentionally retained as diagnostic evidence.
+         """
+         results = []
++        self.require_termination(termination)
+         for item in reversed(self.resources):
+             try:
+                 require(item['boot_id'] == self.host.text('/proc/sys/kernel/random/boot_id').strip(), 'boot changed')
+@@ -177,7 +218,7 @@
+                         continue
+                     self.detach_volume(role, identity, termination)
+                 elif item['kind'] == 'loop':
+-                    require(termination, 'partial cleanup requires termination readback')
++                    self.require_termination(termination)
+                     mounts = mount_records(self.host.text('/proc/self/mountinfo'))
+                     require(not any(m['source'] == identity['loop'] for m in mounts), 'loop still mounted')
+                     # Absence is not identity mismatch, but must be observed.
+@@ -185,6 +226,7 @@
+                                                         '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
+                     if rows:
+                         require(rows == [{'name': identity['loop'], 'back-file': identity['backing']}], 'partial loop mismatch')
++                        self.require_termination(termination)
+                         self.host.command(['losetup', '--detach', identity['loop']], 10)
+                         rows = json.loads(self.host.command(['losetup', '--json', '--associated', identity['backing'],
+                                                             '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
+@@ -198,11 +240,13 @@
+         return results
+ 
+     def detach_volume(self, role, identity, terminated):
+-        require(terminated, 'termination must be observed before unmount')
++        self.require_termination(terminated)
+         require(self.volume_identity(role, identity['loop']) == identity, 'volume changed')
++        self.require_termination(terminated)
+         self.host.command(['umount', identity['mount']['mount']], 10)
+         require(not any(m['mount'] == identity['mount']['mount'] for m in mount_records(self.host.text('/proc/self/mountinfo'))), 'mount survives')
+         require(self.find_loop(identity['backing'])['loop'] == identity['loop'], 'loop changed')
++        self.require_termination(terminated)
+         self.host.command(['losetup', '--detach', identity['loop']], 10)
+         rows = json.loads(self.host.command(['losetup', '--json', '--associated', identity['backing'], '--output', 'NAME,BACK-FILE'], 10))['loopdevices']
+         require(rows == [], 'loop survives')
+@@ -211,6 +255,7 @@
+     def export_and_ack(self, exporter, manifest, evidence_identity, termination):
+         # Receiver must independently read its exported bytes and return the
+         # exact manifest digest. No archive deletion before acknowledgement.
++        self.require_termination(termination)
+         raw = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode()
+         digest = hashlib.sha256(raw).hexdigest()
+         receipt = exporter.export(raw, manifest, maximum_bytes=512 * 1024**2, timeout=60)
+@@ -218,9 +263,14 @@
+                 'export acknowledgement absent or mismatched')
+         self.journal.append('export-ack', receipt)
+         self.journal.seal()
+-        self.detach_volume('evidence', evidence_identity, termination)
++        # Export can take >10s. Obtain a new observed receipt, never extend an
++        # old timestamp or trust exporter/owner success as termination evidence.
++        fresh = self.terminate(termination['ownership'])
++        self.require_termination(fresh)
++        self.detach_volume('evidence', evidence_identity, fresh)
+         # Retain backing bytes; deletion needs final exported teardown receipt.
+-        return {'export_acknowledged': True, 'evidence_detached': True, 'backing_retained': True}
++        return {'export_acknowledged': True, 'evidence_detached': True, 'backing_retained': True,
++                'manifest_sha256': digest, 'receipt': receipt}
+ 
+ 
+ class IndependentWatchdog:
+--- /dev/null
++++ b/package_integration.py
+@@ -0,0 +1,74 @@
++"""Explicit local review generator. No network, Linux operations or installation."""
++import argparse
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++
++BASE = 'a579bc9ba7eaff586f95a21e1cbc45c72b34fca2c63f4133896605c969279129'
++EDITED = {'linux_host.py', 'linux_lifecycle.py', 'supervisor_evidence.py', 'evidence_export.py',
++          'test_linux_lifecycle.py', 'test_supervisor_v2.py', 'test_persistence_finalization.py',
++          'test_evidence_export.py', 'file-hashes.json'}
++
++def digest(raw): return hashlib.sha256(raw).hexdigest()
++
++def write(path, value):
++    path.write_text(json.dumps(value, sort_keys=True, indent=2) + '\n', encoding='utf-8')
++
++def main():
++    parser = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): parser.add_argument('--' + name, required=True, type=Path)
++    args = parser.parse_args(); root = args.root.resolve()
++    if digest(args.base.read_bytes()) != BASE: raise ValueError('parent ZIP mismatch')
++    with zipfile.ZipFile(args.base) as base:
++        ledger = json.loads(base.read('file-hashes.json'))
++        if set(base.namelist()) != set(ledger) | {'file-hashes.json'}: raise ValueError('parent coverage')
++        for name, item in ledger.items():
++            raw = base.read(name)
++            if len(raw) != item['size_bytes'] or digest(raw) != item['sha256']: raise ValueError(name)
++            if name not in EDITED and (root / name).read_bytes() != raw: raise ValueError('unexpected edit: ' + name)
++        (root / 'history' / 'linux-revision-file-hashes.json').write_bytes(base.read('file-hashes.json'))
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        command = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        tested = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True, timeout=120)
++        (root / 'integration-tests.log').write_text(tested.stdout + tested.stderr, encoding='utf-8')
++        if tested.returncode: raise RuntimeError('test failure: see integration-tests.log')
++        summary = re.search(r'Ran \d+ tests in [^\n]+', tested.stderr).group()
++        for path in root.glob('*.py'): compile(path.read_text(encoding='utf-8'), str(path), 'exec')
++        changes, diff = [], []
++        for path in sorted(root.iterdir()):
++            if path.suffix not in ('.py', '.md'): continue
++            before = base.read(path.name).decode().splitlines(True) if path.name in base.namelist() else []
++            after = path.read_text(encoding='utf-8').splitlines(True)
++            if before == after: continue
++            if any(s.rstrip('\r\n').rstrip() != s.rstrip('\r\n') for s in after): raise ValueError('whitespace: ' + path.name)
++            changes.append(path.name)
++            diff.extend(difflib.unified_diff(before, after, fromfile='a/' + path.name if before else '/dev/null', tofile='b/' + path.name))
++        (root / 'integration-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root / 'INTEGRATION_VALIDATION.json', {'parent_sha256': BASE, 'parent_entries_verified': len(ledger),
++              'command': command, 'test_summary': summary, 'exit_code': tested.returncode,
++              'python': sys.version, 'platform': platform.platform(), 'changed_files': changes,
++              'controller_minimum_python': '3.10', 'python310_runtime_executed': False,
++              'linux_acceptance_executed': False, 'integrated_mocked_path': True,
++              'original_15_tests_unchanged': True, 'execution_approved': False,
++              'dependency_pins_unchanged': True, 'stage_b': 'paused',
++              'warning': 'Retained acceptance_driver.py Python 3.14 return-in-finally SyntaxWarning',
++              'scope': 'Mocked OS/subprocess tests; local temporary invented report bytes only'})
++    current = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path != root / 'file-hashes.json':
++            raw = path.read_bytes(); current[path.relative_to(root).as_posix()] = {'sha256': digest(raw), 'size_bytes': len(raw)}
++    write(root / 'file-hashes.json', current)
++    with zipfile.ZipFile(args.output, 'x', zipfile.ZIP_DEFLATED) as out:
++        for name in [*sorted(current), 'file-hashes.json']: out.write(root / name, name)
++    print(json.dumps({'path': str(args.output.resolve()), 'sha256': digest(args.output.read_bytes()),
++                      'ledger_entries': len(current), 'tests': summary}, indent=2))
++
++if __name__ == '__main__': main()
+--- a/supervisor_evidence.py
++++ b/supervisor_evidence.py
+@@ -5,11 +5,32 @@
+ from pathlib import Path
+ import re
+ 
++def sync_directory(path):
++    """Linux directory entry durability; unsupported platforms fail closed."""
++    if os.name != 'posix' or not hasattr(os, 'O_DIRECTORY'):
++        raise OSError('Linux directory fsync required; use explicit fake in non-Linux tests')
++    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
++    try:
++        os.fsync(fd)
++    finally:
++        os.close(fd)
++
+ class FileEvidence:
+-    def __init__(self, output):
++    def __init__(self, output, directory_sync=None):
++        self.directory_sync = directory_sync or sync_directory
++        self.durability_failed = False
+         self.root = Path(output)
+         self.root.mkdir(exist_ok=False)
+         self.serial = 0
++        self.sync(self.root.parent)
++        self.sync(self.root)
++
++    def sync(self, path):
++        try:
++            self.directory_sync(path)
++        except BaseException:
++            self.durability_failed = True
++            raise
+ 
+     def append(self, name, value):
+         if re.fullmatch('[a-z-]+', name) is None:
+@@ -23,6 +44,7 @@
+             f.write(raw)
+             f.flush()
+             os.fsync(f.fileno())
++        self.sync(self.root)
+ 
+     def seal(self):
+         entries = {}
+@@ -40,7 +62,9 @@
+             f.write(json.dumps(entries, indent=2, sort_keys=True).encode() + b'\n')
+             f.flush()
+             os.fsync(f.fileno())
++        self.sync(self.root)
+         os.replace(tmp, self.root / 'report-hashes.json')
++        self.sync(self.root)
+ 
+     def fallback(self, report):
+         raw = json.dumps(report, sort_keys=True)
+@@ -49,6 +73,8 @@
+         print(raw, flush=True)
+ 
+     def complete(self, outcome):
++        if self.durability_failed:
++            raise OSError('prior directory durability failure; completion refused')
+         raw = (self.root / 'report-hashes.json').read_bytes()
+         receipt = {'schema': 'pv2_evidence_completion_v1', 'outcome': outcome,
+                    'ledger_sha256': hashlib.sha256(raw).hexdigest()}
+@@ -56,6 +82,7 @@
+             f.write(json.dumps(receipt, sort_keys=True).encode() + b'\n')
+             f.flush()
+             os.fsync(f.fileno())
++        self.sync(self.root)
+ 
+ 
+ def validate_complete(root):
+--- a/test_evidence_export.py
++++ b/test_evidence_export.py
+@@ -15,7 +15,7 @@
+         with tempfile.TemporaryDirectory() as t:
+             src, m = self.fixture(t); dst = Path(t) / 'destination'
+             raw = json.dumps(m, sort_keys=True, separators=(',', ':')).encode()
+-            e = LocalEvidenceExport(src, dst)
++            e = LocalEvidenceExport(src, dst, directory_sync=lambda p: None)
+             self.assertTrue(e.export(raw, m, 4096, 1)['readback_verified'])
+             self.assertEqual((dst / 'record.json').read_bytes(), b'{}')
+             with self.assertRaises(FileExistsError):
+@@ -25,19 +25,19 @@
+             src, m = self.fixture(t); dst = Path(t) / 'destination'
+             (src / 'record.json').write_bytes(b'XX')
+             with self.assertRaisesRegex(ValueError, 'mismatch'):
+-                LocalEvidenceExport(src, dst).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
++                LocalEvidenceExport(src, dst, directory_sync=lambda p: None).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
+             self.assertTrue(dst.exists())
+             self.assertTrue(src.exists())
+     def test_aggregate_bound_prevents_destination(self):
+         with tempfile.TemporaryDirectory() as t:
+             src, m = self.fixture(t); dst = Path(t) / 'destination'
+             with self.assertRaises(ValueError):
+-                LocalEvidenceExport(src, dst).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 1, 1)
++                LocalEvidenceExport(src, dst, directory_sync=lambda p: None).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 1, 1)
+             self.assertFalse(dst.exists())
+     def test_timeout_preserves_source(self):
+         with tempfile.TemporaryDirectory() as t:
+             src, m = self.fixture(t); dst = Path(t) / 'destination'
+             ticks = iter([0, 2])
+             with self.assertRaises(TimeoutError):
+-                LocalEvidenceExport(src, dst, lambda: next(ticks)).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
++                LocalEvidenceExport(src, dst, lambda: next(ticks), directory_sync=lambda p: None).export(json.dumps(m, sort_keys=True, separators=(',', ':')).encode(), m, 4096, 1)
+             self.assertEqual((src / 'record.json').read_bytes(), b'{}')
+--- /dev/null
++++ b/test_linux_integration.py
+@@ -0,0 +1,266 @@
++"""Integrated coordinator through an invented in-memory Linux OS boundary.
++
++No Docker command, native process, mount, cgroup or watchdog service is executed.
++The fake interprets explicit argv and records requests for assertions.
++"""
++from copy import deepcopy
++import hashlib
++import json
++from types import SimpleNamespace
++import unittest
++from unittest.mock import Mock
++
++from linux_integration import Coordinator
++from test_supervisor_v2 import FakeEvidence
++from test_linux_lifecycle import FakeHost, MOUNTS
++
++
++class Node:
++    def __init__(self, path, directory=False):
++        self.path, self.directory = path, directory
++        self.name = path.rsplit('/', 1)[-1]
++    def __str__(self): return self.path
++    def is_dir(self): return self.directory
++    def is_symlink(self): return False
++
++
++class Kernel(FakeHost):
++    def __init__(self):
++        super().__init__()
++        self.stats = {}; self.mounts = []; self.loops = {}; self.processes = {}; self.units = {}; self.argv = {}
++        self.next_pid = 100; self.next_inode = 500; self.next_loop = 10
++        self.unarmed = False; self.corrupt = False; self.escape = False; self.spill = False
++        self.blocks = [b'invented output', b'']; self.worker_seen_before_daemon = False
++        self.files.update({'/sys/fs/cgroup/supervisor/memory.max': str(256 * 1024**2),
++                           '/sys/fs/cgroup/supervisor/memory.swap.max': '0',
++                           '/sys/fs/cgroup/supervisor/pids.max': '16',
++                           '/sys/fs/cgroup/supervisor/cpu.max': '25000 100000'})
++
++    def mkdir(self, path):
++        if path in self.stats: raise FileExistsError(path)
++        self.stats[path] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++        self.calls.append(('mkdir', path))
++
++    def stat(self, path):
++        return self.stats.get(path, SimpleNamespace(st_ino=111))
++
++    def allocate_exclusive(self, path, capacity):
++        if path in self.stats: raise FileExistsError(path)
++        self.stats[path] = SimpleNamespace(st_ino=self.next_inode, st_size=capacity, st_blocks=capacity // 512)
++        self.next_inode += 1
++
++    def free_bytes(self, path): return 20 * 1024**3
++
++    def digest(self, path):
++        if path in self.files:
++            return hashlib.sha256(self.files[path].encode()).hexdigest()
++        return 'a' * 64
++
++    def write_exclusive(self, path, raw):
++        if path in self.files: raise FileExistsError(path)
++        self.files[path] = raw.decode()
++        self.stats[path] = SimpleNamespace(st_ino=self.next_inode); self.next_inode += 1
++
++    def assert_no_symlinks(self, path): pass
++
++    def writable_paths(self, pid): return ['/unbounded/bad'] if self.spill else []
++
++    def socket_owned(self, pid, path): return pid in self.processes
++
++    def filesystem(self, path):
++        return {'inode_capacity': 65536, 'free_bytes': 100000, 'free_inodes': 1000,
++                'capacity_bytes': 64 * 1024**2 if path.startswith('/run/') else 8 * 1024**3}
++
++    def process(self, pid):
++        if pid not in self.processes: raise FileNotFoundError(str(pid))
++        p = deepcopy(self.processes[pid])
++        if self.escape and 'dockerd' in p['cgroup']: p['cgroup'] = '/escaped'
++        return p
++
++    def children(self, path):
++        if path == '/proc': return [Node('/proc/' + str(pid)) for pid in self.processes]
++        return []
++
++    def put(self, path, value):
++        super().put(path, value)
++        if path.endswith('/cgroup.kill'):
++            for pid in list(self.processes):
++                if '-control.slice' not in self.processes[pid]['cgroup']:
++                    del self.processes[pid]
++
++    def text(self, path):
++        if path == '/proc/self/mountinfo':
++            return MOUNTS + ''.join(f"{m['id']} 1 {m['device']} / {m['mount']} rw - {m['filesystem']} {m['source']} rw\n" for m in self.mounts)
++        if path == '/proc/net/unix':
++            if any('dockerd' in p['cgroup'] for p in self.processes.values()):
++                return self.runtime + '/docker.sock\n' + self.runtime + '/containerd.sock'
++            return ''
++        if path.endswith('/cgroup.events'):
++            return 'populated ' + str(int(any('-control.slice' not in p['cgroup'] for p in self.processes.values())))
++        if path.endswith('/cgroup.procs'):
++            return '\n'.join(str(pid) for pid, p in self.processes.items() if '-control.slice' not in p['cgroup'])
++        if path.startswith('/proc/') and path.endswith('/cmdline'):
++            return '\0'.join(self.argv[int(path.split('/')[2])]) + '\0'
++        if 'watchdog-armed.json' in path and self.unarmed: raise FileNotFoundError(path)
++        if path not in self.files: raise FileNotFoundError(path)
++        return self.files[path]
++
++    def command(self, argv, timeout):
++        self.calls.append(('command', list(argv), timeout))
++        if argv[0] == 'losetup':
++            if '--find' in argv:
++                loop = '/dev/loop' + str(self.next_loop); self.next_loop += 1
++                self.loops[loop] = argv[-1]; return loop.encode()
++            if '--detach' in argv:
++                self.loops.pop(argv[-1]); return b''
++            if '--associated' in argv:
++                backing = argv[argv.index('--associated') + 1]
++                rows = [{'name': k, 'back-file': v} for k, v in self.loops.items() if v == backing]
++            else:
++                loop = argv[-1]; rows = [{'name': loop, 'back-file': self.loops[loop]}]
++            return json.dumps({'loopdevices': rows}).encode()
++        if argv[0] == 'blkid': return b'invented-uuid'
++        if argv[0] == 'mount':
++            fs = argv[argv.index('-t') + 1]; source, target = argv[-2:]
++            self.mounts.append({'id': 100 + len(self.mounts), 'device': '7:10', 'root': '/', 'mount': target,
++                                'filesystem': fs, 'source': source})
++            if fs == 'tmpfs': self.runtime = target
++            return b''
++        if argv[0] == 'umount':
++            self.mounts = [m for m in self.mounts if m['mount'] != argv[1]]; return b''
++        if argv[0] == 'systemd-run':
++            unit = next(a.split('=', 1)[1] for a in argv if a.startswith('--unit='))
++            slice_name = next(a.split('=', 1)[1] for a in argv if a.startswith('--slice='))
++            role = unit.rsplit('-', 1)[-1].split('.')[0]
++            pid = self.next_pid; self.next_pid += 1
++            p = {'pid': pid, 'start_ticks': pid * 10, 'executable_sha256': 'a' * 64,
++                 'cgroup': '/' + slice_name + '/' + unit}
++            self.processes[pid] = p; self.units[unit] = pid; self.argv[pid] = argv[argv.index('--') + 1:]
++            if role == 'watchdog':
++                control = '/sys/fs/cgroup' + p['cgroup']
++                self.files.update({control + '/memory.max': str(256 * 1024**2), control + '/memory.swap.max': '0',
++                                   control + '/pids.max': '16', control + '/cpu.max': '25000 100000'})
++                wd = dict(p, outside_workload=True, lifetime_seconds=1200)
++                token = unit.split('-')[1]
++                path = '/var/tmp/pv2-' + token + '/evidence/watchdog-armed.json'
++                self.files[path] = json.dumps({'token': token, 'boot_id': 'boot', 'watchdog': wd})
++            elif role in ('dockerd', 'containerd'):
++                self.worker_seen_before_daemon = any('watchdog' in x for x in self.units)
++            return b''
++        if argv[:2] == ['systemctl', 'show']:
++            unit = argv[2]; pid = self.units[unit]; p = self.process(pid)
++            return f"Id={unit}\nActiveState=active\nMainPID={pid}\nControlGroup={p['cgroup']}\n".encode()
++        if argv[:2] == ['systemctl', 'stop']:
++            self.processes.pop(self.units[argv[2]], None); return b''
++        return b''
++
++    def start(self, argv):
++        self.command(argv, 10)
++        return SimpleNamespace(poll=lambda: 0)
++
++    def read(self, process, maximum, timeout): return self.blocks.pop(0)
++
++    def remove_owned(self, path, inode, directory=False):
++        if self.stat(path).st_ino != inode: raise ValueError('inode changed')
++        self.stats.pop(path, None)
++
++
++class IntegrationTests(unittest.TestCase):
++    def make(self):
++        h, journal, evidence = Kernel(), FakeEvidence(), FakeEvidence()
++        c = Coordinator(h, journal, 'a' * 32)
++        inventory = {p: 'a' * 64 for p in ('/usr/bin/dockerd', '/usr/bin/containerd', '/usr/bin/runc')}
++        return h, c, inventory, evidence
++
++    def test_integrated_provision_operation_cleanup(self):
++        h, c, inventory, evidence = self.make()
++        result = c.execute(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1', evidence)
++        self.assertEqual(result['state'], 'VERIFIED_FAKE', result)
++        self.assertTrue(h.worker_seen_before_daemon)
++        self.assertFalse(any(m['mount'].endswith('/data') for m in h.mounts))
++        self.assertEqual(evidence.stdout['state'], 'EVIDENCE_PENDING')
++        self.assertFalse(result['execution_approved'])
++
++    def test_unarmed_watchdog_blocks_daemons_and_operation(self):
++        h, c, inventory, evidence = self.make(); h.unarmed = True
++        result = c.execute(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1', evidence)
++        self.assertEqual(result['state'], 'FAILED')
++        self.assertFalse(h.worker_seen_before_daemon)
++        self.assertFalse(any('-operation.service' in str(call) for call in h.calls))
++
++    def test_snapshot_rejects_escape_spill_config_and_limits(self):
++        for mutation in ('escape', 'spill', 'config', 'limit'):
++            h, c, inventory, evidence = self.make()
++            backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++            if mutation == 'escape': h.escape = True
++            elif mutation == 'spill': h.spill = True
++            elif mutation == 'config': h.files[c.l.runtime + '/dockerd.json'] = '{"bad":true}'
++            else: h.files[c.l.cg + '/memory.max'] = 'max'
++            from supervisor_v2 import verify_snapshot
++            with self.assertRaises((ValueError, KeyError)):
++                verify_snapshot(record, backend.snapshot(record), True)
++
++    def test_failure_after_provision_keeps_primary_and_cleanup(self):
++        h, c, inventory, evidence = self.make(); h.blocks = [b'x' * 65536] * 17
++        result = c.execute(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1', evidence)
++        self.assertEqual(result['state'], 'FAILED')
++        self.assertIn('overflow', result['primary_error'])
++        self.assertTrue(result['daemon_io_termination_verified'])
++
++    def test_final_export_and_teardown(self):
++        h, c, inventory, evidence = self.make()
++        backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        from supervisor_v2 import Supervisor
++        self.assertEqual(Supervisor(backend, evidence).run(record)['state'], 'VERIFIED_FAKE')
++        exporter = Mock()
++        def export(raw, manifest, **kwargs):
++            return {'manifest_sha256': hashlib.sha256(raw).hexdigest(), 'readback_verified': True}
++        exporter.export.side_effect = export
++        final_sink = FakeEvidence()
++        result = c.finalize(backend, exporter, {'files': {}}, final_sink)
++        self.assertTrue(result['complete'], result)
++        self.assertFalse(h.loops)
++        self.assertFalse(h.mounts)
++        self.assertFalse(h.processes)
++        self.assertTrue(final_sink.ledger)
++
++    def test_bad_export_ack_preserves_evidence(self):
++        h, c, inventory, evidence = self.make()
++        backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        from supervisor_v2 import Supervisor
++        Supervisor(backend, evidence).run(record)
++        exporter = Mock(); exporter.export.return_value = {'manifest_sha256': 'bad', 'readback_verified': True}
++        result = c.finalize(backend, exporter, {'files': {}}, FakeEvidence())
++        self.assertFalse(result['complete'])
++        self.assertTrue(any(m['mount'].endswith('/evidence') for m in h.mounts))
++
++    def test_worker_algorithm_arms_and_rechecks_owner(self):
++        h, c, inventory, evidence = self.make()
++        backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        wd = record['watchdog']; owner = {'pid': 9876, 'start_ticks': 1, 'executable_sha256': 'b' * 64, 'cgroup': '/owner'}
++        path = c.l.root + '/evidence/watchdog-armed.json'; del h.files[path]
++        from watchdog_worker import worker
++        from unittest.mock import patch
++        with patch('watchdog_worker.os.getpid', return_value=wd['pid']):
++            result = worker(c.l, c.l.cgroup_identity(), owner, FakeEvidence(), lambda: False)
++        self.assertTrue(result['termination_confirmed'])
++        self.assertEqual(json.loads(h.files[path])['watchdog'], wd)
++
++    def test_unbounded_controller_refused_before_creation(self):
++        h = Kernel(); h.files['/sys/fs/cgroup/supervisor/memory.max'] = 'max'
++        with self.assertRaises(ValueError): Coordinator(h, FakeEvidence(), 'a' * 32)
++        self.assertFalse(h.calls)
++
++    def test_final_persistence_failure_never_saved_success(self):
++        h, c, inventory, evidence = self.make()
++        backend, record = c.provision(inventory, ['invented-watchdog'], ['invented-operation'], '123', '1')
++        from supervisor_v2 import Supervisor
++        Supervisor(backend, evidence).run(record)
++        exporter = Mock()
++        exporter.export.side_effect = lambda raw, manifest, **kw: {'manifest_sha256': hashlib.sha256(raw).hexdigest(), 'readback_verified': True}
++        sink = FakeEvidence('seal')
++        result = c.finalize(backend, exporter, {'files': {}}, sink)
++        self.assertFalse(result['complete'])
++        self.assertEqual(result['state'], 'FAILED')
++        self.assertEqual(sink.stdout['state'], 'FAILED')
++        self.assertTrue(all(row.get('state') not in ('VERIFIED_FAKE', 'CLEANUP_VERIFIED_FAKE') for _, row in sink.rows))
+--- a/test_linux_lifecycle.py
++++ b/test_linux_lifecycle.py
+@@ -137,7 +137,7 @@
+         l, h, e = self.make(); exporter = Mock()
+         exporter.export.return_value = {'manifest_sha256': 'wrong', 'readback_verified': True}
+         with patch.object(l, 'detach_volume') as detach, self.assertRaises(ValueError):
+-            l.export_and_ack(exporter, {'files': []}, {}, True)
++            l.export_and_ack(exporter, {'files': []}, {}, l.terminate(l.cgroup_identity()))
+         detach.assert_not_called()
+ 
+     def test_export_ack_precedes_teardown(self):
+@@ -149,7 +149,7 @@
+         def detach(*args):
+             self.assertEqual(e.ledger[-1][0], 'export-ack')
+         with patch.object(l, 'detach_volume', side_effect=detach):
+-            self.assertTrue(l.export_and_ack(exporter, manifest, {}, True)['backing_retained'])
++            self.assertTrue(l.export_and_ack(exporter, manifest, {}, l.terminate(l.cgroup_identity()))['backing_retained'])
+ 
+     def test_daemon_arguments_private_and_inventory_bound(self):
+         l, h, e = self.make()
+--- a/test_persistence_finalization.py
++++ b/test_persistence_finalization.py
+@@ -58,7 +58,7 @@
+ 
+     def test_disk_consumer_accepts_only_complete_binding(self):
+         with tempfile.TemporaryDirectory() as t:
+-            e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++            e = FileEvidence(Path(t) / 'reports', directory_sync=lambda p: None); b = FakeBackend()
+             with patch('builtins.print'):
+                 result = Supervisor(b, e).run(b.r)
+             self.assertEqual(validate_complete(e.root)['outcome'], result['state'])
+@@ -69,7 +69,7 @@
+     def test_disk_seal_failure_leaves_no_success_claim(self):
+         for method in ('run', 'independent_cleanup'):
+             with tempfile.TemporaryDirectory() as t:
+-                e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++                e = FileEvidence(Path(t) / 'reports', directory_sync=lambda p: None); b = FakeBackend()
+                 with patch.object(e, 'seal', side_effect=OSError('ledger')), patch('builtins.print') as stdout:
+                     result = getattr(Supervisor(b, e), method)(b.r)
+                 self.assertEqual(json.loads(stdout.call_args.args[0])['state'], 'FAILED')
+@@ -81,7 +81,7 @@
+ 
+     def test_fallback_failure_invalidates_old_receipt(self):
+         with tempfile.TemporaryDirectory() as t:
+-            e = FileEvidence(Path(t) / 'reports'); b = FakeBackend()
++            e = FileEvidence(Path(t) / 'reports', directory_sync=lambda p: None); b = FakeBackend()
+             with patch.object(e, 'fallback', side_effect=OSError('stdout')):
+                 result = Supervisor(b, e).run(b.r)
+             self.assertEqual(result['state'], 'FAILED')
+--- a/test_supervisor_v2.py
++++ b/test_supervisor_v2.py
+@@ -237,7 +237,7 @@
+ 
+     def test_file_evidence_no_overwrite_and_final_binding(self):
+         with tempfile.TemporaryDirectory() as temp:
+-            root = Path(temp) / 'evidence'; sink = FileEvidence(root)
++            root = Path(temp) / 'evidence'; sink = FileEvidence(root, directory_sync=lambda p: None)
+             with patch('builtins.print'):
+                 self.run_case(evidence=sink)
+             ledger = json.loads((root / 'report-hashes.json').read_text())
+--- /dev/null
++++ b/test_termination_durability.py
+@@ -0,0 +1,140 @@
++"""Fake Linux observations; directory-sync injection is explicit on Windows."""
++from copy import deepcopy
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import Mock, patch
++
++from test_linux_lifecycle import FakeHost
++from test_supervisor_v2 import FakeEvidence
++from linux_lifecycle import LinuxLifecycle
++from linux_host import annotate
++from supervisor_evidence import FileEvidence, sync_directory
++from linux_integration import recover_records
++
++
++class TerminationTests(unittest.TestCase):
++    def make(self):
++        h = FakeHost(); l = LinuxLifecycle(h, FakeEvidence(), 'a' * 32)
++        return l, h
++
++    def assert_denied(self, l, h, result):
++        h.calls.clear()
++        for call in (lambda: l.detach_volume('data', {'loop': '/dev/loop10'}, result),
++                     lambda: l.partial_cleanup(result),
++                     lambda: l.export_and_ack(Mock(), {}, {}, result)):
++            with self.assertRaises(ValueError):
++                call()
++        self.assertFalse(any(c[0] == 'command' and c[1][0] in ('umount', 'losetup') for c in h.calls))
++
++    def test_truthy_failed_dictionary_never_tears_down(self):
++        l, h = self.make()
++        self.assert_denied(l, h, {'termination_confirmed': False, 'errors': ['failed']})
++
++    def test_malformed_results(self):
++        for result in (True, 1, 'yes', {}, {'termination_confirmed': True}, None):
++            l, h = self.make(); self.assert_denied(l, h, result)
++
++    def test_failed_bound_result(self):
++        l, h = self.make(); h.busy = True
++        result = l.terminate(l.cgroup_identity())
++        h.busy = False
++        self.assert_denied(l, h, result)
++
++    def test_foreign_tampered_superseded_and_stale(self):
++        for mutate in ('foreign', 'timestamp', 'superseded', 'stale', 'numeric_true', 'errors'):
++            l, h = self.make(); result = l.terminate(l.cgroup_identity())
++            if mutate == 'foreign': result['token'] = 'b' * 32
++            elif mutate == 'timestamp': result['observed_at'] = float('nan')
++            elif mutate == 'superseded': l.terminate(l.cgroup_identity())
++            elif mutate == 'stale': h.time = 11
++            elif mutate == 'numeric_true': result['termination_confirmed'] = 1
++            else: result['errors'] = ['TERM failed']
++            self.assert_denied(l, h, result)
++
++    def test_repopulation_after_success_refused(self):
++        l, h = self.make(); result = l.terminate(l.cgroup_identity()); h.busy = True
++        self.assert_denied(l, h, result)
++
++    def test_changed_boot_cgroup_and_socket_refused(self):
++        for changed in ('inode', 'boot', 'listener'):
++            l, h = self.make(); result = l.terminate(l.cgroup_identity())
++            if changed == 'inode': h.inode += 1
++            elif changed == 'boot': h.files['/proc/sys/kernel/random/boot_id'] = 'new'
++            else: h.files['/proc/net/unix'] = l.runtime + '/docker.sock'
++            self.assert_denied(l, h, result)
++
++    def test_fresh_observation_after_volume_inspection(self):
++        l, h = self.make(); result = l.terminate(l.cgroup_identity())
++        v = {'loop': '/dev/loop10'}
++        def changed(*args):
++            h.busy = True
++            return v
++        with patch.object(l, 'volume_identity', side_effect=changed), self.assertRaises(ValueError):
++            l.detach_volume('data', v, result)
++        self.assertFalse(any(c[0] == 'command' and c[1][0] == 'umount' for c in h.calls))
++
++
++class DurabilityTests(unittest.TestCase):
++    def test_directory_sync_order(self):
++        with tempfile.TemporaryDirectory() as t:
++            calls = []
++            e = FileEvidence(Path(t) / 'e', directory_sync=lambda p: calls.append(('dir', str(p))))
++            self.assertEqual(calls, [('dir', t), ('dir', str(e.root))])
++            calls.clear()
++            e.append('ownership', {'id': 1})
++            self.assertEqual(calls, [('dir', str(e.root))])
++            calls.clear()
++            import os
++            original = os.replace
++            def replace(a, b):
++                calls.append(('replace', str(b))); original(a, b)
++            with patch('supervisor_evidence.os.replace', side_effect=replace): e.seal()
++            self.assertEqual([x[0] for x in calls], ['dir', 'replace', 'dir'])
++
++    def test_sync_failure_blocks_ownership_effect(self):
++        with tempfile.TemporaryDirectory() as t:
++            sync = Mock(); e = FileEvidence(Path(t) / 'e', directory_sync=sync)
++            l = LinuxLifecycle(FakeHost(), e, 'a' * 32)
++            sync.side_effect = OSError('directory sync failed'); effect = Mock()
++            with self.assertRaises(OSError): l.acquire('x', '/a', effect, lambda: {})
++            effect.assert_not_called()
++            with self.assertRaises(OSError): e.complete('VERIFIED_FAKE')
++
++    def test_post_replace_sync_failure_poisoned(self):
++        with tempfile.TemporaryDirectory() as t:
++            e = FileEvidence(Path(t) / 'e', directory_sync=lambda p: None)
++            e.append('ownership', {})
++            e.directory_sync = Mock(side_effect=[None, OSError('post replace')])
++            with self.assertRaises(OSError): e.seal()
++            self.assertTrue((e.root / 'report-hashes.json').exists())
++            with self.assertRaises(OSError): e.complete('VERIFIED_FAKE')
++
++    def test_native_sync_closes_fd_on_failure(self):
++        with patch('supervisor_evidence.os.name', 'posix'), patch('supervisor_evidence.os.O_DIRECTORY', 65536, create=True), patch('supervisor_evidence.os.O_NOFOLLOW', 131072, create=True), patch('supervisor_evidence.os.open', return_value=9), patch('supervisor_evidence.os.fsync', side_effect=OSError('sync')), patch('supervisor_evidence.os.close') as close:
++            with self.assertRaises(OSError): sync_directory('/invented')
++            close.assert_called_once_with(9)
++
++    def test_recovery_bound_records_and_unresolved_intent(self):
++        with tempfile.TemporaryDirectory() as t:
++            e = FileEvidence(Path(t) / 'e', directory_sync=lambda p: None)
++            l = LinuxLifecycle(FakeHost(), e, 'a' * 32)
++            l.acquire('directory', l.root, lambda: None, lambda: {'path': l.root, 'inode': 5})
++            recovered = recover_records(e.root, l.token, l.boot)
++            self.assertTrue(recovered['admission_allowed'])
++            e.append('provision-intent', {'kind': 'x', 'requested': l.root + '/x', 'boot_id': l.boot, 'phase': 'intent'})
++            e.seal()
++            self.assertFalse(recover_records(e.root, l.token, l.boot)['admission_allowed'])
++            (e.root / '0001-provision-intent.json').write_bytes(b'{}')
++            with self.assertRaises(ValueError): recover_records(e.root, l.token, l.boot)
++
++    def test_python310_exception_fallback(self):
++        class OldError(Exception): add_note = None
++        error = OldError('primary'); annotate(error, 'cleanup failed')
++        self.assertEqual(str(error), 'primary')
++        self.assertEqual(error.__notes__, ['cleanup failed'])
++
++    def test_controller_sources_python310_syntax(self):
++        import ast
++        for name in ('linux_host.py', 'linux_lifecycle.py', 'linux_integration.py', 'watchdog_worker.py', 'supervisor_evidence.py'):
++            ast.parse((Path(__file__).parent / name).read_text(), feature_version=(3, 10))
+--- /dev/null
++++ b/watchdog_worker.py
+@@ -0,0 +1,25 @@
++"""Internal worker algorithm; deliberately no executable main/CLI entry point."""
++import os
++from linux_lifecycle import IndependentWatchdog
++from linux_integration import canonical
++from supervisor_v2 import require, within
++
++
++def worker(lifecycle, identity, owner, report, acknowledgment):
++    host = lifecycle.host
++    require(host.is_fake is True, 'live watchdog entry disabled')
++    me = host.process(os.getpid())
++    require(not within(me['cgroup'], '/pv2-' + lifecycle.token + '.slice'), 'watchdog inside workload')
++    # The service manager resource checks are required before worker admission;
++    # identity is observed from /proc, not the spawning client's PID estimate.
++    wd = {k: me[k] for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup')}
++    wd.update(outside_workload=True, lifetime_seconds=1200)
++    host.write_exclusive(lifecycle.root + '/evidence/watchdog-armed.json',
++                         canonical({'token': lifecycle.token, 'boot_id': lifecycle.boot, 'watchdog': wd}))
++    def alive():
++        try:
++            current = host.process(owner['pid'])
++        except FileNotFoundError:
++            return False
++        return all(current.get(k) == owner.get(k) for k in ('pid', 'start_ticks', 'executable_sha256', 'cgroup'))
++    return IndependentWatchdog(lifecycle, identity, host.now() + 1200, report).supervise(alive, acknowledgment)

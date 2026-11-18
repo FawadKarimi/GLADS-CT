@@ -1,0 +1,55 @@
+name: Performance-v2 Linux synthetic acceptance proposal
+on:
+  workflow_dispatch:
+    inputs:
+      zero_paid_usage_verified:
+        type: boolean
+        required: true
+        default: false
+        description: Fresh included-minutes/storage and enforced zero-paid-usage checks complete
+      synthetic_execution_authorized:
+        type: boolean
+        required: true
+        default: false
+        description: Separate reviewed synthetic-only security/build authorization exists
+permissions:
+  contents: read
+concurrency:
+  group: performance-v2-linux-synthetic
+  cancel-in-progress: false
+jobs:
+  synthetic:
+    if: ${{ github.event.repository.private && inputs.zero_paid_usage_verified && inputs.synthetic_execution_authorized }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CUDA_VISIBLE_DEVICES: ''
+      PYTHONDONTWRITEBYTECODE: '1'
+      DOCKER_HOST: unix:///var/run/docker.sock
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify, acquire, build and run synthetic scenarios once
+        timeout-minutes: 21
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset DOCKER_CONTEXT DOCKER_TLS_VERIFY DOCKER_CERT_PATH
+          python3 -B acceptance_driver.py --package reviewed/inspector.zip --approval synthetic-approval.json --output "$RUNNER_TEMP/acceptance"
+      - name: Independent bounded build cleanup
+        if: ${{ always() }}
+        timeout-minutes: 2
+        shell: bash
+        run: python3 -B build_lifecycle.py --cleanup-output "$RUNNER_TEMP/acceptance"
+      - name: Retain bounded reports, including failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux-synthetic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/acceptance/reports/
+          retention-days: 1
+          compression-level: 6
+          if-no-files-found: error
+          include-hidden-files: false

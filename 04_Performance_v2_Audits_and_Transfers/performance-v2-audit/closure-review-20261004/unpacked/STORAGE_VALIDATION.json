@@ -1,0 +1,58 @@
+{
+  "base_ledger_entries_verified": 116,
+  "base_sha256": "a1f9f1568132414ab4cbbc6c97afcf9bcc0050d85f63cb90071b644c5f18ad8e",
+  "boundaries": "invented filesystem/allocations and mocked OS only; no Docker or privileged operations",
+  "changed_files": [
+    "activation_bridge.py",
+    "activation_trust.py",
+    "launcher-sources.json",
+    "package_storage.py",
+    "STORAGE_ADMISSION_REVIEW.md",
+    "test_activation_bridge.py",
+    "test_storage_admission.py"
+  ],
+  "dependencies_approved": false,
+  "development_failure": "Windows lacks os.statvfs; Linux-only mocked attribute now explicitly created",
+  "execution_approved": false,
+  "historical_warning": "unchanged acceptance_driver.py return-in-finally SyntaxWarning",
+  "native_execution": false,
+  "pilot_execution_authorized": false,
+  "platform": "Windows-11-10.0.22621-SP0",
+  "production_pins_unchanged": true,
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "python310_syntax": "passed",
+  "security_approved": false,
+  "stage_b": "paused",
+  "tests": [
+    {
+      "command": [
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "test_storage_admission",
+        "-v"
+      ],
+      "exit_code": 0,
+      "result": "Ran 10 tests in 0.094s",
+      "suite": "targeted"
+    },
+    {
+      "command": [
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\ConsenDxFormer\\.venv\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "C:\\Users\\Lenovo y520\\Documents\\Playground\\performance-v2-storage-review-20260929",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "result": "Ran 171 tests in 1.898s",
+      "suite": "full"
+    }
+  ]
+}

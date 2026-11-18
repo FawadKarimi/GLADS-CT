@@ -1,0 +1,2 @@
+# Diagnostic limits
+Train/validation only. Mixed CSV containers were read/hashed; test rows discarded before label interpretation. No test predictions/metrics, checkpoint tensors, images or array archives opened. Subset integrity is not full-bundle verification. History counterfactuals do not identify available alternative checkpoints. Augmented online train versus deterministic validation gaps are not definitive overfitting. Target discordance is not measured gradient conflict. LR/gradient/gate traces NOT_RECORDED. No pilot release.

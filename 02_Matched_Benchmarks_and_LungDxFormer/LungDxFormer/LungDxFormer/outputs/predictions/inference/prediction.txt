@@ -1,0 +1,4 @@
+Predicted class: malignant
+benign: 0.319837
+indeterminate: 0.329148
+malignant: 0.351015

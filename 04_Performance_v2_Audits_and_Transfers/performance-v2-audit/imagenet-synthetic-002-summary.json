@@ -1,0 +1,38 @@
+{
+  "attempt": 2,
+  "success": true,
+  "outer": {
+    "attempt": 2,
+    "exit_status": 0,
+    "elapsed_seconds": 13.619749307632446,
+    "launches": 1,
+    "command": "REVIEWED_SOURCE_LOCK_SHA256=e1796b4a17a59b6c052fd15e2fda79fd722db679fd2185fbc3c776956acc26b4 /bin/bash /home/chaidir/.performance-v2-imagenet-review-20261008/candidate/PROPOSED-COMMAND.sh"
+  },
+  "results": {
+    "python": "3.10.17 (main, Apr  9 2025, 08:54:15) [GCC 9.4.0]",
+    "torch": "2.3.0+cu121",
+    "torchvision": "0.18.0+cu121",
+    "tests": 37,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "real_weight_loads": 0,
+    "model_forwards": 0
+  },
+  "source_bindings": 1080,
+  "source_mismatches": [],
+  "missing_evidence": [],
+  "evidence_hash_mismatches": [],
+  "managed_session_id": 540218,
+  "remaining_managed_processes": [],
+  "process_observation_errors": [],
+  "historical_and_attempt001_preserved": true,
+  "production_execution_authorized": false,
+  "pilot_execution_authorized": false,
+  "stage_b_authorized": false,
+  "internal_report_directory_note": "Reviewed fixed report basename remains imagenet-synthetic-review-001; outer identity is attempt002. Attempt001 never created this directory.",
+  "evidence_zip": "performance-v2-imagenet-synthetic-002-evidence.zip",
+  "evidence_zip_sha256": "17a58d025c254b8915c6ae1db713886cb12fb7f6d364ee12e5a6ea3c50486808",
+  "evidence_ledger_sha256": "3581a8fcfcdcc2b39054757a957f750fe5220aeff06cc0373bce079d8529128a",
+  "evidence_members": 22
+}

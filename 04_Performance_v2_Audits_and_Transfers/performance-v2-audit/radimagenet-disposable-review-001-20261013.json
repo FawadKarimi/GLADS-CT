@@ -1,0 +1,496 @@
+{
+  "scope": "only existing private project scratch/report children; metadata-only",
+  "free_bytes": 54399037440,
+  "unchanged_min_bytes": 64424509440,
+  "minimum_shortfall_bytes": 10025472000,
+  "recommended_shortfall_for_4GiB_headroom": 14320439296,
+  "children": [
+    {
+      "path": "/home/chaidir/.performance-v2-scratch/train-val-mapping-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "5230592\t/home/chaidir/.performance-v2-scratch/train-val-mapping-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-scratch/r50-imagenet-hard-budget-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "16465321984\t/home/chaidir/.performance-v2-scratch/r50-imagenet-hard-budget-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-scratch/r50-random-hard-budget-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "27308240896\t/home/chaidir/.performance-v2-scratch/r50-random-hard-budget-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-scratch/r50-timing-budget-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "835584\t/home/chaidir/.performance-v2-scratch/r50-timing-budget-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-wrapper-stdout.log",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4096\t/home/chaidir/.performance-v2-reports/acceptance-001-wrapper-stdout.log\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-002",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "49152\t/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-002\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/performance-v2-native-acceptance-001-evidence.zip",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "20021248\t/home/chaidir/.performance-v2-reports/performance-v2-native-acceptance-001-evidence.zip\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-activation-outer-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-random-42-activation-outer-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-002-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-002-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/orchestration-dryrun-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "331776\t/home/chaidir/.performance-v2-reports/orchestration-dryrun-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-source-stage-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-source-stage-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-matched-zero-budget-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "16384\t/home/chaidir/.performance-v2-reports/r50-matched-zero-budget-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/train-val-mapping-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "577536\t/home/chaidir/.performance-v2-reports/train-val-mapping-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-full-activation-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "28672\t/home/chaidir/.performance-v2-reports/r50-random-42-full-activation-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/native-acceptance-001-envelope",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "77115392\t/home/chaidir/.performance-v2-reports/native-acceptance-001-envelope\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-cpu-integration-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "53248\t/home/chaidir/.performance-v2-reports/r50-cpu-integration-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-evidence-ledger.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "962560\t/home/chaidir/.performance-v2-reports/acceptance-001-evidence-ledger.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "28672\t/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-activation-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "45056\t/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-receiver-attempt-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "40960\t/home/chaidir/.performance-v2-reports/imagenet-receiver-attempt-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/materialization-synthetic-001-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "40960\t/home/chaidir/.performance-v2-reports/materialization-synthetic-001-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-pair-001-metadata-evidence-20261012.zip",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "557056\t/home/chaidir/.performance-v2-reports/r50-hard-seed42-pair-001-metadata-evidence-20261012.zip\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-model-import-attempt-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "585728\t/home/chaidir/.performance-v2-reports/imagenet-model-import-attempt-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-timing-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "45056\t/home/chaidir/.performance-v2-reports/r50-timing-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-full-outer-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-random-42-full-outer-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/orchestration-dryrun-001-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "237568\t/home/chaidir/.performance-v2-reports/orchestration-dryrun-001-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-outer-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-outer-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012-evidence.zip",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "1667072\t/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012-evidence.zip\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/FINAL-ACCEPTANCE-20261008.sh",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4096\t/home/chaidir/.performance-v2-reports/FINAL-ACCEPTANCE-20261008.sh\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-supervisor-result.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "8192\t/home/chaidir/.performance-v2-reports/acceptance-001-supervisor-result.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/materialization-synthetic-001-envelope",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "57344\t/home/chaidir/.performance-v2-reports/materialization-synthetic-001-envelope\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-003",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "45056\t/home/chaidir/.performance-v2-reports/r50-cuda-synthetic-003\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "802189312\t/home/chaidir/.performance-v2-reports/r50-checkpoint-cpu-synthetic-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-evidence-review.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4096\t/home/chaidir/.performance-v2-reports/acceptance-001-evidence-review.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-first-pair-observed-records-001-20261012.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4096\t/home/chaidir/.performance-v2-reports/r50-first-pair-observed-records-001-20261012.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-activation-outer-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-imagenet-42-activation-outer-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/train-val-mapping-001-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "49152\t/home/chaidir/.performance-v2-reports/train-val-mapping-001-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-launch.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "4096\t/home/chaidir/.performance-v2-reports/acceptance-001-launch.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-wrapper-stderr.log",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "0\t/home/chaidir/.performance-v2-reports/acceptance-001-wrapper-stderr.log\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/reader-integration-001-envelope",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "61440\t/home/chaidir/.performance-v2-reports/reader-integration-001-envelope\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-random-42-completion-review-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "24576\t/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-completion-review-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-imagenet-42-completion-review-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-timing-001-outer",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "57344\t/home/chaidir/.performance-v2-reports/r50-timing-001-outer\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-hard-seed42-pair-001-outcomes-20261012.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "8192\t/home/chaidir/.performance-v2-reports/r50-hard-seed42-pair-001-outcomes-20261012.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-entry-six-cpu-synthetic-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "32768\t/home/chaidir/.performance-v2-reports/r50-entry-six-cpu-synthetic-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-002-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "217088\t/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-002-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/reader-integration-001-launch",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "28672\t/home/chaidir/.performance-v2-reports/reader-integration-001-launch\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-random-42-hard-full-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "53248\t/home/chaidir/.performance-v2-reports/r50-random-42-hard-full-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-hard-full-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "126976\t/home/chaidir/.performance-v2-reports/r50-imagenet-42-hard-full-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "57344\t/home/chaidir/.performance-v2-reports/imagenet-synthetic-review-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-full-delta-synthetic-001",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "28672\t/home/chaidir/.performance-v2-reports/r50-full-delta-synthetic-001\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/acceptance-001-preflight.json",
+      "uid": 1009,
+      "mode": "0o600",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "24576\t/home/chaidir/.performance-v2-reports/acceptance-001-preflight.json\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    },
+    {
+      "path": "/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-outer-001-20261012",
+      "uid": 1009,
+      "mode": "0o700",
+      "symlink": false,
+      "du_exit": 0,
+      "du_stdout": "12288\t/home/chaidir/.performance-v2-reports/r50-imagenet-42-full-outer-001-20261012\n",
+      "disposition": "preserve: not proven disposable/unreferenced"
+    }
+  ],
+  "deleted": []
+}

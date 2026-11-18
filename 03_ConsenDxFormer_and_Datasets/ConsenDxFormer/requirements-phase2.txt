@@ -1,0 +1,2 @@
+-r requirements-phase1.txt
+pydicom>=2.4,<4

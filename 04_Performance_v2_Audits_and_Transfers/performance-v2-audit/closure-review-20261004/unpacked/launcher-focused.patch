@@ -1,0 +1,493 @@
+--- /dev/null
++++ b/launcher_binding.py
+@@ -0,0 +1,102 @@
++"""Closed launcher contract. Local verification only; no host activation."""
++import argparse
++import hashlib
++import json
++from pathlib import Path, PurePosixPath
++import re
++
++ROOT = '/opt/pv2-native-acceptance'
++PYTHON = '/usr/bin/python3'
++ROLES = ('controller', 'watchdog', 'helper')
++SOURCES = ('launcher_binding.py', 'native_launcher.py', 'synthetic_helper.py',
++           'watchdog_worker.py', 'linux_host.py', 'linux_lifecycle.py',
++           'linux_integration.py', 'systemd_ownership.py', 'supervisor_v2.py',
++           'supervisor_evidence.py', 'evidence_export.py')
++EXECUTABLES = ('/usr/bin/python3', '/usr/bin/systemctl', '/usr/bin/systemd-run',
++               '/usr/bin/busctl', '/usr/bin/dockerd', '/usr/bin/containerd',
++               '/usr/bin/runc', '/usr/bin/fallocate', '/usr/sbin/mkfs.ext4',
++               '/usr/sbin/losetup', '/usr/bin/mount', '/usr/bin/umount',
++               '/usr/sbin/blkid')
++
++
++def sha(raw):
++    return hashlib.sha256(raw).hexdigest()
++
++
++def need(value, message):
++    if not value:
++        raise ValueError(message)
++
++
++def canonical(value):
++    return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
++
++
++def source_manifest(root):
++    root = Path(root)
++    records = {}
++    for name in SOURCES:
++        path = root / name
++        need(not path.is_symlink() and path.is_file(), 'source not regular: ' + name)
++        raw = path.read_bytes()
++        records[ROOT + '/' + name] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    return {'schema': 'pv2_launcher_sources_v1', 'root': ROOT, 'files': records}
++
++
++def verify_sources(root, manifest):
++    need(source_manifest(root) == manifest, 'launcher source mismatch')
++
++
++def command(role, token, scenario='success'):
++    need(role in ROLES, 'unknown role')
++    need(re.fullmatch('[a-f0-9]{32}', token), 'token')
++    need(scenario in ('success', 'output_overflow', 'timeout'), 'scenario')
++    return [PYTHON, '-I', '-B', ROOT + '/native_launcher.py', '--role', role,
++            '--token', token, '--scenario', scenario,
++            '--source-manifest', ROOT + '/launcher-sources.json',
++            '--inventory', '/run/pv2-authorization/inventory.json',
++            '--authorization', '/run/pv2-authorization/authorization.json']
++
++
++def validate_inventory(inventory):
++    need(inventory.get('schema') == 'pv2_native_inventory_v1', 'inventory schema')
++    need(inventory.get('architecture') == 'x86_64' and inventory.get('cgroup_version') == 2,
++         'native acceptance requires reviewed unified v2 host')
++    for field in ('boot_id', 'kernel', 'os_release', 'python_version', 'systemd_version',
++                  'security_review_sha256', 'host_evidence_sha256'):
++        need(isinstance(inventory.get(field), str) and inventory[field], 'missing ' + field)
++    for field in ('security_review_sha256', 'host_evidence_sha256'):
++        need(re.fullmatch('[0-9a-f]{64}', inventory[field]), 'invalid ' + field)
++    need(set(inventory.get('executables', {})) == set(EXECUTABLES), 'executable coverage')
++    for path, entry in inventory['executables'].items():
++        need(set(entry) == {'sha256', 'resolved_path', 'version'}, 'executable fields')
++        need(re.fullmatch('[0-9a-f]{64}', entry['sha256']), 'executable hash')
++        need(PurePosixPath(entry['resolved_path']).is_absolute() and '..' not in PurePosixPath(entry['resolved_path']).parts,
++             'executable resolved path')
++        need(bool(entry['version']), 'executable version')
++
++
++def authorize(auth, manifest, inventory, token, now):
++    validate_inventory(inventory)
++    need(auth.get('schema') == 'pv2_native_authorization_v1', 'authorization schema')
++    need(auth.get('scope') == 'A_native_synthetic_only', 'scope')
++    need(auth.get('execution_authorized') is True, 'execution not authorized')
++    need(auth.get('security_approved') is True, 'native security not approved')
++    need(auth.get('token') == token and auth.get('boot_id') == inventory['boot_id'], 'run/boot binding')
++    need(auth.get('sources_sha256') == sha(canonical(manifest)), 'sources binding')
++    need(auth.get('inventory_sha256') == sha(canonical(inventory)), 'inventory binding')
++    start, end = auth.get('not_before'), auth.get('expires')
++    need(type(start) is int and type(end) is int and start <= now < end and 0 < end-start <= 3600,
++         'authorization validity window')
++    need(auth.get('dependency_inspection_authorized') is False and auth.get('pilot_execution_authorized') is False,
++         'scope escalation')
++
++
++def parser():
++    p = argparse.ArgumentParser(description='Review-only native acceptance interface; live dispatch disabled')
++    p.add_argument('--role', choices=ROLES, required=True)
++    p.add_argument('--token', required=True)
++    p.add_argument('--scenario', choices=('success', 'output_overflow', 'timeout'), default='success')
++    for name in ('source-manifest', 'inventory', 'authorization'):
++        p.add_argument('--' + name, type=Path, required=True)
++    return p
+--- /dev/null
++++ b/LAUNCHER_REVIEW.md
+@@ -0,0 +1,145 @@
++# Native launcher and inventory binding preparation — 2026-09-28
++
++Status: source preparation only. All execution approvals remain false. Stage A
++is unchanged, Stage B paused, pilots unauthorized. Nothing in this package is
++authorization to activate native primitives. No historical workflow is enabled.
++
++Base ZIP SHA-256:
++`737f7a8c814592378c27f7240aea5be2ab20affb9b4310dfe52ebe615f9c0df7`.
++
++## Implemented interfaces and limits
++
++`launcher-sources.json` binds all eleven controller/watchdog/helper and imported
++runtime source files to exact proposed `/opt/pv2-native-acceptance/` paths, byte
++sizes and SHA-256 values. It is generated separately; its own hash is not inside
++itself. Authorization binds the SHA-256 of canonical JSON (UTF-8, sorted keys,
++compact separators), both for this manifest and the complete inventory. The
++file ledger additionally binds raw JSON bytes. Python is explicitly
++`/usr/bin/python3 -I -B`; controller minimum remains Python 3.10, separate from
++the frozen inspection interpreter. `command()` constructs three real parser
++interfaces, not arbitrary caller-provided shell strings. The new integration
++test uses these interfaces in the existing coordinator instead of invented argv.
++Historical tests remain byte-for-byte unchanged.
++
++The dispatcher validates scope, source/inventory hashes, boot/run identity,
++short authorization validity, literal approval booleans and explicit denial of
++B/pilots. Its injected fake adapter is inaccessible through the command line.
++The CLI rejects live activation even with valid authorization, prints a failed
++JSON receipt, and exits 2. Existing native constructors remain disabled.
++This is intentional: it must not misrepresent a parser and mocked dispatch as
++a completed privileged bootstrap. The stdout rejection is not a durable sealed
++execution report; an external collector must retain it if the CLI is examined.
++
++The accepted hierarchy, deadlines, watchdog algorithm, storage lifetime,
++termination authorization and evidence-finalization code are unchanged. The
++finite helper defines success/overflow payloads; timeout is simulated, never a
++real sleep or fork. No test runs a native command.
++
++## Exact remaining activation work (not hidden by the mock result)
++
++An authenticated owner authorization file must be delivered through a trusted,
++root-owned channel; plain JSON hashes are integrity bindings, not signatures.
++Before activation, implement/review the bootstrap which verifies root ownership,
++non-writability and absence of symlink components for the whole source tree,
++manifest, inventory and authorization; resolves and rehashes executable bytes;
++records interpreter/stdlib/shared-library dependencies; reserves a token without
++reuse; and rechecks boot identity. Current source verification is local file
++comparison, not TOCTOU-proof code loading. The launcher imports its small binding
++module before validation; this therefore requires a trusted immutable bootstrap,
++not execution of an untrusted downloaded directory.
++
++The live bridge still needs to create the bounded controller service through the
++manager; reconstruct watchdog lifecycle state in a separate interpreter using a
++durable bootstrap record before daemons start; publish/observe arm and export
++acknowledgment; connect controller completion to actual export/final teardown;
++and collect partial evidence after controller loss. The current fake kernel
++manufactures the watchdog arm record: it does NOT exercise separate-process
++startup. Existing recovery/teardown code is available but not silently enabled.
++Native acceptance cannot be dispatched until this bridge is reviewed. This
++package supplies concrete interfaces and gate semantics, not proof of that
++unimplemented native bootstrap. No hash-bound authorization is supplied here.
++
++## A — proposed bounded native lifecycle acceptance (NOT EXECUTED)
++
++Only a fresh disposable Linux x86-64, systemd, unified cgroup-v2 host is in this
++proposal. Cgroup-v1 inspector work is historical, not substituted here. No
++container/image build, package installation, registry pull, weight or research
++input is allowed. Private Docker/containerd services use already provisioned,
++separately approved host binaries. The synthetic helper runs as a native unit.
++
++One reviewed scenario per unique token, no retries: success, helper-output
++overflow, helper timeout, owner disappearance, partial provisioning, and
++interrupted teardown/recovery. Each scenario needs a distinct authorization and
++output directory. Never run scenarios concurrently. Preserve the policy:
++workload 6 GiB, swap 0, 1.5 CPU, 256 tasks; controller/guard independently bounded
++256 MiB, swap 0, .25 CPU, 16 tasks; data 8 GiB, evidence 512 MiB, runtime tmpfs
++64 MiB. Workload/watchdog lifetime 1200 seconds, operation 60 seconds, output
++1 MiB, TERM/KILL/read-back separate 10-second budgets, export 60 seconds/512 MiB.
++Systemd-reported ControlGroup paths, not inferred slice paths, remain authoritative.
++Reserve at least 12 GiB dedicated free host storage plus an independently bounded
++external evidence destination before provisioning; reject other host consumers
++where these bounds cannot be assured. No claim of hard preemption of blocked
++kernel/filesystem operations is made.
++
++Acceptance requires original ownership/journal/ledger records, snapshots before
++and after operations, independent watchdog identity/arm, timeout/error details,
++fresh termination receipts, export manifest/read-back acknowledgment and final
++completion receipt validated by `validate_complete`. Failure must retain the
++primary error separately from persistence/cleanup errors. Never discard backing
++storage without fresh bound termination authorization and export acknowledgment.
++Unconfirmed cleanup means failure and retained resources, not fabricated success.
++External watchdog/collector must survive controller loss; host loss can prevent
++all persistence and remains an explicit limit. Transfer completed evidence only
++after offline ledger verification; receipt of copied bytes is not Linux acceptance.
++
++Proposed role command after future bridge approval, NOT EXECUTED and presently
++guaranteed to reject (the enclosing controller unit bootstrap is still missing):
++
++```sh
++/usr/bin/python3 -I -B /opt/pv2-native-acceptance/native_launcher.py --role controller --token 0123456789abcdef0123456789abcdef --scenario success --source-manifest /opt/pv2-native-acceptance/launcher-sources.json --inventory /run/pv2-authorization/inventory.json --authorization /run/pv2-authorization/authorization.json
++```
++
++Do not submit this as a GitHub workflow yet. No runnable workflow or activation
++authorization is included. Concrete watchdog/helper argv use the same interface
++with `--role watchdog` / `--role helper`, emitted by `command()`.
++
++## Outstanding host/runtime and security evidence for A
++
++No actual current host inventory is asserted. Required evidence:
++
++- Exact OS release/image identifier, kernel/build/architecture/boot ID, Python
++  interpreter version and bytes, stdlib and native linkage inventory, systemd
++  version and manager properties. Resolve every path in `EXECUTABLES` to actual
++  canonical bytes, publisher/package identity, version and hash. Distribution
++  aliases such as `/usr/bin` versus `/usr/sbin` need an explicit reviewed path
++  amendment, not fallback search through PATH.
++- cgroup mount/controller availability, systemd delegation/privilege policy,
++  observed quotas, swap controls, branch independence, controller placement,
++  loop capacity, mount/namespace/security profile and filesystem fsync support.
++  Establish free bytes/inodes and exclusive bounded storage, export destination
++  capacity, process visibility and authority to stop owned units only.
++- Dated applicability review for exact kernel/systemd, Docker/containerd/runc,
++  Python/stdlib/shared libraries, util-linux, e2fsprogs and filesystem/security
++  tooling versions; package-origin/checksum evidence and any unresolved CVEs.
++  Document privileged-native attack surface, daemon network/socket exposure,
++  uninterruptible I/O and host-loss residual risk. A hash alone is not clearance.
++- If Actions is later chosen: fresh standard-runner image/inventory and action
++  commit/security records, private repository and zero-paid-usage evidence,
++  independent cancellation collector and authorization. Prior host metadata is
++  historical and cannot replace a fresh boot-bound inventory.
++
++Inventory validation implemented here checks closed executable coverage and
++binding fields; it does not fetch or authenticate this missing evidence, assess
++advisories, or freshly inspect executable bytes on Linux.
++
++## B — dependency installation and weight inspection remains separate
++
++Even successful A would clear only exercised host lifecycle scenarios. Frozen
++production dependency pins and embedded inspector bytes are unchanged. Candidate
++upgrades remain unapproved; immutable source and binary identities, full dependency
++closure, publisher-vs-independent-byte hashes, advisory/native-security clearance,
++compatibility/topology tests and Linux synthetic inspector acceptance remain open.
++Restricted loading, tensor storage/layout checks, classifier and optimizer checks,
++weight terms/overlap and RadImageNet blockers remain applicable. B needs a new
++authorization; neither A completion nor its JSON authorization grants installation,
++binary acquisition or weight deserialization. No Stage A result is reopened.
+--- /dev/null
++++ b/native_launcher.py
+@@ -0,0 +1,41 @@
++"""Concrete role interfaces; live bridge intentionally unavailable pending review.
++
++The injectable dispatcher is solely a mocked integration seam, never selected by
++CLI arguments or an authorization file. Authorization is necessary, not enough.
++"""
++import json
++from pathlib import Path
++import sys
++import time
++
++# -I omits the script directory. Import only from this explicit package location.
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++from launcher_binding import authorize, command, parser, verify_sources
++
++
++def dispatch_mocked(args, manifest, inventory, auth, now, backend):
++    authorize(auth, manifest, inventory, args.token, now)
++    if getattr(backend, 'is_fake', False) is not True:
++        raise RuntimeError('live launcher binding disabled')
++    argv = command(args.role, args.token, args.scenario)
++    return backend.launch_role(args.role, argv, inventory, args.scenario)
++
++
++def main():
++    args = parser().parse_args()
++    try:
++        manifest = json.loads(args.source_manifest.read_bytes())
++        verify_sources(Path(__file__).resolve().parent, manifest)
++        inventory = json.loads(args.inventory.read_bytes())
++        auth = json.loads(args.authorization.read_bytes())
++        authorize(auth, manifest, inventory, args.token, int(time.time()))
++        raise RuntimeError('NOT EXECUTED: native activation bridge remains disabled pending separate review')
++    except Exception as exc:
++        print(json.dumps({'schema': 'pv2_launcher_rejection_v1', 'complete': False,
++                          'role': args.role, 'error': str(exc), 'host_operations': 0,
++                          'stage_b': 'paused', 'pilot_execution_authorized': False}), flush=True)
++        return 2
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+--- /dev/null
++++ b/package_launcher.py
+@@ -0,0 +1,81 @@
++"""Local review artifact generation; no native host operations."""
++import argparse
++import difflib
++import hashlib
++import json
++import os
++from pathlib import Path
++import platform
++import re
++import subprocess
++import sys
++import zipfile
++from launcher_binding import source_manifest
++
++BASE = '737f7a8c814592378c27f7240aea5be2ab20affb9b4310dfe52ebe615f9c0df7'
++
++
++def sha(raw): return hashlib.sha256(raw).hexdigest()
++
++
++def write(path, value):
++    path.write_text(json.dumps(value, sort_keys=True, indent=2)+'\n', encoding='utf-8', newline='\n')
++
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('root', 'base', 'output'): p.add_argument('--'+name, type=Path, required=True)
++    a = p.parse_args(); root = a.root.resolve()
++    if sha(a.base.read_bytes()) != BASE: raise ValueError('base hash')
++    with zipfile.ZipFile(a.base) as z:
++        old = json.loads(z.read('file-hashes.json'))
++        if set(z.namelist()) != set(old) | {'file-hashes.json'}: raise ValueError('base coverage')
++        for name, rec in old.items():
++            raw = z.read(name)
++            if sha(raw) != rec['sha256'] or len(raw) != rec['size_bytes']: raise ValueError(name)
++            if (root/name).read_bytes() != raw: raise ValueError('parent changed: '+name)
++        (root/'history'/'deadline-file-hashes.json').write_bytes(z.read('file-hashes.json'))
++        write(root/'launcher-sources.json', source_manifest(root))
++        command = [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(root), '-p', 'test_*.py', '-v']
++        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', CUDA_VISIBLE_DEVICES='')
++        run = subprocess.run(command, cwd=root, env=env, capture_output=True, text=True, timeout=120)
++        (root/'launcher-tests.log').write_text(run.stdout+run.stderr, encoding='utf-8')
++        if run.returncode: raise RuntimeError('tests failed')
++        summary = re.search(r'Ran \d+ tests in [^\n]+', run.stderr).group()
++        diff = []; changed = []
++        for path in sorted(root.glob('*')):
++            if path.suffix not in ('.py', '.md') or path.name in old: continue
++            after = path.read_text(encoding='utf-8').splitlines(True)
++            if any(x.rstrip('\r\n') != x.rstrip() for x in after): raise ValueError('whitespace')
++            changed.append(path.name)
++            diff.extend(difflib.unified_diff([], after, fromfile='/dev/null', tofile='b/'+path.name))
++        for path in root.glob('*.py'): compile(path.read_text(encoding='utf-8'), str(path), 'exec')
++        (root/'launcher-focused.patch').write_text(''.join(diff), encoding='utf-8', newline='\n')
++        write(root/'LAUNCHER_VALIDATION.json', {
++            'base_sha256': BASE, 'base_entries_verified': len(old), 'all_base_files_unchanged': True,
++            'command': command, 'result': summary, 'exit_code': run.returncode,
++            'runtime': sys.version, 'platform': platform.platform(), 'new_tests': 8,
++            'changed_source_documents': changed, 'execution_approved': False,
++            'linux_acceptance_executed': False, 'live_bridge_complete': False,
++            'scope': 'mocked OS only; local temporary synthetic evidence',
++            'initial_test_failure': 'New test imported IntegratedTests instead of IntegrationTests; corrected before final suite.',
++            'warning': 'Retained acceptance_driver.py return-in-finally SyntaxWarning under Python 3.14',
++            'stage_b': 'paused', 'pilot_execution_authorized': False})
++    ledger = {}
++    for path in sorted(root.rglob('*')):
++        if path.is_symlink(): raise ValueError('symlink')
++        if path.is_file() and path.name != 'file-hashes.json':
++            raw = path.read_bytes(); ledger[path.relative_to(root).as_posix()] = {'sha256': sha(raw), 'size_bytes': len(raw)}
++    write(root/'file-hashes.json', ledger)
++    with zipfile.ZipFile(a.output, 'x', zipfile.ZIP_DEFLATED) as z:
++        for name in [*sorted(ledger), 'file-hashes.json']: z.write(root/name, name)
++    with zipfile.ZipFile(a.output) as z:
++        if set(z.namelist()) != set(ledger) | {'file-hashes.json'}: raise ValueError('output coverage')
++        for name, rec in ledger.items():
++            raw = z.read(name)
++            if sha(raw) != rec['sha256'] or len(raw) != rec['size_bytes']: raise ValueError('output hash')
++    print(json.dumps({'zip': str(a.output.resolve()), 'sha256': sha(a.output.read_bytes()),
++                      'ledger_entries': len(ledger), 'tests': summary}, indent=2))
++
++
++if __name__ == '__main__': main()
+--- /dev/null
++++ b/synthetic_helper.py
+@@ -0,0 +1,14 @@
++"""Finite synthetic payload generator; no native operations or live entry point."""
++
++
++def blocks(scenario):
++    if scenario == 'success':
++        yield b'pv2-native-synthetic-v1\n'
++    elif scenario == 'output_overflow':
++        for _ in range(17):
++            yield b'x' * 65536
++    elif scenario == 'timeout':
++        # A fake scheduler models blocking. Never sleep or spin in this module.
++        raise TimeoutError('synthetic helper timeout scenario')
++    else:
++        raise ValueError('unknown synthetic scenario')
+--- /dev/null
++++ b/test_launcher_binding.py
+@@ -0,0 +1,92 @@
++"""Invented inventory and fake OS only, not Linux acceptance."""
++import copy
++import json
++from pathlib import Path
++from types import SimpleNamespace
++import unittest
++from unittest.mock import Mock, patch
++
++from launcher_binding import (EXECUTABLES, ROOT, authorize, canonical, command,
++                              sha, source_manifest, verify_sources)
++from native_launcher import dispatch_mocked
++from synthetic_helper import blocks
++import test_linux_integration as integration
++
++
++def fixture():
++    manifest = source_manifest(Path(__file__).parent)
++    inventory = {'schema': 'pv2_native_inventory_v1', 'architecture': 'x86_64',
++                 'cgroup_version': 2, 'boot_id': 'invented-boot', 'kernel': 'invented',
++                 'os_release': 'invented', 'python_version': '3.10 invented',
++                 'systemd_version': 'invented', 'security_review_sha256': 'b'*64,
++                 'host_evidence_sha256': 'c'*64,
++                 'executables': {p: {'sha256': 'a'*64, 'resolved_path': p, 'version': 'invented'} for p in EXECUTABLES}}
++    auth = {'schema': 'pv2_native_authorization_v1', 'scope': 'A_native_synthetic_only',
++            'execution_authorized': True, 'security_approved': True, 'token': 'a'*32,
++            'boot_id': 'invented-boot', 'sources_sha256': sha(canonical(manifest)),
++            'inventory_sha256': sha(canonical(inventory)), 'not_before': 100, 'expires': 200,
++            'dependency_inspection_authorized': False, 'pilot_execution_authorized': False}
++    return manifest, inventory, auth
++
++
++class BindingTests(unittest.TestCase):
++    def test_exact_sources(self):
++        manifest, _, _ = fixture()
++        verify_sources(Path(__file__).parent, manifest)
++        manifest['files'][ROOT+'/watchdog_worker.py']['sha256'] = '0'*64
++        with self.assertRaisesRegex(ValueError, 'source mismatch'):
++            verify_sources(Path(__file__).parent, manifest)
++
++    def test_authorization(self):
++        m, i, a = fixture()
++        authorize(a, m, i, 'a'*32, 150)
++        for field, value in [('execution_authorized', False), ('security_approved', False),
++                             ('sources_sha256', '0'*64), ('inventory_sha256', '0'*64),
++                             ('boot_id', 'other'), ('scope', 'B'), ('expires', 150),
++                             ('pilot_execution_authorized', True)]:
++            with self.subTest(field=field), self.assertRaises(ValueError):
++                bad = dict(a, **{field: value}); authorize(bad, m, i, 'a'*32, 150)
++
++    def test_missing_inventory(self):
++        m, i, a = fixture()
++        del i['executables']['/usr/bin/runc']
++        with self.assertRaisesRegex(ValueError, 'coverage'):
++            authorize(a, m, i, 'a'*32, 150)
++
++    def test_no_live_backend(self):
++        m, i, a = fixture()
++        args = SimpleNamespace(role='controller', token='a'*32, scenario='success')
++        with self.assertRaisesRegex(RuntimeError, 'disabled'):
++            dispatch_mocked(args, m, i, a, 150, SimpleNamespace(is_fake=False))
++
++    def test_rejected_authorization_never_dispatches(self):
++        m, i, a = fixture(); a['execution_authorized'] = False
++        backend = Mock(is_fake=True)
++        with self.assertRaises(ValueError):
++            dispatch_mocked(SimpleNamespace(role='controller', token='a'*32, scenario='success'), m, i, a, 150, backend)
++        backend.launch_role.assert_not_called()
++
++    def test_concrete_roles(self):
++        m, i, a = fixture()
++        backend = Mock(is_fake=True)
++        for role in ('controller', 'watchdog', 'helper'):
++            args = SimpleNamespace(role=role, token='a'*32, scenario='success')
++            dispatch_mocked(args, m, i, a, 150, backend)
++            backend.launch_role.assert_called_with(role, command(role, 'a'*32), i, 'success')
++        self.assertEqual(backend.launch_role.call_count, 3)
++
++    def test_payload_boundaries(self):
++        self.assertEqual(b''.join(blocks('success')), b'pv2-native-synthetic-v1\n')
++        self.assertEqual(sum(map(len, blocks('output_overflow'))), 17*65536)
++        with self.assertRaises(TimeoutError): list(blocks('timeout'))
++
++    def test_integrated_concrete_argv(self):
++        # Actual coordinator/state machine with fake services, mounts and clock.
++        h, c, inventory, evidence = integration.IntegrationTests().make()
++        h.blocks = list(blocks('success')) + [b'']
++        result = c.execute(inventory, command('watchdog', 'a'*32),
++                           command('helper', 'a'*32), '123', '1', evidence)
++        self.assertEqual(result['state'], 'VERIFIED_FAKE')
++
++
++if __name__ == '__main__': unittest.main()

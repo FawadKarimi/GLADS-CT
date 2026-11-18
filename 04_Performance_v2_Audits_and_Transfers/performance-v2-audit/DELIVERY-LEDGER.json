@@ -1,0 +1,15 @@
+{
+  "files": {
+    "performance-v2-reader-correction-REVIEW-20261008.zip": "da87378dd395af6594f1d57335538ac83739261c83233d4ed3019017cc944967",
+    "PROPOSED-COMMAND.sh": "428c66a35bc3bc92d6580e44059f04c25c940f156b344076565c43aa4732fd79",
+    "SHA256-LEDGER.json": "ad6302eb160ddd90bb4c2fdeb36ed88a599d8765c8a855c84ba12c0b2aa1fef4",
+    "FOCUSED.diff": "b7fe24c186b7b15b4edabf93e9ee920b07112fa3e7cb60644c6a12c173711c0e",
+    "COMPLETE-INTEGRATION.diff": "71f3a9b5ae4bdbcd9b94eff506f0536f4b0cbd3a02b508e0eb4c258b19605b5b",
+    "local-validation/results.json": "c55b5bb50fc83c1989bf5b11105b3e0fd17fb2d1ea109ae37c710f4504fc9ac2"
+  },
+  "source_lock_sha256": "aed4e1dd5b2f82accedcfdec9082f5ed8ce75fed47169d04310d6e44952fa378",
+  "focused_reverse_apply_check_passed": true,
+  "proposed_python310_bootstrap_grammar_valid": true,
+  "linux_command_executed": false,
+  "pilot_execution_authorized": false
+}

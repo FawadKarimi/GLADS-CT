@@ -1,0 +1,11 @@
+{
+  "native_build_execution_reviewed": false,
+  "orchestration_hashes": {
+    "acceptance_driver.py": "80c8d83c388713c50dbef8cadbbafb6993c599fae5d703a232b8ab0919e42429",
+    "build_lifecycle.py": "bc6b865d4bd8edd40700f4d22821a1903496047717f594dbdebca1b1d54a5b8d"
+  },
+  "package_sha256": "2f97fdaf4dd7e3dd5a04255aa62a7dd7b603fcda0fd82ffcb026b3957407d45e",
+  "production_loading_approved": false,
+  "review_reference": null,
+  "synthetic_execution_approved": false
+}
